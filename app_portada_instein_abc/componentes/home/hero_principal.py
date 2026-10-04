@@ -1,0 +1,490 @@
+"""
+Hero principal del home — estilo Neon adaptativo.
+
+Capas (de fondo a frente)
+-------------------------
+- CAPA 0: Gradiente adaptativo (light: claro, dark: oscuro).
+- CAPA 1: Orbes de glow azul marino en esquinas.
+- CAPA 2: Partículas (iconos flotantes) en azul marino.
+- CAPA 3: Contenido principal (título, CTA, trust badges) + explorador.
+
+Sistema de color
+----------------
+✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+
+- Fondo: `FONDO_HOME_HERO` (adaptativo).
+- Acentos: `AZUL_MARINO_NEON` en ambos modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
+- Punto verde: `#22c55e` semántico.
+- Título: gradiente adaptativo (`GRADIENTE_TEXTO_HOME`).
+
+Notas técnicas
+--------------
+- `rx.icon(size=...)` NO acepta `rx.breakpoints(...)`.
+- Las opacidades de partículas y orbes son mayores en dark.
+"""
+
+from __future__ import annotations
+
+import random
+from typing import TypedDict
+
+import reflex as rx
+
+from ...componentes.carreras.explorador import (
+    explorador_carrera_destacada,
+)
+from ...componentes.base.primitivos import (
+    enlace_navegacion,
+)
+from ...infraestructura.constantes.colores import (
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_HERO,
+    GRADIENTE_TEXTO_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
+)
+from ...infraestructura.constantes.dimensiones import (
+    RADIO_PASTILLA,
+)
+
+
+# ======================================================================
+# Tipos
+# ======================================================================
+
+
+class Particula(TypedDict):
+    """Partícula decorativa del fondo del hero."""
+
+    icono: str
+    x: float
+    y: float
+    tamano: int
+    opacidad: float
+    delay: float
+    duracion: float
+    rotacion: float
+
+
+# ======================================================================
+# Catálogo de iconos para las partículas
+# ======================================================================
+
+ICONOS_PARTICULAS: list[str] = [
+    # Sistemas Informáticos
+    "cpu", "code-2", "database", "wifi", "terminal", "binary", "hard-drive",
+    # Contaduría General
+    "calculator", "receipt", "coins", "chart-line", "wallet", "trending-up",
+    # Secretariado Ejecutivo
+    "briefcase", "calendar-clock", "mail", "users", "file-text",
+    "clipboard-list",
+    # Comercio Internacional
+    "globe", "ship", "package", "truck", "plane",
+    # Electrónica
+    "zap", "circuit-board", "radio", "plug-zap", "settings",
+    # Académicos generales
+    "graduation-cap", "book-open", "award", "lightbulb", "target", "rocket",
+]
+
+
+# ======================================================================
+# Configuración de las partículas
+# ======================================================================
+
+CANTIDAD_PARTICULAS: int = 50
+SEMILLA_PARTICULAS: int = 42
+TAMANOS_PARTICULAS: list[int] = [14, 18, 20, 24, 28, 32]
+
+OPACIDAD_MINIMA: float = 0.08
+OPACIDAD_MAXIMA: float = 0.20
+
+DURACION_MINIMA: float = 4.0
+DURACION_MAXIMA: float = 8.0
+ROTACION_MINIMA: float = -25
+ROTACION_MAXIMA: float = 25
+
+
+# ======================================================================
+# Generador de partículas
+# ======================================================================
+
+
+def _generar_particulas(
+    cantidad: int = CANTIDAD_PARTICULAS,
+    semilla: int = SEMILLA_PARTICULAS,
+) -> list[Particula]:
+    """
+    Genera partículas reproducibles con semilla fija.
+
+    Args:
+        cantidad: Número de partículas.
+        semilla: Semilla para reproducibilidad.
+
+    Returns:
+        Lista de `Particula` con configuración aleatoria pero estable.
+    """
+    rng = random.Random(semilla)
+    return [
+        {
+            "icono": rng.choice(ICONOS_PARTICULAS),
+            "x": rng.uniform(0, 100),
+            "y": rng.uniform(0, 100),
+            "tamano": rng.choice(TAMANOS_PARTICULAS),
+            "opacidad": rng.uniform(OPACIDAD_MINIMA, OPACIDAD_MAXIMA),
+            "delay": rng.uniform(0, 5),
+            "duracion": rng.uniform(DURACION_MINIMA, DURACION_MAXIMA),
+            "rotacion": rng.uniform(ROTACION_MINIMA, ROTACION_MAXIMA),
+        }
+        for _ in range(cantidad)
+    ]
+
+
+PARTICULAS_FONDO: list[Particula] = _generar_particulas()
+"""Partículas precalculadas (constante de módulo)."""
+
+
+# ======================================================================
+# CAPA 2: Partículas
+# ======================================================================
+
+
+def _icono_particula(particula: Particula) -> rx.Component:
+    """Renderiza una partícula flotante."""
+    return rx.box(
+        rx.icon(
+            particula["icono"],
+            size=particula["tamano"],
+            color=AZUL_MARINO_NEON,
+        ),
+        position="absolute",
+        left=f"{particula['x']}%",
+        top=f"{particula['y']}%",
+        opacity=rx.color_mode_cond(
+            light=f"{particula['opacidad'] * 0.5}",
+            dark=f"{particula['opacidad']}",
+        ),
+        style={"--rotacion": f"{particula['rotacion']}deg"},
+        animation=(
+            f"flotar_icono_particula {particula['duracion']}s ease-in-out "
+            f"{particula['delay']}s infinite"
+        ),
+        pointer_events="none",
+    )
+
+
+def _capa_particulas() -> rx.Component:
+    """Capa completa de partículas."""
+    return rx.box(
+        *[_icono_particula(p) for p in PARTICULAS_FONDO],
+        position="absolute",
+        top="0",
+        left="0",
+        right="0",
+        bottom="0",
+        overflow="hidden",
+        pointer_events="none",
+        z_index="1",
+    )
+
+
+# ======================================================================
+# CAPA 1: Orbes de glow
+# ======================================================================
+
+
+def _orbes_glow() -> rx.Component:
+    """Orbes de glow azul marino en las esquinas del hero."""
+    return rx.fragment(
+        rx.box(
+            position="absolute",
+            top="-30%",
+            right="-15%",
+            width="60%",
+            height="100%",
+            background=(
+                f"radial-gradient(circle, {AZUL_MARINO_NEON} 0%, "
+                f"transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(light="0.12", dark="0.25"),
+            filter="blur(80px)",
+            z_index="0",
+            pointer_events="none",
+        ),
+        rx.box(
+            position="absolute",
+            bottom="-30%",
+            left="-15%",
+            width="60%",
+            height="100%",
+            background=(
+                "radial-gradient(circle, #1a237e 0%, transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(light="0.15", dark="0.30"),
+            filter="blur(80px)",
+            z_index="0",
+            pointer_events="none",
+        ),
+    )
+
+
+# ======================================================================
+# Badge de inscripciones
+# ======================================================================
+
+
+def _badge_inscripciones_abiertas() -> rx.Component:
+    """Badge "INSCRIPCIONES ABIERTAS · GESTIÓN 2026" con punto verde."""
+    return rx.flex(
+        rx.box(
+            height="0.5rem",
+            width="0.5rem",
+            border_radius=RADIO_PASTILLA,
+            background="#22c55e",
+            animation="pulse 2s ease-in-out infinite",
+            box_shadow="0 0 12px #22c55e",
+            flex_shrink="0",
+        ),
+        rx.text(
+            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
+            font_size="0.75rem",
+            font_weight="700",
+            color=TEXTO_HOME_PRINCIPAL,
+            letter_spacing="0.1em",
+        ),
+        align="center",
+        gap="0.5rem",
+        padding="0.5rem 1rem",
+        border_radius=RADIO_PASTILLA,
+        background=FONDO_AZUL_SUAVE,
+        border=f"1px solid {BORDE_HOME_AZUL}",
+        backdrop_filter="blur(12px)",
+        width="fit-content",
+    )
+
+
+# ======================================================================
+# CTA dual
+# ======================================================================
+
+
+def _cta_primario() -> rx.Component:
+    """CTA primario "Explorar Carreras" con azul marino + glow."""
+    return enlace_navegacion(
+        "/carreras",
+        rx.text("Explorar Carreras", as_="span", font_weight="700"),
+        rx.icon(
+            "arrow-right",
+            size=18,
+            class_name="arrow-icon",
+            transition="transform 0.2s",
+        ),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
+        background=AZUL_MARINO_NEON,
+        color="white",
+        padding="1rem 2rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="1rem",
+        font_weight="700",
+        box_shadow=f"0 0 40px {AZUL_MARINO_NEON}80",
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
+            "& .arrow-icon": {"transform": "translateX(4px)"},
+        },
+    )
+
+
+def _cta_secundario() -> rx.Component:
+    """CTA secundario "Conocer más" con glassmorphism."""
+    return enlace_navegacion(
+        "/contacto",
+        rx.icon("message-circle", size=18),
+        rx.text("Conocer más", as_="span", font_weight="600"),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
+        background=rx.color_mode_cond(
+            light="rgba(255, 255, 255, 0.6)",
+            dark="rgba(255, 255, 255, 0.05)",
+        ),
+        color=TEXTO_HOME_PRINCIPAL,
+        padding="1rem 2rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="1rem",
+        border=f"1px solid {BORDE_HOME_MEDIO}",
+        backdrop_filter="blur(12px)",
+        transition="all 0.2s",
+        _hover={
+            "background": rx.color_mode_cond(
+                light="rgba(255, 255, 255, 0.9)",
+                dark="rgba(255, 255, 255, 0.1)",
+            ),
+            "border_color": BORDE_HOME_AZUL,
+        },
+    )
+
+
+# ======================================================================
+# Trust badges
+# ======================================================================
+
+
+def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
+    """Badge individual con icono + texto."""
+    return rx.flex(
+        rx.icon(icono, size=14, color=AZUL_MARINO_NEON),
+        rx.text(
+            etiqueta,
+            font_size="0.75rem",
+            font_weight="600",
+            color=TEXTO_HOME_SUAVE,
+        ),
+        align="center",
+        gap="0.4rem",
+        padding="0.5rem 0.875rem",
+        border_radius=RADIO_PASTILLA,
+        background=rx.color_mode_cond(
+            light="rgba(255, 255, 255, 0.7)",
+            dark="rgba(255, 255, 255, 0.03)",
+        ),
+        border=f"1px solid {BORDE_HOME_SUAVE}",
+        backdrop_filter="blur(12px)",
+    )
+
+
+# ======================================================================
+# Título + CTA
+# ======================================================================
+
+
+def _hero_titulo_y_cta() -> rx.Component:
+    """Bloque superior del hero con título, subtítulo, CTA y badges."""
+    return rx.vstack(
+        rx.box(
+            _badge_inscripciones_abiertas(),
+            margin_bottom="1.5rem",
+        ),
+        rx.heading(
+            "Forja tu futuro como ",
+            rx.text.span(
+                "Técnico Superior",
+                background=GRADIENTE_TEXTO_HOME,
+                background_clip="text",
+                color="transparent",
+                webkit_background_clip="text",
+            ),
+            "",
+            size="9",
+            text_align="center",
+            font_weight="900",
+            letter_spacing="-0.04em",
+            line_height="1.05",
+            color=TEXTO_HOME_PRINCIPAL,
+            max_width="60rem",
+        ),
+        rx.text(
+            "Formación técnica de excelencia con títulos de Provisión "
+            "Nacional. 5 carreras, equipamiento moderno y docentes "
+            "especializados.",
+            font_size=["1rem", "1.125rem", "1.25rem"],
+            text_align="center",
+            color=TEXTO_HOME_MAS_SUAVE,
+            max_width="42rem",
+            line_height="1.6",
+            margin_top="1.5rem",
+        ),
+        rx.flex(
+            _cta_primario(),
+            _cta_secundario(),
+            gap="0.75rem",
+            margin_top="2.5rem",
+            flex_direction=rx.breakpoints(initial="column", sm="row"),
+            align="center",
+            justify="center",
+        ),
+        rx.flex(
+            _trust_badge("award", "R.M. 0871/2016"),
+            _trust_badge("shield-check", "Título Nacional"),
+            _trust_badge("users", "500+ Egresados"),
+            _trust_badge("trending-up", "100% Empleabilidad"),
+            gap="0.5rem",
+            margin_top="3rem",
+            flex_wrap="wrap",
+            justify="center",
+            max_width="48rem",
+        ),
+        align="center",
+        text_align="center",
+        padding="6rem 1.5rem 4rem 1.5rem",
+        position="relative",
+        z_index="2",
+        width="100%",
+        max_width="72rem",
+        margin="0 auto",
+    )
+
+
+# ======================================================================
+# Hero completo
+# ======================================================================
+
+
+def hero_principal() -> rx.Component:
+    """
+    Hero completo del home con sistema de capas apiladas.
+
+    Orden de renderizado (de atrás hacia adelante):
+    1. Gradiente adaptativo.
+    2. Orbes de glow.
+    3. Partículas.
+    4. Contenido principal (título + CTA + badges).
+    5. Explorador de carreras.
+    """
+    return rx.box(
+        # CAPA 0: Fondo gradiente
+        rx.box(
+            position="absolute",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            background=FONDO_HOME_HERO,
+            z_index="-1",
+            pointer_events="none",
+        ),
+        # CAPA 1: Orbes de glow
+        _orbes_glow(),
+        # CAPA 2: Partículas
+        _capa_particulas(),
+        # CAPA 3: Contenido principal
+        rx.vstack(
+            _hero_titulo_y_cta(),
+            explorador_carrera_destacada(),
+            width="100%",
+            align="center",
+            spacing="0",
+            position="relative",
+            z_index="2",
+        ),
+        position="relative",
+        width="100%",
+        overflow="hidden",
+        min_height="100vh",
+    )
+
+
+# ======================================================================
+# EXPORTS
+# ======================================================================
+
+__all__ = ["hero_principal"]

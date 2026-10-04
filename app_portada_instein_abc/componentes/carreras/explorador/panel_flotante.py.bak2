@@ -1,0 +1,315 @@
+"""
+Panel flotante de selección de carrera.
+
+Estructura
+----------
+- Botón flotante (esquina inferior derecha) con azul marino neon.
+- Overlay adaptativo cuando el panel está abierto.
+- Panel desplegable con grid de cards de carrera.
+
+Cada card navega al detalle `/carrera/{id}`.
+
+Sistema de color
+----------------
+✅ ADAPTATIVO: overlay, panel, textos y bordes cambian con el modo.
+
+- Fondo del panel: `FONDO_HOME_CARD` (adaptativo).
+- Acentos: `AZUL_MARINO_NEON` en ambos modos.
+- Textos: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_SUAVE`.
+- Overlay: negro translúcido con blur.
+
+Nota técnica: `columns` ES PROP CERRADO
+---------------------------------------
+En Reflex 0.9.x, `rx.grid(columns=...)` NO acepta listas:
+
+    ❌ columns="1"
+    ✅ columns="1"                        # valor único
+    ✅ columns=rx.breakpoints(initial="1", sm="1")  # responsive
+
+Motivo: `columns` acepta solo `str` o `Breakpoints`, no
+`Sequence[str]`. Los props CSS abiertos (padding, gap, etc.) SÍ
+aceptan listas, pero `columns` NO.
+"""
+
+from __future__ import annotations
+
+import reflex as rx
+
+from ...base.primitivos import contenedor_clicable
+from ....dominio import (
+    Carrera,
+    EstadoInstitucional,
+)
+from ....infraestructura import (
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_CARD,
+    RADIO_EXTRA_GRANDE,
+    RADIO_MEDIO,
+    RADIO_PASTILLA,
+    SOMBRA_HOVER_CARD_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+)
+
+from .constantes import (
+    ALTO_BANNER_CARD,
+    ANCHO_PANEL_FLOTANTE,
+    PADDING_PANEL_FLOTANTE,
+    POSICION_PANEL_FLOTANTE,
+    TAMANO_BOTON_FLOTANTE,
+)
+
+
+# ======================================================================
+# Card individual de carrera en el panel
+# ======================================================================
+
+
+def _card_carrera_panel(carrera: Carrera) -> rx.Component:
+    """Card de carrera con imagen destacada arriba + datos debajo."""
+    return rx.link(
+        rx.card(
+            rx.inset(
+                rx.box(
+                    rx.image(
+                        src="/" + carrera["imagen_banner"],
+                        alt=carrera["nombre"],
+                        width="100%",
+                        height="100%",
+                        object_fit="cover",
+                    ),
+                    rx.box(
+                        position="absolute",
+                        top="0",
+                        left="0",
+                        right="0",
+                        bottom="0",
+                        background=(
+                            f"linear-gradient(180deg, transparent 40%, "
+                            f"rgba(59, 91, 219, 0.3) 100%)"
+                        ),
+                        pointer_events="none",
+                    ),
+                    position="relative",
+                    width="100%",
+                    height=ALTO_BANNER_CARD,
+                    overflow="hidden",
+                    border_radius=RADIO_MEDIO,
+                ),
+                side="top",
+                pb="current",
+            ),
+            rx.flex(
+                rx.flex(
+                    rx.icon(
+                        carrera["icono"],
+                        size=16,
+                        color=AZUL_MARINO_NEON,
+                    ),
+                    height="2rem",
+                    width="2rem",
+                    border_radius=RADIO_MEDIO,
+                    background=FONDO_AZUL_SUAVE,
+                    border=f"1px solid {BORDE_HOME_AZUL}",
+                    align="center",
+                    justify="center",
+                    flex_shrink="0",
+                ),
+                rx.vstack(
+                    rx.text(
+                        carrera["nombre_corto"],
+                        font_size="0.875rem",
+                        font_weight="700",
+                        color=TEXTO_HOME_PRINCIPAL,
+                        line_height="1.2",
+                    ),
+                    rx.text(
+                        carrera["duracion"],
+                        font_size="0.6875rem",
+                        color=TEXTO_HOME_MAS_SUAVE,
+                        line_height="1.2",
+                    ),
+                    spacing="0",
+                    align="start",
+                    flex="1",
+                    min_width="0",
+                ),
+                rx.icon(
+                    "arrow-up-right",
+                    size=14,
+                    color=TEXTO_HOME_MAS_SUAVE,
+                    flex_shrink="0",
+                ),
+                align="center",
+                gap="0.625rem",
+                width="100%",
+            ),
+            width="100%",
+            padding="0.5rem",
+            cursor="pointer",
+            background=FONDO_HOME_CARD,
+            backdrop_filter="blur(12px)",
+            border=f"1px solid {BORDE_HOME_SUAVE}",
+            transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            _hover={
+                "transform": "translateY(-2px)",
+                "border_color": BORDE_HOME_AZUL,
+                "box_shadow": SOMBRA_HOVER_CARD_HOME,
+            },
+        ),
+        href=f"/carrera/{carrera['id']}",
+        text_decoration="none",
+        width="100%",
+    )
+
+
+# ======================================================================
+# Panel flotante completo
+# ======================================================================
+
+
+def panel_flotante_selector() -> rx.Component:
+    """Botón flotante que abre un panel con todas las carreras."""
+    return rx.box(
+        # Overlay
+        rx.cond(
+            EstadoInstitucional.mostrar_panel_flotante,
+            rx.box(
+                position="fixed",
+                top="0",
+                left="0",
+                right="0",
+                bottom="0",
+                background=rx.color_mode_cond(
+                    light="rgba(15, 23, 42, 0.4)",
+                    dark="rgba(0, 0, 0, 0.6)",
+                ),
+                backdrop_filter="blur(8px)",
+                z_index="998",
+                on_click=EstadoInstitucional.cerrar_panel_flotante,
+                cursor="pointer",
+            ),
+            rx.fragment(),
+        ),
+        # Botón flotante
+        contenedor_clicable(
+            rx.icon("layout-grid", size=22, color="white"),
+            position="fixed",
+            bottom="2rem",
+            right="2rem",
+            height=TAMANO_BOTON_FLOTANTE,
+            width=TAMANO_BOTON_FLOTANTE,
+            border_radius=RADIO_PASTILLA,
+            background=AZUL_MARINO_NEON,
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            box_shadow=rx.color_mode_cond(
+                light=f"0 0 30px {AZUL_MARINO_NEON}50",
+                dark=f"0 0 40px {AZUL_MARINO_NEON}80",
+            ),
+            z_index="999",
+            transition="all 0.3s",
+            al_hacer_clic=EstadoInstitucional.alternar_panel_flotante,
+            _hover={
+                "transform": "scale(1.1)",
+                "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
+            },
+        ),
+        # Panel desplegable
+        rx.cond(
+            EstadoInstitucional.mostrar_panel_flotante,
+            rx.box(
+                rx.vstack(
+                    # Cabecera
+                    rx.flex(
+                        rx.vstack(
+                            rx.text(
+                                "Elige una carrera",
+                                font_size="1rem",
+                                font_weight="800",
+                                color=TEXTO_HOME_PRINCIPAL,
+                                line_height="1.2",
+                                letter_spacing="-0.02em",
+                            ),
+                            rx.text(
+                                "Accede rápido al detalle",
+                                font_size="0.75rem",
+                                color=TEXTO_HOME_MAS_SUAVE,
+                                line_height="1.3",
+                            ),
+                            spacing="0",
+                            align="start",
+                        ),
+                        contenedor_clicable(
+                            rx.icon(
+                                "x",
+                                size=18,
+                                color=TEXTO_HOME_MAS_SUAVE,
+                            ),
+                            padding="0.5rem",
+                            border_radius=RADIO_MEDIO,
+                            al_hacer_clic=(
+                                EstadoInstitucional.cerrar_panel_flotante
+                            ),
+                            _hover={
+                                "background": FONDO_AZUL_SUAVE,
+                                "color": TEXTO_HOME_PRINCIPAL,
+                            },
+                        ),
+                        align="center",
+                        justify="between",
+                        width="100%",
+                        margin_bottom="1rem",
+                    ),
+                    # Grid de cards — ✅ CORREGIDO
+                    rx.grid(
+                        rx.foreach(
+                            EstadoInstitucional.carreras,
+                            _card_carrera_panel,
+                        ),
+                        columns="1",   # ← ✅ prop cerrado, valor único
+                        spacing="3",
+                        width="100%",
+                    ),
+                    spacing="2",
+                    width="100%",
+                ),
+                # Estilos del panel
+                position="fixed",
+                bottom=POSICION_PANEL_FLOTANTE,
+                right="2rem",
+                width=ANCHO_PANEL_FLOTANTE,
+                max_height="70vh",
+                overflow_y="auto",
+                padding=PADDING_PANEL_FLOTANTE,
+                border_radius=RADIO_EXTRA_GRANDE,
+                background=FONDO_HOME_CARD,
+                border=f"1px solid {BORDE_HOME_AZUL}",
+                box_shadow=rx.color_mode_cond(
+                    light=(
+                        f"0 30px 60px -15px rgba(0, 0, 0, 0.15), "
+                        f"0 0 40px -10px {AZUL_MARINO_NEON}20"
+                    ),
+                    dark=(
+                        f"0 30px 60px -15px rgba(0, 0, 0, 0.5), "
+                        f"0 0 40px -10px {AZUL_MARINO_NEON}40"
+                    ),
+                ),
+                z_index="999",
+                animation="deslizar_desde_abajo 0.3s ease-out",
+            ),
+            rx.fragment(),
+        ),
+    )
+
+
+# ======================================================================
+# EXPORTS
+# ======================================================================
+
+__all__ = ["panel_flotante_selector"]
