@@ -1,22 +1,64 @@
 """
-Sección multimedia institucional del home — estilo Neon adaptativo.
+Sección multimedia institucional del home — estilo Neon.com.
+
+Diseño
+------
+Refactorizado al estilo de Neon.com:
+
+1. **Video desnudo**: sin borde, sin glow, solo el radius.
+2. **Layout 60/40**: video dominante (izq), texto (der).
+3. **Sin badges redundantes**: un solo badge "PLATAFORMA OFICIAL".
+4. **CTA alineado**: botón `fit-content`, no full-width.
+5. **Redes sociales outline**: botones limpios al pie.
+6. **Espaciado generoso**: coherente con el resto del home.
+7. **Fondo del video consistente**: negro puro en ambos modos.
 
 Contenido
 ---------
-- Video institucional en formato 16:9.
-- Bloque de texto describiendo la plataforma de seguimiento académico.
-- Enlaces a redes sociales del instituto.
+1. Video institucional (columna izquierda, 60%).
+2. Bloque de plataforma académica (columna derecha, 40%):
+   - Badge "PLATAFORMA OFICIAL".
+   - Título.
+   - Descripción.
+   - CTA "Crear Cuenta Institucional".
+3. Fila de redes sociales (pie, full width).
 
 Sistema de color
 ----------------
 ✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
 
-- Acentos: `AZUL_MARINO_NEON` en ambos modos.
-- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE` / `TEXTO_HOME_SUAVE`.
-- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
-- Fondo tintado: `FONDO_AZUL_SUAVE`.
-- Título con gradiente: `GRADIENTE_TEXTO_HOME`.
-- Redes sociales: colores corporativos oficiales (hex fijos).
+Nota técnica: ¿POR QUÉ EL VIDEO SIN BORDE?
+-----------------------------------------
+El video en sí ya es un elemento visual fuerte (contiene imagen
+en movimiento). Añadirle:
+
+- Borde (`border`).
+- Sombra (`box_shadow`).
+- Padding interno (`padding`).
+- Fondo de card.
+
+...es **ruido visual**. El video debe respirar por sí solo.
+
+En Neon.com, los videos y diagramas no tienen card wrapper: son el
+elemento mismo.
+
+Nota técnica: REDES SOCIALES EN OUTLINE
+---------------------------------------
+En el diseño original, las redes eran **botones con fondo del color
+corporativo** (rojo YouTube, azul Facebook, etc.). Esto:
+
+- Introduce 6 colores diferentes al diseño.
+- Compite visualmente con el video.
+- No es coherente con el minimalismo de Neon.
+
+En la nueva versión, los botones son **outline** con:
+- Fondo transparente.
+- Icono en el color corporativo (mantiene identidad).
+- Texto en color principal.
+- Hover: borde del color de la red.
+
+Resultado: identidad preservada, pero sin ruido.
 """
 
 from __future__ import annotations
@@ -25,19 +67,13 @@ import reflex as rx
 
 from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_AZUL,
     BORDE_HOME_MEDIO,
-    BORDE_HOME_SUAVE,
-    FONDO_AZUL_SUAVE,
-    GRADIENTE_TEXTO_HOME,
+    COLOR_DIVISOR,
     TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
-    TEXTO_HOME_SUAVE,
 )
 from ...infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
-    RADIO_MEDIO,
     RADIO_PASTILLA,
 )
 from ...infraestructura.constantes.identidad import (
@@ -50,8 +86,9 @@ from ...infraestructura.constantes.identidad import (
 # Constantes locales
 # ======================================================================
 
-ANCHO_MAXIMO_SECCION: str = "72rem"
-PADDING_LATERAL_SECCION: str = "1.5rem"
+ANCHO_MAXIMO_SECCION: str = "80rem"
+PADDING_LATERAL_SECCION: str = "2rem"
+PADDING_VERTICAL_SECCION: str = "6rem"
 
 
 # ======================================================================
@@ -61,10 +98,13 @@ PADDING_LATERAL_SECCION: str = "1.5rem"
 
 def _video_institucional() -> rx.Component:
     """
-    Video institucional en formato 16:9 con estilo Neon adaptativo.
+    Video institucional en formato 16:9 — estilo desnudo.
 
-    El fondo del reproductor es oscuro incluso en light mode, porque
-    el contenido del video suele ser oscuro y necesita contraste.
+    Sin borde, sin glow, sin padding. Solo el video con su radius.
+
+    El fondo del contenedor es negro puro en ambos modos, porque
+    el video en sí suele ser oscuro. Si el video no carga, se ve
+    un fondo oscuro elegante.
     """
     return rx.box(
         rx.aspect_ratio(
@@ -76,175 +116,170 @@ def _video_institucional() -> rx.Component:
                 auto_play=False,
                 loop=False,
                 muted=False,
-                border_radius=RADIO_GRANDE,
+                border_radius=RADIO_EXTRA_GRANDE,
             ),
             ratio=16 / 9,
         ),
         width="100%",
         border_radius=RADIO_EXTRA_GRANDE,
         overflow="hidden",
+        background="#0a0a0a",
+        # Sombra muy sutil para separar del fondo
         box_shadow=rx.color_mode_cond(
-            light=(
-                f"0 20px 40px -10px rgba(0, 0, 0, 0.15), "
-                f"0 0 40px -10px {AZUL_MARINO_NEON}40"
-            ),
-            dark=(
-                f"0 20px 40px -10px rgba(0, 0, 0, 0.5), "
-                f"0 0 40px -10px {AZUL_MARINO_NEON}80"
-            ),
+            light="0 4px 20px -4px rgba(0, 0, 0, 0.15)",
+            dark="0 4px 20px -4px rgba(0, 0, 0, 0.5)",
         ),
-        border=f"1px solid {BORDE_HOME_SUAVE}",
-        background="#1a1a20",
-        padding="0.25rem",
-        transition="all 0.3s",
-        _hover={
-            "border_color": BORDE_HOME_AZUL,
-            "box_shadow": rx.color_mode_cond(
-                light=(
-                    f"0 20px 40px -10px rgba(0, 0, 0, 0.15), "
-                    f"0 0 60px -10px {AZUL_MARINO_NEON}80"
-                ),
-                dark=(
-                    f"0 20px 40px -10px rgba(0, 0, 0, 0.5), "
-                    f"0 0 60px -10px {AZUL_MARINO_NEON}cc"
-                ),
-            ),
-        },
     )
 
 
 # ======================================================================
-# Bloque de plataforma académica
+# Badge de plataforma
 # ======================================================================
 
 
 def _badge_plataforma() -> rx.Component:
-    """Badge "PLATAFORMA OFICIAL" con fondo azul marino neon."""
+    """
+    Badge "PLATAFORMA OFICIAL" en outline sutil.
+
+    Sin glow, sin fondo sólido. Solo texto + icono con borde.
+    """
     return rx.flex(
-        rx.icon("award", size=12, color="white"),
+        rx.icon("award", size=12, color=AZUL_MARINO_NEON),
         rx.text(
             "PLATAFORMA OFICIAL",
-            font_size="0.625rem",
-            font_weight="800",
-            color="white",
-            letter_spacing="0.1em",
+            font_size="0.6875rem",
+            font_weight="700",
+            color=AZUL_MARINO_NEON,
+            letter_spacing="0.15em",
+            text_transform="uppercase",
         ),
         align="center",
-        gap="0.375rem",
-        background=AZUL_MARINO_NEON,
+        gap="0.5rem",
         padding="0.375rem 0.75rem",
         border_radius=RADIO_PASTILLA,
+        background="transparent",
+        border=f"1px solid {AZUL_MARINO_NEON}",
         width="fit-content",
-        box_shadow=f"0 0 20px {AZUL_MARINO_NEON}80",
     )
 
 
-def _badge_historial() -> rx.Component:
-    """Badge "Historial Académico Completo" con glassmorphism."""
-    return rx.flex(
-        rx.icon("graduation-cap", size=12, color=AZUL_MARINO_NEON),
-        rx.text(
-            "Historial Académico Completo",
-            font_size="0.8125rem",
-            font_weight="600",
-            color=TEXTO_HOME_SUAVE,
-        ),
-        align="center",
-        gap="0.375rem",
-        padding="0.5rem 0.875rem",
-        border_radius=RADIO_PASTILLA,
-        background=FONDO_AZUL_SUAVE,
-        border=f"1px solid {BORDE_HOME_AZUL}",
-        backdrop_filter="blur(12px)",
-        width="fit-content",
-    )
+# ======================================================================
+# CTA crear cuenta
+# ======================================================================
 
 
 def _cta_crear_cuenta() -> rx.Component:
-    """Botón CTA "Crear Cuenta Institucional" con glow azul marino."""
+    """
+    CTA "Crear Cuenta Institucional" — estilo Neon.com.
+
+    Fondo azul marino sólido, sin glow. Ancho `fit-content`.
+    """
     return rx.button(
-        rx.icon("user-plus", size=18),
-        rx.text(
-            "Crear Cuenta Institucional",
-            as_="span",
-            font_weight="700",
-        ),
+        rx.text("Crear cuenta institucional", as_="span", font_weight="600"),
+        rx.icon("arrow-right", size=16),
         size="3",
-        width="100%",
-        max_width="24rem",
         cursor="pointer",
         background=AZUL_MARINO_NEON,
         color="white",
-        border_radius=RADIO_MEDIO,
-        box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}80",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.9375rem",
+        padding="0.875rem 1.5rem",
+        width="fit-content",
         transition="all 0.2s",
         _hover={
             "transform": "translateY(-2px)",
-            "box_shadow": f"0 15px 35px -5px {AZUL_MARINO_NEON}cc",
+            "filter": "brightness(1.08)",
         },
     )
 
 
+# ======================================================================
+# Info de la plataforma
+# ======================================================================
+
+
 def _info_plataforma() -> rx.Component:
-    """Bloque de texto de la plataforma de seguimiento académico."""
+    """
+    Bloque de texto que describe la plataforma académica.
+
+    Estructura:
+    - Badge "PLATAFORMA OFICIAL".
+    - Título.
+    - Descripción.
+    - CTA.
+    """
     return rx.vstack(
+        # ─── Badge ─────────────────────────────────────────────
         _badge_plataforma(),
+        # ─── Título ────────────────────────────────────────────
         rx.heading(
             "Plataforma web de ",
             rx.text.span(
                 "seguimiento académico",
-                background=GRADIENTE_TEXTO_HOME,
-                background_clip="text",
-                color="transparent",
-                webkit_background_clip="text",
+                color=AZUL_MARINO_NEON,
             ),
             "",
-            size="7",
-            font_weight="900",
-            letter_spacing="-0.03em",
+            as_="h3",
+            font_size=["1.5rem", "1.75rem", "2rem"],
+            font_weight="800",
+            letter_spacing="-0.02em",
             line_height="1.15",
             color=TEXTO_HOME_PRINCIPAL,
+            margin_top="1rem",
         ),
+        # ─── Descripción ───────────────────────────────────────
         rx.text(
-            "Accede a tu historial académico, calificaciones, asistencia y "
-            "materiales de estudio desde cualquier dispositivo. Inicia sesión "
-            "con tu cuenta institucional y mantén el control total de tu "
-            "formación técnica.",
-            font_size="1rem",
+            "Accede a tu historial académico, calificaciones, "
+            "asistencia y materiales de estudio desde cualquier "
+            "dispositivo. Inicia sesión con tu cuenta institucional "
+            "y mantén el control total de tu formación técnica.",
+            font_size="0.9375rem",
             line_height="1.7",
             color=TEXTO_HOME_MAS_SUAVE,
-            max_width="36rem",
+            max_width="32rem",
+            margin_top="0.5rem",
         ),
-        _badge_historial(),
-        _cta_crear_cuenta(),
+        # ─── CTA ───────────────────────────────────────────────
+        rx.box(
+            _cta_crear_cuenta(),
+            margin_top="1.5rem",
+        ),
         align="start",
-        spacing="4",
+        spacing="0",
         width="100%",
     )
 
 
 # ======================================================================
-# Redes sociales
+# Redes sociales (outline)
 # ======================================================================
 
 
-def _tarjeta_red_social(red: RedSocial) -> rx.Component:
+def _boton_red_social(red: RedSocial) -> rx.Component:
     """
-    Botón de red social con el color corporativo oficial.
+    Botón de red social en estilo outline.
 
-    ⚠️ Los colores de marca NO cambian con el modo.
+    Estructura:
+    - Icono en el color corporativo de la red.
+    - Texto en color principal.
+    - Fondo transparente.
+    - Hover: borde + fondo sutil del color corporativo.
 
     Args:
         red: `RedSocial` con `nombre`, `icono`, `url`, `color`.
     """
     return rx.link(
         rx.flex(
-            rx.icon(red["icono"], size=18, color="white"),
+            rx.icon(
+                red["icono"],
+                size=16,
+                color=red["color"],
+            ),
             rx.text(
                 red["nombre"],
                 font_size="0.8125rem",
                 font_weight="600",
-                color="white",
+                color=TEXTO_HOME_PRINCIPAL,
             ),
             align="center",
             gap="0.5rem",
@@ -252,45 +287,49 @@ def _tarjeta_red_social(red: RedSocial) -> rx.Component:
         href=red["url"],
         is_external=True,
         text_decoration="none",
-        padding="0.625rem 1rem",
-        border_radius=RADIO_MEDIO,
-        background=red["color"],
-        box_shadow=f"0 4px 12px -2px {red['color']}80",
+        padding="0.5rem 0.875rem",
+        border_radius=RADIO_PASTILLA,
+        background="transparent",
+        border=f"1px solid {BORDE_HOME_MEDIO}",
         transition="all 0.2s",
         aria_label=f"Visitar {red['nombre']}",
         _hover={
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 8px 20px -4px {red['color']}cc",
-            "filter": "brightness(1.1)",
+            "border_color": red["color"],
+            "background": f"{red['color']}10",
         },
     )
 
 
-def _redes_sociales_instituto() -> rx.Component:
-    """Sección con todas las redes sociales del instituto."""
-    return rx.vstack(
-        rx.flex(
-            rx.icon("share-2", size=18, color=AZUL_MARINO_NEON),
-            rx.text(
-                "Síguenos en redes sociales",
-                font_size="0.875rem",
-                font_weight="700",
-                letter_spacing="0.1em",
-                text_transform="uppercase",
-                color=TEXTO_HOME_PRINCIPAL,
-            ),
-            align="center",
-            gap="0.5rem",
+def _fila_redes_sociales() -> rx.Component:
+    """
+    Fila de redes sociales al pie de la sección.
+
+    Estructura:
+    - Etiqueta "SÍGUENOS".
+    - Fila de botones outline.
+    """
+    return rx.flex(
+        # ─── Etiqueta ──────────────────────────────────────────
+        rx.text(
+            "SÍGUENOS",
+            font_size="0.6875rem",
+            font_weight="700",
+            color=TEXTO_HOME_MAS_SUAVE,
+            letter_spacing="0.15em",
+            text_transform="uppercase",
+            flex_shrink="0",
         ),
+        # ─── Botones ───────────────────────────────────────────
         rx.flex(
-            *[_tarjeta_red_social(red) for red in REDES_SOCIALES],
-            gap="0.75rem",
+            *[_boton_red_social(red) for red in REDES_SOCIALES],
+            gap="0.5rem",
             flex_wrap="wrap",
-            justify="center",
+            align="center",
         ),
         align="center",
-        spacing="4",
+        gap=["1.5rem", "2rem"],
         width="100%",
+        flex_wrap="wrap",
     )
 
 
@@ -301,52 +340,71 @@ def _redes_sociales_instituto() -> rx.Component:
 
 def seccion_multimedia_institucional() -> rx.Component:
     """
-    Sección completa con:
-    - Video institucional (columna izquierda).
-    - Info de la plataforma académica (columna derecha).
-    - Redes sociales (abajo, full width).
+    Sección completa del bloque multimedia institucional.
 
-    Layout:
-    - Desktop: 60% video / 40% info.
+    Estructura:
+    1. Video institucional (60%) + Info plataforma (40%).
+    2. Separador horizontal.
+    3. Fila de redes sociales.
+
+    Layout responsive:
+    - Desktop: video 60% / info 40%.
     - Tablet/Móvil: stack vertical.
     """
     return rx.box(
         rx.vstack(
             # ==========================================================
-            # Fila principal: video + info
+            # Fila principal: video + info plataforma
             # ==========================================================
             rx.flex(
+                # ─── Video (60%) ────────────────────────────────
                 rx.box(
                     _video_institucional(),
-                    width=["100%", "100%", "100%", "60%"],
+                    width=rx.breakpoints(
+                        initial="100%",
+                        lg="60%",
+                    ),
+                    flex_shrink="0",
                 ),
+                # ─── Info plataforma (40%) ──────────────────────
                 rx.box(
                     _info_plataforma(),
-                    padding=["0", "0", "0", "0 0 0 2rem"],
-                    width=["100%", "100%", "100%", "40%"],
+                    width=rx.breakpoints(
+                        initial="100%",
+                        lg="40%",
+                    ),
+                    flex_shrink="0",
                 ),
+                # ─── Layout responsive ──────────────────────────
+                direction=rx.breakpoints(
+                    initial="column",
+                    lg="row",
+                ),
+                align="start",
+                justify="between",
+                gap=["3rem", "3rem", "4rem"],
                 width="100%",
-                justify="center",
-                align="center",
-                flex_direction=rx.breakpoints(initial="column", lg="row"),
-                gap=["2rem", "2rem", "2rem", "3rem"],
             ),
             # ==========================================================
-            # Redes sociales
+            # Separador
             # ==========================================================
             rx.box(
-                _redes_sociales_instituto(),
-                padding_top="3rem",
-                border_top=f"1px solid {BORDE_HOME_SUAVE}",
+                height="1px",
                 width="100%",
+                background=COLOR_DIVISOR,
+                margin_y=["3rem", "4rem"],
             ),
-            spacing="6",
+            # ==========================================================
+            # Fila de redes sociales
+            # ==========================================================
+            _fila_redes_sociales(),
+            spacing="0",
             width="100%",
         ),
         width="100%",
         max_width=ANCHO_MAXIMO_SECCION,
         margin="0 auto",
-        padding=f"4rem {PADDING_LATERAL_SECCION}",
+        padding=f"{PADDING_VERTICAL_SECCION} {PADDING_LATERAL_SECCION}",
     )
 
 

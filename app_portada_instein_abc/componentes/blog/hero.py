@@ -10,7 +10,6 @@ from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
     COLOR_ACENTO_FONDO,
-    COLOR_ACENTO_TEXTO,
     COLOR_TEXTO_CUERPO,
     COLOR_TEXTO_PRINCIPAL,
 )

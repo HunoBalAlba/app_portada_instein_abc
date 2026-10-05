@@ -55,7 +55,6 @@ Los siguientes keyframes son usados por componentes:
 
 from __future__ import annotations
 
-import reflex as rx
 
 from ..dominio.servicios.kepler import (
     DefinicionKeyframe,
@@ -161,7 +160,24 @@ KEYFRAMES_UI: dict = {
             "box-shadow": "0 0 0 0 rgba(0, 144, 255, 0)",
         },
     },
+   
+    # ==================================================================
+    # Marquee horizontal infinito (para el carrusel de iconos)
+    # ==================================================================
+    "@keyframes marquee_horizontal": {
+        "0%": {"transform": "translateX(0%)"},
+        "100%": {"transform": "translateX(-50%)"},
+    },
+
+    # ==================================================================
+    # Pulso de columnas verticales (para las barras tipo datacenter)
+    # ==================================================================
+    "@keyframes pulso_columna": {
+        "0%, 100%": {"opacity": "0.4"},
+        "50%": {"opacity": "1"},
+    },
 }
+
 
 
 # ======================================================================

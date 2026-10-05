@@ -1,18 +1,21 @@
 """
-CTA final del Calendario Académico.
+CTA final del Calendario Académico — estilo Neon.com.
+
+Diseño UX
+---------
+- CTA simple tipo "¿Tienes dudas? **Contáctanos →**"
+- Sin botón grande con glow.
+- Coherente con los CTA finales del resto del sitio.
 """
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
-)
-from ...infraestructura.constantes.dimensiones import (
-    RADIO_PASTILLA,
+    COLOR_DIVISOR,
+    TEXTO_HOME_MAS_SUAVE,
 )
 
 
@@ -28,54 +31,44 @@ def cta_calendario() -> rx.Component:
     """
     Bloque CTA final hacia /contacto.
 
-    Estilo Neon adaptativo:
-    - Título grande centrado.
-    - Subtítulo descriptivo.
-    - Botón primario "Contactar ahora" con azul marino.
+    Estilo Neon.com:
+    - Enlace simple con flecha.
+    - Sin botón grande con glow.
+    - Border_top sutil.
 
     Returns:
         Bloque CTA completo.
     """
     return rx.box(
-        rx.vstack(
-            rx.heading(
-                "¿Tienes dudas sobre el calendario?",
-                size="6",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
-            ),
+        rx.flex(
             rx.text(
-                "Contáctanos para más información sobre fechas, "
-                "inscripciones y actividades académicas.",
-                font_size="0.9375rem",
-                color=COLOR_TEXTO_SECUNDARIO,
-                text_align="center",
-                max_width="36rem",
+                "¿Tienes dudas sobre el calendario?",
+                font_size="1rem",
+                color=TEXTO_HOME_MAS_SUAVE,
             ),
             rx.link(
-                rx.icon("message-circle", size=18),
-                rx.text("Contactar ahora", as_="span", font_weight="700"),
+                rx.text(
+                    "Contáctanos",
+                    font_size="1rem",
+                    font_weight="700",
+                    color=AZUL_MARINO_NEON,
+                ),
+                rx.icon("arrow-right", size=16, color=AZUL_MARINO_NEON),
                 href="/contacto",
                 text_decoration="none",
                 display="inline-flex",
                 align_items="center",
-                gap="0.5rem",
-                background=AZUL_MARINO_NEON,
-                color="white",
-                padding="0.875rem 1.75rem",
-                border_radius=RADIO_PASTILLA,
-                font_size="0.9375rem",
-                margin_top="1.5rem",
-                box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}",
-                transition="all 0.2s",
-                _hover={
-                    "transform": "translateY(-2px)",
-                    "filter": "brightness(1.1)",
-                },
+                gap="0.375rem",
+                transition="gap 0.2s",
+                _hover={"gap": "0.625rem"},
             ),
             align="center",
-            spacing="2",
+            justify="start",
+            gap="0.5rem",
+            flex_wrap="wrap",
+            width="100%",
+            padding_top="3rem",
+            border_top=f"1px solid {COLOR_DIVISOR}",
         ),
         max_width=ANCHO_MAXIMO,
         margin="0 auto",

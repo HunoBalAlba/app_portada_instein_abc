@@ -1,44 +1,42 @@
 """
-Pie de página institucional — estilo Neon adaptativo (dark/light).
+Pie de página institucional — estilo Neon.com (reingeniería UX).
+
+Filosofía
+---------
+El footer NO es una repetición del header. Es el **último punto de
+contacto** con el usuario. Debe:
+
+1. **Acceso rápido** a acciones clave (WhatsApp, ubicación, admisión).
+2. **Captar leads** (newsletter con propuesta de valor).
+3. **Navegación secundaria** (enlaces con iconos descriptivos).
+4. **Cerrar con CTA** (empujar a la acción).
 
 Estructura
 ----------
-1. **Bloque superior**: brand (logo + tagline + redes) + newsletter.
-2. **Sección de feedback**: "¿Te resultó útil?" + Sí/No + Reportar.
-3. **Grid de enlaces**: 4 columnas (Plataforma, Institucional,
-   Recursos, Contacto).
-4. **Barra inferior**: copyright + links legales + estado del servidor.
+1. **Acceso rápido** (3 tarjetas: WhatsApp, Ubicación, Admisión).
+2. **Newsletter + Enlaces** (2 columnas).
+3. **Feedback discreto** ("¿Te resultó útil?").
+4. **Barra inferior** (copyright + legales + redes).
 
 Sistema de color
 ----------------
-✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
 
-- Fondo: `FONDO_HOME` (light: claro, dark: oscuro).
-- Acentos: azul marino neon (`AZUL_MARINO_NEON`) en AMBOS modos.
-- Textos: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_SUAVE` / `BORDE_HOME_MEDIO` / `BORDE_HOME_AZUL`.
-- Redes sociales: colores corporativos oficiales (hex fijos),
-  porque son colores de marca de terceros y no deben cambiar con
-  el tema.
-- Estado del servidor: verde semántico con pulse.
+Nota técnica: `spacing` en `rx.grid` NO acepta unidades CSS
+----------------------------------------------------------
+`spacing` en `rx.grid` y `rx.flex` de Radix Themes es un prop
+CERRADO que acepta solo:
 
-Nota técnica: TOGGLE DE COLOR MODE
-----------------------------------
-El toggle está en la **barra de navegación superior** (arriba a la
-derecha) para que sea más visible. El footer NO duplica el toggle.
+- `"0"`, `"1"`, `"2"`, ..., `"9"` (valores discretos).
+- `rx.breakpoints(initial="2", lg="4")` (breakpoints con esos
+  mismos valores).
 
-Nota técnica: `ENLACES_FOOTER` es CONSTANTE
--------------------------------------------
-`ENLACES_FOOTER` es una constante de módulo (no una función que
-devuelve lista) porque no depende del State. Esto permite:
+❌ NO acepta unidades CSS como `"3rem"`, `"4rem"`.
+❌ NO acepta listas `["3rem", "4rem", "6rem"]`.
 
-- Reutilizar la constante en tests.
-- Evitar reconstruir la lista en cada render del footer.
-
-Nota técnica: SEMÁNTICA HTML5
------------------------------
-El footer se renderiza con `role="contentinfo"` en el componente
-raíz para que lectores de pantalla lo identifiquen correctamente.
+Para separación CSS personalizada, usar `gap` (prop abierto)
+en lugar de `spacing`.
 """
 
 from __future__ import annotations
@@ -52,27 +50,27 @@ from ...componentes.base.primitivos import (
 )
 from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_AZUL,
     BORDE_HOME_MEDIO,
     BORDE_HOME_SUAVE,
-    FONDO_AZUL_MUY_SUAVE,
+    COLOR_DIVISOR,
     FONDO_HOME,
+    FONDO_HOME_CARD,
     TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
     TEXTO_HOME_SUAVE,
 )
 from ...infraestructura.constantes.dimensiones import (
+    RADIO_GRANDE,
     RADIO_MEDIO,
-    RADIO_PASTILLA,
 )
 from ...infraestructura.constantes.identidad import (
     ANIO_COPYRIGHT,
-    DESCRIPCION_INSTITUCIONAL,
     EMAIL_CONTACTO,
     NOMBRE_INSTITUTO,
     REDES_SOCIALES,
     RedSocial,
     TELEFONO_PRINCIPAL,
+    UBICACION_FISICA,
     WHATSAPP_URL,
 )
 
@@ -81,21 +79,14 @@ from ...infraestructura.constantes.identidad import (
 # Constantes locales
 # ======================================================================
 
-ANCHO_MAXIMO_FOOTER: str = "72rem"
-"""Ancho máximo del contenido del footer."""
-
+ANCHO_MAXIMO_FOOTER: str = "80rem"
 PADDING_LATERAL_FOOTER: str = "1.5rem"
-"""Padding lateral del footer."""
-
-COLOR_VERDE_ACTIVO: str = "#22c55e"
-"""Color del punto verde semántico (activo). Mismo en ambos modos."""
 
 RUTA_REPORTAR_PROBLEMA: str = "/contacto"
-"""Ruta del enlace "Reportar un problema"."""
 
 
 # ======================================================================
-# Tipos para la estructura de enlaces
+# Tipos
 # ======================================================================
 
 
@@ -104,6 +95,7 @@ class ItemEnlaceFooter(TypedDict):
 
     etiqueta: str
     ruta: str
+    icono: str
     externo: bool
 
 
@@ -114,17 +106,71 @@ class ColumnaFooter(TypedDict):
     items: list[ItemEnlaceFooter]
 
 
+class AccionRapida(TypedDict):
+    """Acción de acceso rápido."""
+
+    icono: str
+    titulo: str
+    descripcion: str
+    ruta: str
+    externo: bool
+
+
 # ======================================================================
-# Estructura de los enlaces del footer (constante de módulo)
+# Datos: acciones rápidas
+# ======================================================================
+
+ACCIONES_RAPIDAS: list[AccionRapida] = [
+    {
+        "icono": "message-circle",
+        "titulo": "WhatsApp",
+        "descripcion": "Respuesta en minutos",
+        "ruta": WHATSAPP_URL,
+        "externo": True,
+    },
+    {
+        "icono": "map-pin",
+        "titulo": "Ubicación",
+        "descripcion": UBICACION_FISICA,
+        "ruta": "/contacto",
+        "externo": False,
+    },
+    {
+        "icono": "graduation-cap",
+        "titulo": "Admisión",
+        "descripcion": "Inscripciones abiertas",
+        "ruta": "/admision",
+        "externo": False,
+    },
+]
+
+
+# ======================================================================
+# Datos: enlaces del footer (con iconos)
 # ======================================================================
 
 ENLACES_FOOTER: list[ColumnaFooter] = [
     {
         "titulo": "Plataforma",
         "items": [
-            {"etiqueta": "Inicio", "ruta": "/", "externo": False},
-            {"etiqueta": "Carreras", "ruta": "/carreras", "externo": False},
-            {"etiqueta": "Contacto", "ruta": "/contacto", "externo": False},
+            {
+                "etiqueta": "Inicio",
+                "ruta": "/",
+                "icono": "home",
+                "externo": False,
+            },
+            {
+                "etiqueta": "Carreras",
+                "ruta": "/carreras",
+                "icono": "graduation-cap",
+                "externo": False,
+            },
+            {
+                "etiqueta": "Contacto",
+                "ruta": "/contacto",
+                "icono": "map-pin",
+                "externo": False,
+            },
         ],
     },
     {
@@ -133,16 +179,19 @@ ENLACES_FOOTER: list[ColumnaFooter] = [
             {
                 "etiqueta": "Sobre nosotros",
                 "ruta": "/sobre-nosotros",
+                "icono": "users",
                 "externo": False,
             },
             {
                 "etiqueta": "Preguntas frecuentes",
                 "ruta": "/faq",
+                "icono": "circle-help",
                 "externo": False,
             },
             {
                 "etiqueta": "Calendario académico",
                 "ruta": "/calendario",
+                "icono": "calendar",
                 "externo": False,
             },
         ],
@@ -150,15 +199,22 @@ ENLACES_FOOTER: list[ColumnaFooter] = [
     {
         "titulo": "Recursos",
         "items": [
-            {"etiqueta": "Blog", "ruta": "/blog", "externo": False},
             {
-                "etiqueta": "Guía de admisión",
-                "ruta": "/admision",
+                "etiqueta": "Blog",
+                "ruta": "/blog",
+                "icono": "newspaper",
                 "externo": False,
             },
             {
-                "etiqueta": "Becas y reconocimientos",
+                "etiqueta": "Guía de admisión",
+                "ruta": "/admision",
+                "icono": "book-open",
+                "externo": False,
+            },
+            {
+                "etiqueta": "Becas",
                 "ruta": "/becas",
+                "icono": "trophy",
                 "externo": False,
             },
         ],
@@ -166,15 +222,22 @@ ENLACES_FOOTER: list[ColumnaFooter] = [
     {
         "titulo": "Contacto",
         "items": [
-            {"etiqueta": "WhatsApp", "ruta": WHATSAPP_URL, "externo": True},
+            {
+                "etiqueta": "WhatsApp",
+                "ruta": WHATSAPP_URL,
+                "icono": "message-circle",
+                "externo": True,
+            },
             {
                 "etiqueta": f"Tel: {TELEFONO_PRINCIPAL}",
                 "ruta": f"tel:+591{TELEFONO_PRINCIPAL}",
+                "icono": "phone",
                 "externo": True,
             },
             {
                 "etiqueta": EMAIL_CONTACTO,
                 "ruta": f"mailto:{EMAIL_CONTACTO}",
+                "icono": "mail",
                 "externo": True,
             },
         ],
@@ -183,150 +246,135 @@ ENLACES_FOOTER: list[ColumnaFooter] = [
 
 
 # ======================================================================
-# Brand block (logo + tagline + redes sociales)
+# Bloque: Acciones rápidas
 # ======================================================================
 
 
-def _logo_institucional_footer() -> rx.Component:
+def _tarjeta_accion_rapida(accion: AccionRapida) -> rx.Component:
     """
-    Logo textual del instituto con badge de gradiente azul marino.
+    Tarjeta de acción rápida (WhatsApp, Ubicación, Admisión).
 
-    ✅ ADAPTATIVO: el texto "INSTEIN" y el subtítulo cambian según el modo.
-    """
-    return rx.flex(
-        # --- Badge "I" con gradiente azul marino ---
-        rx.box(
-            rx.text(
-                "I",
-                font_size="1.125rem",
-                font_weight="900",
-                color="white",
-                line_height="1",
-            ),
-            height="2.25rem",
-            width="2.25rem",
-            border_radius=RADIO_MEDIO,
-            background=(
-                f"linear-gradient(135deg, {AZUL_MARINO_NEON} 0%, "
-                f"#1a237e 100%)"
-            ),
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            box_shadow=f"0 0 20px {AZUL_MARINO_NEON}80",
-            flex_shrink="0",
-        ),
-        # --- Texto INSTEIN + subtítulo ---
-        rx.vstack(
-            rx.text(
-                NOMBRE_INSTITUTO,
-                font_size="0.9375rem",
-                font_weight="900",
-                color=TEXTO_HOME_PRINCIPAL,
-                letter_spacing="0.1em",
-                line_height="1.1",
-            ),
-            rx.text(
-                "Instituto Técnico Integrado",
-                font_size="0.6875rem",
-                font_weight="500",
-                color=TEXTO_HOME_MAS_SUAVE,
-                line_height="1.2",
-            ),
-            spacing="0",
-            align="start",
-        ),
-        align="center",
-        gap="0.75rem",
-    )
+    Estructura:
+    - Icono pequeño.
+    - Título grande.
+    - Descripción corta.
 
-
-def _red_social_boton(red: RedSocial) -> rx.Component:
-    """
-    Botón de red social con el color corporativo oficial.
-
-    ⚠️ Los colores de marca de las redes NO cambian con el modo
-    (son colores oficiales de cada plataforma).
+    Estilo:
+    - Fondo plano (`FONDO_HOME_CARD`).
+    - Borde sutil.
+    - Hover: borde azul.
 
     Args:
-        red: `RedSocial` con `nombre`, `icono`, `url`, `color`.
+        accion: `AccionRapida` con `icono`, `titulo`, `descripcion`,
+            `ruta`, `externo`.
+
+    Returns:
+        Tarjeta clicable con la acción.
     """
-    return rx.link(
-        rx.icon(red["icono"], size=16, color="white"),
-        href=red["url"],
-        is_external=True,
+    return enlace_navegacion(
+        accion["ruta"],
+        rx.box(
+            rx.vstack(
+                # ─── Icono ───────────────────────────────────────
+                rx.icon(
+                    accion["icono"],
+                    size=20,
+                    color=AZUL_MARINO_NEON,
+                ),
+                # ─── Título ──────────────────────────────────────
+                rx.text(
+                    accion["titulo"],
+                    font_size="0.9375rem",
+                    font_weight="700",
+                    color=TEXTO_HOME_PRINCIPAL,
+                    line_height="1.3",
+                ),
+                # ─── Descripción ─────────────────────────────────
+                rx.text(
+                    accion["descripcion"],
+                    font_size="0.75rem",
+                    color=TEXTO_HOME_MAS_SUAVE,
+                    line_height="1.4",
+                ),
+                align="start",
+                spacing="1",
+                width="100%",
+            ),
+            padding="1.25rem",
+            border_radius=RADIO_GRANDE,
+            background=FONDO_HOME_CARD,
+            border=f"1px solid {BORDE_HOME_SUAVE}",
+            width="100%",
+            height="100%",
+            transition="all 0.2s",
+            _hover={
+                "border_color": AZUL_MARINO_NEON,
+                "transform": "translateY(-2px)",
+            },
+        ),
+        externo=accion["externo"],
         text_decoration="none",
-        height="2rem",
-        width="2rem",
-        border_radius=RADIO_MEDIO,
-        background=red["color"],
-        display="flex",
-        align_items="center",
-        justify_content="center",
-        transition="all 0.2s",
-        aria_label=f"Visitar {red['nombre']}",
-        _hover={
-            "transform": "translateY(-2px)",
-            "filter": "brightness(1.15)",
-        },
+        width="100%",
+        height="100%",
     )
 
 
-def _brand_block() -> rx.Component:
+def _bloque_acceso_rapido() -> rx.Component:
     """
-    Bloque de marca con logo + descripción + redes sociales.
+    Bloque de 3 tarjetas de acceso rápido.
 
-    ✅ ADAPTATIVO: la descripción cambia de color según el modo.
+    Layout:
+    - Móvil:    1 columna.
+    - Tablet:   3 columnas.
+    - Desktop:  3 columnas.
     """
     return rx.vstack(
-        _logo_institucional_footer(),
         rx.text(
-            DESCRIPCION_INSTITUCIONAL,
-            font_size="0.8125rem",
+            "Acceso rápido",
+            font_size="0.75rem",
+            font_weight="700",
             color=TEXTO_HOME_MAS_SUAVE,
-            line_height="1.6",
-            max_width="20rem",
+            letter_spacing="0.15em",
+            text_transform="uppercase",
+            margin_bottom="1.5rem",
         ),
-        rx.flex(
-            *[_red_social_boton(red) for red in REDES_SOCIALES],
-            gap="0.5rem",
-            flex_wrap="wrap",
-            margin_top="0.25rem",
+        rx.grid(
+            *[_tarjeta_accion_rapida(a) for a in ACCIONES_RAPIDAS],
+            columns=rx.breakpoints(initial="1", sm="3", lg="3"),
+            spacing="3",
+            width="100%",
         ),
         align="start",
-        spacing="3",
+        spacing="0",
         width="100%",
-        max_width="22rem",
+        margin_bottom="4rem",
     )
 
 
 # ======================================================================
-# Newsletter
+# Bloque: Newsletter
 # ======================================================================
 
 
 def _newsletter() -> rx.Component:
     """
-    Bloque de newsletter con input de email + botón suscribir.
-
-    ✅ ADAPTATIVO: input, textos y botón cambian según el modo.
-
-    Nota: en una implementación real, el input dispararía un evento
-    al backend para guardar el email. Por ahora es solo UI.
+    Bloque de newsletter con propuesta de valor.
     """
     return rx.vstack(
         rx.text(
-            "Recibe novedades",
-            font_size="0.875rem",
+            "Recibe fechas de inscripción antes que nadie",
+            font_size="1.125rem",
             font_weight="700",
             color=TEXTO_HOME_PRINCIPAL,
-            line_height="1.2",
+            line_height="1.3",
+            letter_spacing="-0.01em",
         ),
         rx.text(
-            "Noticias, fechas de inscripción y eventos del instituto.",
-            font_size="0.75rem",
+            "Te avisamos cuando se abran las inscripciones y "
+            "publicamos nuevos artículos. Sin spam.",
+            font_size="0.8125rem",
             color=TEXTO_HOME_MAS_SUAVE,
-            line_height="1.4",
+            line_height="1.5",
         ),
         rx.flex(
             rx.input(
@@ -336,121 +384,40 @@ def _newsletter() -> rx.Component:
                 width="100%",
                 flex="1",
                 min_width="0",
-                background=FONDO_AZUL_MUY_SUAVE,
+                background="transparent",
                 border=f"1px solid {BORDE_HOME_MEDIO}",
                 color=TEXTO_HOME_PRINCIPAL,
+                border_radius=RADIO_MEDIO,
                 _placeholder={"color": TEXTO_HOME_MAS_SUAVE},
                 _focus={
-                    "border_color": BORDE_HOME_AZUL,
+                    "border_color": AZUL_MARINO_NEON,
                     "box_shadow": f"0 0 0 1px {AZUL_MARINO_NEON}",
                 },
             ),
             rx.button(
-                rx.icon("send", size=14),
-                rx.text("Suscribir", as_="span"),
+                rx.icon("arrow-right", size=14),
                 size="2",
                 cursor="pointer",
                 flex_shrink="0",
                 background=AZUL_MARINO_NEON,
                 color="white",
                 border_radius=RADIO_MEDIO,
-                box_shadow=f"0 4px 12px -2px {AZUL_MARINO_NEON}40",
                 transition="all 0.2s",
-                _hover={
-                    "transform": "translateY(-1px)",
-                    "box_shadow": f"0 6px 16px -2px {AZUL_MARINO_NEON}cc",
-                },
+                _hover={"filter": "brightness(1.1)"},
             ),
             gap="0.5rem",
             width="100%",
             align="center",
+            margin_top="0.5rem",
         ),
         align="start",
-        spacing="2",
-        width="100%",
-        max_width="22rem",
-    )
-
-
-# ======================================================================
-# Sección de feedback ("¿Te resultó útil?")
-# ======================================================================
-
-
-def _seccion_feedback() -> rx.Component:
-    """
-    Sección con pregunta de feedback y botones Sí/No + reportar.
-
-    ✅ ADAPTATIVO: textos, link y borde cambian según el modo.
-
-    UX:
-    - Pregunta con texto destacado.
-    - Botones semánticos: verde para Sí, rojo para No.
-    - Link "Reportar un problema" con glassmorphism adaptativo.
-    - Borde inferior sutil que separa del grid de enlaces.
-
-    Nota: los botones Sí/No usan colores semánticos (verde/rojo),
-    NO el azul marino, porque representan estados del sistema.
-    """
-    return rx.flex(
-        rx.text(
-            "¿Te resultó útil esta página?",
-            font_weight="600",
-            font_size="0.875rem",
-            color=TEXTO_HOME_PRINCIPAL,
-        ),
-        rx.flex(
-            rx.button(
-                rx.icon("thumbs-up", size=14),
-                rx.text("Sí", as_="span"),
-                size="1",
-                variant="soft",
-                color_scheme="green",
-                cursor="pointer",
-            ),
-            rx.button(
-                rx.icon("thumbs-down", size=14),
-                rx.text("No", as_="span"),
-                size="1",
-                variant="soft",
-                color_scheme="red",
-                cursor="pointer",
-            ),
-            enlace_navegacion(
-                RUTA_REPORTAR_PROBLEMA,
-                rx.icon("message-square-warning", size=14),
-                rx.text("Reportar un problema", as_="span"),
-                display="inline-flex",
-                align_items="center",
-                gap="0.4rem",
-                padding="0.375rem 0.75rem",
-                border_radius=RADIO_MEDIO,
-                background=FONDO_AZUL_MUY_SUAVE,
-                border=f"1px solid {BORDE_HOME_SUAVE}",
-                color=TEXTO_HOME_SUAVE,
-                font_size="0.75rem",
-                font_weight="600",
-                transition="all 0.2s",
-                _hover={
-                    "background": FONDO_AZUL_MUY_SUAVE,
-                    "border_color": BORDE_HOME_MEDIO,
-                    "color": TEXTO_HOME_PRINCIPAL,
-                },
-            ),
-            gap="0.5rem",
-            align="center",
-            wrap="wrap",
-        ),
-        direction="column",
-        gap="0.75rem",
-        padding="2rem 0",
-        border_bottom=f"1px solid {BORDE_HOME_SUAVE}",
+        spacing="3",
         width="100%",
     )
 
 
 # ======================================================================
-# Columna individual de enlaces
+# Bloque: Columna individual de enlaces
 # ======================================================================
 
 
@@ -458,13 +425,10 @@ def _columna_enlaces(columna: ColumnaFooter) -> rx.Component:
     """
     Renderiza una columna del footer con su título y sus enlaces.
 
-    ✅ ADAPTATIVO: los textos y el hover cambian según el modo.
-
-    Args:
-        columna: `ColumnaFooter` con `titulo` e `items`.
+    Cada enlace lleva un icono descriptivo.
     """
     return rx.vstack(
-        # --- Título de la columna ---
+        # ─── Título de la columna ───────────────────────────────
         rx.text(
             columna["titulo"],
             font_size="0.75rem",
@@ -472,45 +436,240 @@ def _columna_enlaces(columna: ColumnaFooter) -> rx.Component:
             text_transform="uppercase",
             letter_spacing="0.1em",
             color=TEXTO_HOME_MAS_SUAVE,
-            margin_bottom="0.5rem",
+            margin_bottom="1rem",
         ),
-        # --- Enlaces ---
+        # ─── Enlaces con iconos ─────────────────────────────────
         rx.vstack(
             *[
                 enlace_navegacion(
                     item["ruta"],
-                    item["etiqueta"],
+                    rx.flex(
+                        rx.icon(
+                            item["icono"],
+                            size=14,
+                            color=TEXTO_HOME_MAS_SUAVE,
+                            flex_shrink="0",
+                        ),
+                        rx.text(
+                            item["etiqueta"],
+                            font_size="0.875rem",
+                            color=TEXTO_HOME_SUAVE,
+                            line_height="1.4",
+                        ),
+                        align="center",
+                        gap="0.625rem",
+                    ),
                     externo=item["externo"],
-                    font_size="0.875rem",
-                    color=TEXTO_HOME_SUAVE,
                     transition="color 0.2s",
                     _hover={"color": AZUL_MARINO_NEON},
                 )
                 for item in columna["items"]
             ],
-            gap="0.5rem",
+            gap="0.75rem",
             align="start",
             width="100%",
         ),
         align="start",
-        spacing="1",
+        spacing="0",
+        width="100%",
+    )
+
+
+def _grid_enlaces() -> rx.Component:
+    """
+    Grid de 4 columnas con los enlaces del footer.
+
+    ⚠️ `spacing` es prop cerrado (solo "0"-"9" o
+    `rx.breakpoints(...)` con esos valores). NO acepta unidades CSS.
+    """
+    return rx.grid(
+        *[_columna_enlaces(col) for col in ENLACES_FOOTER],
+        columns=rx.breakpoints(initial="2", sm="2", lg="4"),
+        spacing=rx.breakpoints(initial="4", lg="6"),
         width="100%",
     )
 
 
 # ======================================================================
-# Barra inferior con copyright y estado
+# Bloque: Newsletter + Enlaces (2 columnas)
+# ======================================================================
+
+
+def _bloque_newsletter_enlaces() -> rx.Component:
+    """
+    Bloque de newsletter (izquierda) + enlaces (derecha).
+
+    Layout:
+    - Desktop: newsletter 30% / enlaces 70%.
+    - Tablet/Móvil: stack vertical.
+    """
+    return rx.flex(
+        # ─── Newsletter (30%) ───────────────────────────────────
+        rx.box(
+            _newsletter(),
+            width=rx.breakpoints(
+                initial="100%",
+                lg="30%",
+            ),
+            flex_shrink="0",
+        ),
+        # ─── Enlaces (70%) ──────────────────────────────────────
+        rx.box(
+            _grid_enlaces(),
+            width=rx.breakpoints(
+                initial="100%",
+                lg="70%",
+            ),
+            flex_shrink="0",
+        ),
+        # ─── Layout responsive ──────────────────────────────────
+        direction=rx.breakpoints(
+            initial="column",
+            lg="row",
+        ),
+        align="start",
+        justify="between",
+        gap="4rem",
+        width="100%",
+        padding_y="4rem",
+        border_top=f"1px solid {COLOR_DIVISOR}",
+        border_bottom=f"1px solid {COLOR_DIVISOR}",
+    )
+
+
+# ======================================================================
+# Bloque: Feedback discreto
+# ======================================================================
+
+
+def _bloque_feedback() -> rx.Component:
+    """
+    Bloque de feedback discreto ("¿Te resultó útil?").
+    """
+    return rx.flex(
+        rx.text(
+            "¿Te resultó útil esta página?",
+            font_size="0.8125rem",
+            color=TEXTO_HOME_MAS_SUAVE,
+        ),
+        rx.flex(
+            rx.button(
+                rx.icon("thumbs-up", size=12),
+                rx.text("Sí", as_="span"),
+                size="1",
+                variant="soft",
+                color_scheme="green",
+                cursor="pointer",
+            ),
+            rx.button(
+                rx.icon("thumbs-down", size=12),
+                rx.text("No", as_="span"),
+                size="1",
+                variant="soft",
+                color_scheme="red",
+                cursor="pointer",
+            ),
+            gap="0.5rem",
+            align="center",
+        ),
+        enlace_navegacion(
+            RUTA_REPORTAR_PROBLEMA,
+            rx.text(
+                "Reportar un problema",
+                font_size="0.75rem",
+                font_weight="600",
+                color=TEXTO_HOME_MAS_SUAVE,
+            ),
+            rx.icon(
+                "arrow-up-right",
+                size=12,
+                color=TEXTO_HOME_MAS_SUAVE,
+            ),
+            display="inline-flex",
+            align_items="center",
+            gap="0.375rem",
+            text_decoration="none",
+            transition="color 0.2s",
+            _hover={"color": AZUL_MARINO_NEON},
+        ),
+        align="center",
+        justify="start",
+        gap="1.5rem",
+        flex_wrap="wrap",
+        padding_y="2rem",
+        width="100%",
+    )
+
+
+# ======================================================================
+# Bloque: Redes sociales
+# ======================================================================
+
+
+def _boton_red_social(red: RedSocial) -> rx.Component:
+    """
+    Botón de red social (outline, sin fondo de color).
+    """
+    return rx.link(
+        rx.icon(
+            red["icono"],
+            size=16,
+            color=red["color"],
+        ),
+        href=red["url"],
+        is_external=True,
+        text_decoration="none",
+        height="2.25rem",
+        width="2.25rem",
+        border_radius=RADIO_MEDIO,
+        background="transparent",
+        border=f"1px solid {BORDE_HOME_MEDIO}",
+        display="flex",
+        align_items="center",
+        justify_content="center",
+        transition="all 0.2s",
+        aria_label=f"Visitar {red['nombre']}",
+        _hover={
+            "border_color": red["color"],
+            "background": f"{red['color']}10",
+        },
+    )
+
+
+def _fila_redes_sociales() -> rx.Component:
+    """
+    Fila con todas las redes sociales del instituto.
+    """
+    return rx.flex(
+        rx.text(
+            "SÍGUENOS",
+            font_size="0.6875rem",
+            font_weight="700",
+            color=TEXTO_HOME_MAS_SUAVE,
+            letter_spacing="0.15em",
+            text_transform="uppercase",
+            flex_shrink="0",
+        ),
+        rx.flex(
+            *[_boton_red_social(red) for red in REDES_SOCIALES],
+            gap="0.5rem",
+            flex_wrap="wrap",
+            align="center",
+        ),
+        align="center",
+        gap="1.5rem",
+        flex_wrap="wrap",
+        width="100%",
+    )
+
+
+# ======================================================================
+# Bloque: Barra inferior (copyright)
 # ======================================================================
 
 
 def _enlace_legal(etiqueta: str, ruta: str) -> rx.Component:
-    """
-    Enlace legal pequeño en la barra inferior (adaptativo).
-
-    Args:
-        etiqueta: Texto visible.
-        ruta: URL de destino.
-    """
+    """Enlace legal pequeño en la barra inferior."""
     return enlace_navegacion(
         ruta,
         etiqueta,
@@ -521,65 +680,15 @@ def _enlace_legal(etiqueta: str, ruta: str) -> rx.Component:
     )
 
 
-def _indicador_estado_servidor() -> rx.Component:
-    """
-    Indicador visual de estado del servidor (punto verde pulsante).
-
-    ✅ ADAPTATIVO: fondo y borde cambian según el modo.
-
-    UX:
-    - Punto verde con glow pulsante.
-    - Texto "Todos los servicios operativos".
-    - Borde + fondo glassmorphism.
-    - Animación `borderPulse` (definida en estilos globales).
-    """
-    return rx.flex(
-        rx.box(
-            height="0.5rem",
-            width="0.5rem",
-            border_radius=RADIO_PASTILLA,
-            background=COLOR_VERDE_ACTIVO,
-            box_shadow=f"0 0 12px {COLOR_VERDE_ACTIVO}",
-            animation="pulse 2s ease-in-out infinite",
-        ),
-        rx.text(
-            "Todos los servicios operativos",
-            font_size="0.75rem",
-            color=TEXTO_HOME_MAS_SUAVE,
-        ),
-        align="center",
-        gap="0.5rem",
-        padding="0.5rem 0.875rem",
-        border_radius=RADIO_PASTILLA,
-        border=f"1px solid {BORDE_HOME_SUAVE}",
-        background="rgba(34, 197, 94, 0.08)",
-        animation="borderPulse 2.5s ease-in-out infinite",
-    )
-
-
 def _barra_inferior() -> rx.Component:
     """
-    Barra inferior del footer con copyright, links legales y estado
-    del servidor.
-
-    ✅ ADAPTATIVO: textos, borde y fondo del indicador cambian según
-    el modo.
-
-    UX:
-    - Copyright + links legales a la izquierda.
-    - Estado del servidor a la derecha.
-
-    Nota: el toggle de color mode está en la barra de navegación
-    superior (arriba a la derecha) para que sea más visible.
+    Barra inferior con copyright + links legales + redes.
     """
     return rx.flex(
-        # ==========================================================
-        # Copyright + links legales (izquierda)
-        # ==========================================================
+        # ─── Copyright + links legales ──────────────────────────
         rx.flex(
             rx.text(
-                f"© {ANIO_COPYRIGHT} {NOMBRE_INSTITUTO} · "
-                f"Todos los derechos reservados",
+                f"© {ANIO_COPYRIGHT} {NOMBRE_INSTITUTO}",
                 font_size="0.75rem",
                 color=TEXTO_HOME_MAS_SUAVE,
             ),
@@ -599,49 +708,15 @@ def _barra_inferior() -> rx.Component:
             gap="0.5rem",
             flex_wrap="wrap",
         ),
-        # ==========================================================
-        # Estado del servidor (derecha)
-        # ==========================================================
-        _indicador_estado_servidor(),
-        # ==========================================================
-        # Layout de la barra inferior
-        # ==========================================================
+        # ─── Redes sociales (derecha) ───────────────────────────
+        _fila_redes_sociales(),
         align="center",
         justify="between",
         width="100%",
         padding_top="2rem",
+        padding_bottom="1rem",
         wrap="wrap",
         gap="1rem",
-    )
-
-
-# ======================================================================
-# Bloque superior: brand + newsletter
-# ======================================================================
-
-
-def _bloque_superior() -> rx.Component:
-    """
-    Bloque superior del footer: brand block + newsletter.
-
-    En desktop se muestran lado a lado; en móvil se apilan.
-
-    ✅ ADAPTATIVO: el borde inferior cambia según el modo.
-
-    Nota: `direction` en `rx.flex` de Radix Themes acepta listas de
-    breakpoints directamente (a diferencia de `align`/`justify`).
-    Aquí usamos lista para mayor limpieza.
-    """
-    return rx.flex(
-        _brand_block(),
-        _newsletter(),
-        direction=rx.breakpoints(initial="column", md="row"),
-        justify="between",
-        align="start",
-        gap="2rem",
-        width="100%",
-        padding="3rem 0",
-        border_bottom=f"1px solid {BORDE_HOME_SUAVE}",
     )
 
 
@@ -652,60 +727,32 @@ def _bloque_superior() -> rx.Component:
 
 def pie_pagina_institucional() -> rx.Component:
     """
-    Footer institucional completo — estilo Neon adaptativo.
+    Footer institucional completo — estilo Neon.com.
 
-    Contiene:
-    - Bloque superior: brand (logo + tagline + redes) + newsletter.
-    - Sección de feedback ("¿Te resultó útil?").
-    - Grid de enlaces por columnas.
-    - Barra inferior con copyright + legales + estado del servidor.
-
-    ✅ ADAPTATIVO: fondo, textos y bordes respetan el color_mode.
-
-    El toggle de color mode está en la barra de navegación superior.
-
-    Returns:
-        Componente `rx.box` con `role="contentinfo"`.
+    Estructura:
+    1. **Acceso rápido** (3 tarjetas).
+    2. **Newsletter + Enlaces** (2 columnas).
+    3. **Feedback discreto**.
+    4. **Barra inferior**.
     """
     return rx.box(
         rx.vstack(
-            # ==========================================================
-            # Bloque superior: brand + newsletter
-            # ==========================================================
-            _bloque_superior(),
-            # ==========================================================
-            # Sección de feedback
-            # ==========================================================
-            _seccion_feedback(),
-            # ==========================================================
-            # Grid de columnas de enlaces
-            # ==========================================================
-            rx.grid(
-                *[_columna_enlaces(col) for col in ENLACES_FOOTER],
-                columns=rx.breakpoints(initial="1", sm="2", lg="4"),
-                spacing="6",
-                width="100%",
-                padding="3rem 0",
-            ),
-            # ==========================================================
-            # Barra inferior
-            # ==========================================================
+            # 1. Acceso rápido
+            _bloque_acceso_rapido(),
+            # 2. Newsletter + Enlaces
+            _bloque_newsletter_enlaces(),
+            # 3. Feedback discreto
+            _bloque_feedback(),
+            # 4. Barra inferior
             _barra_inferior(),
             spacing="0",
             width="100%",
         ),
-        # ==============================================================
-        # Estilos del contenedor principal
-        # ==============================================================
         width="100%",
-        padding=f"0 {PADDING_LATERAL_FOOTER}",
+        padding=f"4rem {PADDING_LATERAL_FOOTER} 0 {PADDING_LATERAL_FOOTER}",
         max_width=ANCHO_MAXIMO_FOOTER,
         margin="0 auto",
-        border_top=f"1px solid {BORDE_HOME_SUAVE}",
         background=FONDO_HOME,
-        # ==============================================================
-        # Semántica HTML5
-        # ==============================================================
         role="contentinfo",
         aria_label="Información del sitio",
     )
@@ -716,6 +763,7 @@ def pie_pagina_institucional() -> rx.Component:
 # ======================================================================
 
 __all__ = [
+    "ACCIONES_RAPIDAS",
     "ENLACES_FOOTER",
     "ColumnaFooter",
     "ItemEnlaceFooter",

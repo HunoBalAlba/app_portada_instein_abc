@@ -1,50 +1,104 @@
 """
-Vista de contacto con teléfonos, dirección, horario y mapa
-(ruta "/contacto").
+Vista de contacto (ruta "/contacto") — estilo Neon.com.
 
-Contenido:
-- Hero de bienvenida con título y subtítulo.
-- Grid de 3 tarjetas de contacto (teléfono, dirección, horario).
-- Mapa de Google Maps embebido.
-- Sección de tutorial (crear cuenta institucional).
+Contenido
+---------
+1. Hero alineado a la izquierda.
+2. Sección 01 — Información de contacto (3 tarjetas).
+3. Sección 02 — Ubicación (mapa + datos).
+4. Sección 03 — Plataforma académica (tutorial).
+5. CTA final hacia /admision.
+
+Diseño
+------
+Refactorizado al estilo Neon.com:
+
+1. **Layout izquierdo** del hero.
+2. **Un solo acento** (azul marino) para todas las tarjetas.
+3. **Sin glow ni translateY** en hover.
+4. **Iconos directos** (sin cajas cuadradas).
+5. **Separadores** entre secciones.
+6. **HTML5 semántico** (`main`, `section`, `footer`).
+7. **Numeración de secciones** (01, 02, 03).
+
+Sistema de color
+----------------
+✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
+
+Nota técnica: ELIMINACIÓN DE COLORES SEMÁNTICOS
+----------------------------------------------
+El diseño original usaba 3 colores semánticos por tarjeta:
+
+- Azul para teléfono.
+- Rojo para dirección.
+- Verde para horario.
+
+Esto introducía 3 colores extra al diseño, rompiendo la coherencia
+del acento único. En la refactorización se usa **solo azul marino**
+para todos los iconos, manteniendo el verde **solo** para el
+indicador de estado (punto pulsante).
+
+Nota técnica: SIN `translateY(-2px)` NI GLOW
+--------------------------------------------
+El hover de las tarjetas ahora solo cambia el `border_color`. Sin
+elevación, sin sombra con color. Es coherente con el resto del
+sitio (Neon.com usa hover sutil).
+
+Nota técnica: TUTORIAL
+----------------------
+`cuadro_de_tutorial()` (alias de `seccion_plataforma_academica()`)
+vive en `paginas/tutorial_crear_cuenta.py`. Se renderiza como
+sección 03 con su propio encabezado.
+
+Nota técnica: COMPONENTES COMPARTIDOS
+-------------------------------------
+Este archivo usa los componentes compartidos:
+
+- `encabezado_seccion` (de `..componentes.base`).
+- `separador_secciones` (de `..componentes.base`).
+
+Antes tenía copias locales `_encabezado_seccion` y
+`_separador_secciones` (duplicadas en 6+ archivos). Ahora vive
+una sola implementación en `componentes/base/`.
 """
 
 from __future__ import annotations
 
 import reflex as rx
 
+from ..componentes.base import (
+    encabezado_seccion,
+    separador_secciones,
+)
 from ..componentes.navegacion import (
     barra_navegacion_superior,
     pie_pagina_institucional,
 )
 from ..infraestructura import (
-    ANCHO_CONTENIDO,
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
     COLOR_BORDE_SUAVE,
+    COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
     DIRECCION,
-    FONDO_AZUL_SUAVE,
     FONDO_HOME,
     HORARIO_ATENCION,
     NOMBRE_INSTITUTO,
-    PADDING_LATERAL,
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
-    SOMBRA_SUAVE,
     TELEFONO_PRINCIPAL,
     TELEFONO_SECUNDARIO,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
     UBICACION_FISICA,
     WHATSAPP_URL,
 )
 
-# Nota: este componente viene de un módulo externo que debes conservar.
+# Componente externo: sección de plataforma académica (tutorial)
 from .tutorial_crear_cuenta import cuadro_de_tutorial
 
 
@@ -52,76 +106,225 @@ from .tutorial_crear_cuenta import cuadro_de_tutorial
 # Constantes locales
 # ======================================================================
 
+ANCHO_MAXIMO_CONTENIDO: str = "72rem"
+PADDING_SECCION_HORIZONTAL: str = "1.5rem"
+
+# Coordenadas del instituto
 LATITUD: float = -16.5084167
 LONGITUD: float = -68.1635278
 COORDENADAS_TEXTO: str = '16°30\'30.3"S 68°09\'48.7"W'
 
-
-# ======================================================================
-# Paleta semántica
-# ======================================================================
-
-COLOR_AZUL_TEXTO = rx.color("blue", 11)
-COLOR_AZUL_FONDO = rx.color("blue", 3)
-COLOR_AZUL_BORDE = rx.color("blue", 7)
-COLOR_AZUL_SOLIDO = rx.color("blue", 9)
-
-COLOR_VERDE_TEXTO = rx.color("green", 11)
-COLOR_VERDE_FONDO = rx.color("green", 3)
-COLOR_VERDE_BORDE = rx.color("green", 7)
-COLOR_VERDE_SOLIDO = rx.color("green", 9)
-
-COLOR_ROJO_TEXTO = rx.color("red", 11)
-COLOR_ROJO_FONDO = rx.color("red", 3)
-COLOR_ROJO_BORDE = rx.color("red", 7)
-COLOR_ROJO_SOLIDO = rx.color("red", 9)
+# Colores semánticos mínimos
+COLOR_VERDE_ACTIVO: str = "#22c55e"
 
 
 # ======================================================================
-# Tarjeta base reutilizable
+# Sección: Hero
 # ======================================================================
 
 
-def _tarjeta_base(
-    *children: rx.Component,
-    **props,
-) -> rx.Component:
-    """Tarjeta base con estilos consistentes."""
-    props.setdefault("padding", "1.5rem")
-    props.setdefault("border_radius", RADIO_EXTRA_GRANDE)
-    props.setdefault("background", COLOR_FONDO_CARTA)
-    props.setdefault("border", f"1px solid {COLOR_BORDE_SUAVE}")
-    props.setdefault("box_shadow", SOMBRA_SUAVE)
-    props.setdefault("width", "100%")
-    props.setdefault("height", "100%")
-    props.setdefault(
-        "transition",
-        "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-    )
+def _hero_contacto() -> rx.Component:
+    """
+    Hero de contacto alineado a la izquierda.
 
-    return rx.box(*children, **props)
-
-
-def _icono_tarjeta(
-    icono: str,
-    color_texto: rx.Var,
-    color_fondo: rx.Var,
-) -> rx.Component:
-    """Icono con fondo tintado."""
+    Estilo Neon.com:
+    - Badge con punto verde pulsante.
+    - Título grande con énfasis bicolor.
+    - Subtítulo descriptivo.
+    """
     return rx.box(
-        rx.icon(tag=icono, size=22, color=color_texto),
-        padding="0.75rem",
-        border_radius="0.875rem",
-        background=color_fondo,
-        display="flex",
-        align_items="center",
-        justify_content="center",
-        flex_shrink="0",
+        rx.vstack(
+            # ─── Badge ─────────────────────────────────────────
+            rx.flex(
+                rx.box(
+                    width="0.5rem",
+                    height="0.5rem",
+                    border_radius=RADIO_PASTILLA,
+                    background=COLOR_VERDE_ACTIVO,
+                    animation="pulse 2s ease-in-out infinite",
+                    flex_shrink="0",
+                ),
+                rx.text(
+                    "MANTENTE EN CONTACTO",
+                    font_size="0.6875rem",
+                    font_weight="700",
+                    color=AZUL_MARINO_NEON,
+                    letter_spacing="0.15em",
+                    text_transform="uppercase",
+                ),
+                align="center",
+                gap="0.5rem",
+                margin_bottom="1.5rem",
+            ),
+            # ─── Título con énfasis bicolor ────────────────────
+            rx.heading(
+                rx.text.span("Comunícate "),
+                rx.text.span(
+                    "con nosotros",
+                    color=AZUL_MARINO_NEON,
+                ),
+                as_="h1",
+                font_size=["2rem", "2.5rem", "3rem"],
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
+                letter_spacing="-0.03em",
+                line_height="1.1",
+                max_width="48rem",
+            ),
+            # ─── Subtítulo ─────────────────────────────────────
+            rx.text(
+                "Estamos disponibles para resolver tus dudas sobre "
+                "admisiones, carreras, horarios y toda la "
+                "información institucional.",
+                font_size=["1rem", "1.125rem"],
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.6",
+                max_width="48rem",
+                margin_top="1rem",
+            ),
+            align="start",
+            spacing="0",
+            width="100%",
+        ),
+        max_width=ANCHO_MAXIMO_CONTENIDO,
+        margin="0 auto",
+        padding=[
+            f"4rem {PADDING_SECCION_HORIZONTAL} 2rem {PADDING_SECCION_HORIZONTAL}",
+            f"6rem {PADDING_SECCION_HORIZONTAL} 3rem {PADDING_SECCION_HORIZONTAL}",
+        ],
+        width="100%",
     )
 
 
 # ======================================================================
-# Botón de acción reutilizable
+# Tarjeta base de contacto
+# ======================================================================
+
+
+def _tarjeta_contacto(
+    icono: str,
+    etiqueta: str,
+    valor_principal: str,
+    valor_secundario: str | None = None,
+    acciones: rx.Component | None = None,
+    con_indicador: bool = False,
+    texto_indicador: str | None = None,
+) -> rx.Component:
+    """
+    Tarjeta genérica de contacto.
+
+    Estilo Neon.com:
+    - Fondo plano (`COLOR_FONDO_CARTA`).
+    - Borde sutil.
+    - Icono directo (sin caja).
+    - Hover: solo cambia el borde a azul marino.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        etiqueta: Texto pequeño en mayúsculas.
+        valor_principal: Valor grande (ej: teléfono, dirección).
+        valor_secundario: Valor pequeño opcional.
+        acciones: Componente de acciones opcional (botones).
+        con_indicador: Si `True`, muestra un punto verde pulsante.
+        texto_indicador: Texto del indicador (si `con_indicador=True`).
+    """
+    hijos: list[rx.Component] = [
+        # ─── Icono ─────────────────────────────────────────────
+        rx.icon(
+            icono,
+            size=20,
+            color=AZUL_MARINO_NEON,
+        ),
+        # ─── Etiqueta ──────────────────────────────────────────
+        rx.text(
+            etiqueta,
+            font_size="0.6875rem",
+            font_weight="700",
+            color=TEXTO_HOME_MAS_SUAVE,
+            text_transform="uppercase",
+            letter_spacing="0.15em",
+            margin_top="0.75rem",
+        ),
+        # ─── Valor principal ───────────────────────────────────
+        rx.text(
+            valor_principal,
+            font_size="1.125rem",
+            font_weight="700",
+            color=TEXTO_HOME_PRINCIPAL,
+            line_height="1.3",
+            margin_top="0.5rem",
+        ),
+    ]
+
+    # ─── Valor secundario opcional ─────────────────────────────
+    if valor_secundario is not None:
+        hijos.append(
+            rx.text(
+                valor_secundario,
+                font_size="0.8125rem",
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.5",
+                margin_top="0.375rem",
+            )
+        )
+
+    # ─── Indicador opcional ────────────────────────────────────
+    if con_indicador and texto_indicador:
+        hijos.append(
+            rx.flex(
+                rx.box(
+                    width="0.5rem",
+                    height="0.5rem",
+                    border_radius=RADIO_PASTILLA,
+                    background=COLOR_VERDE_ACTIVO,
+                    animation="pulse 2s ease-in-out infinite",
+                    flex_shrink="0",
+                ),
+                rx.text(
+                    texto_indicador,
+                    font_size="0.75rem",
+                    font_weight="600",
+                    color=COLOR_VERDE_ACTIVO,
+                ),
+                align="center",
+                gap="0.5rem",
+                margin_top="1rem",
+                width="fit-content",
+            )
+        )
+
+    # ─── Acciones opcionales ───────────────────────────────────
+    if acciones is not None:
+        hijos.append(
+            rx.box(
+                acciones,
+                margin_top="1.5rem",
+                width="100%",
+            )
+        )
+
+    return rx.box(
+        rx.vstack(
+            *hijos,
+            align="start",
+            spacing="0",
+            width="100%",
+            height="100%",
+        ),
+        padding="2rem",
+        border_radius=RADIO_EXTRA_GRANDE,
+        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {AZUL_MARINO_NEON}",
+        width="100%",
+        height="100%",
+        transition="all 0.2s",
+        _hover={"border_color": AZUL_MARINO_NEON},
+    )
+
+
+# ======================================================================
+# Botones de acción
 # ======================================================================
 
 
@@ -129,287 +332,196 @@ def _boton_accion(
     icono: str,
     etiqueta: str,
     href: str,
-    color_solido: rx.Var,
     externo: bool = False,
+    primario: bool = True,
 ) -> rx.Component:
-    """Botón de acción con icono + etiqueta."""
+    """
+    Botón de acción con icono + etiqueta.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        etiqueta: Texto visible.
+        href: URL destino.
+        externo: Si `True`, abre en nueva pestaña.
+        primario: Si `True`, fondo azul marino; si `False`, outline.
+    """
+    if primario:
+        estilos = {
+            "background": AZUL_MARINO_NEON,
+            "color": "white",
+            "border": "none",
+        }
+    else:
+        estilos = {
+            "background": "transparent",
+            "color": TEXTO_HOME_PRINCIPAL,
+            "border": f"1px solid {BORDE_HOME_MEDIO}",
+        }
+
     return rx.link(
-        rx.icon(tag=icono, size=16, color="white"),
+        rx.icon(icono, size=16, color=estilos["color"]),
         rx.text(
             etiqueta,
             font_size="0.8125rem",
-            font_weight="700",
-            color="white",
+            font_weight="600",
+            color=estilos["color"],
+            white_space="nowrap",
         ),
         href=href,
         is_external=externo,
-        display="flex",
+        display="inline-flex",
         align_items="center",
         justify_content="center",
         gap="0.5rem",
         padding="0.625rem 1rem",
         border_radius=RADIO_MEDIO,
-        background=color_solido,
         text_decoration="none",
-        flex="1",
         transition="all 0.2s",
+        flex="1",
+        **estilos,
         _hover={
-            "transform": "translateY(-1px)",
             "filter": "brightness(1.1)",
-            "box_shadow": f"0 8px 16px -4px {color_solido}",
+            "border_color": BORDE_HOME_AZUL,
         },
     )
 
 
 # ======================================================================
-# Tarjetas de contacto
+# Tarjetas específicas
 # ======================================================================
 
 
-def _tarjeta_telefono() -> rx.Component:
+def _tarjeta_contacto_telefono() -> rx.Component:
     """Tarjeta con teléfonos y botones de acción."""
-    return _tarjeta_base(
-        rx.vstack(
-            rx.flex(
-                _icono_tarjeta("phone", COLOR_AZUL_TEXTO, COLOR_AZUL_FONDO),
-                rx.vstack(
-                    rx.text(
-                        "Atención al Cliente",
-                        font_size="0.75rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        text_transform="uppercase",
-                        letter_spacing="0.05em",
-                        line_height="1.1",
-                    ),
-                    rx.text(
-                        f"{TELEFONO_PRINCIPAL}",
-                        font_size="1.125rem",
-                        font_weight="800",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        line_height="1.2",
-                    ),
-                    rx.text(
-                        f"Alterno: {TELEFONO_SECUNDARIO}",
-                        font_size="0.75rem",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        line_height="1.2",
-                    ),
-                    spacing="1",
-                    align="start",
-                    flex="1",
-                ),
-                align="start",
-                gap="1rem",
-                width="100%",
+    return _tarjeta_contacto(
+        icono="phone",
+        etiqueta="Atención al cliente",
+        valor_principal=TELEFONO_PRINCIPAL,
+        valor_secundario=f"Alterno: {TELEFONO_SECUNDARIO}",
+        acciones=rx.flex(
+            _boton_accion(
+                icono="message-circle",
+                etiqueta="WhatsApp",
+                href=WHATSAPP_URL,
+                externo=True,
+                primario=True,
             ),
-            rx.flex(
-                _boton_accion(
-                    icono="message-circle",
-                    etiqueta="WhatsApp",
-                    href=WHATSAPP_URL,
-                    color_solido=COLOR_VERDE_SOLIDO,
-                    externo=True,
-                ),
-                _boton_accion(
-                    icono="phone",
-                    etiqueta="Llamar",
-                    href=f"tel:+591{TELEFONO_PRINCIPAL}",
-                    color_solido=COLOR_AZUL_SOLIDO,
-                    externo=True,
-                ),
-                gap="0.5rem",
-                width="100%",
-                margin_top="1.25rem",
-                flex_direction=rx.breakpoints(initial="column", sm="row"),
+            _boton_accion(
+                icono="phone",
+                etiqueta="Llamar",
+                href=f"tel:+591{TELEFONO_PRINCIPAL}",
+                externo=True,
+                primario=False,
             ),
-            spacing="0",
+            gap="0.5rem",
             width="100%",
-            height="100%",
+            direction=rx.breakpoints(
+                initial="column",
+                sm="row",
+            ),
         ),
-        _hover={
-            "border_color": COLOR_AZUL_BORDE,
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 12px 30px -10px {COLOR_AZUL_SOLIDO}",
-        },
     )
 
 
-def _tarjeta_direccion() -> rx.Component:
-    """Tarjeta con la dirección física exacta y referencia."""
-    return _tarjeta_base(
-        rx.vstack(
-            rx.flex(
-                _icono_tarjeta("map-pin", COLOR_ROJO_TEXTO, COLOR_ROJO_FONDO),
-                rx.vstack(
-                    rx.text(
-                        "Dirección Exacta",
-                        font_size="0.75rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        text_transform="uppercase",
-                        letter_spacing="0.05em",
-                        line_height="1.1",
-                    ),
-                    rx.text(
-                        DIRECCION,
-                        font_size="0.9375rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        line_height="1.3",
-                    ),
-                    spacing="1",
-                    align="start",
-                    flex="1",
-                ),
-                align="start",
-                gap="1rem",
-                width="100%",
-            ),
-            rx.box(
-                rx.flex(
-                    rx.icon("building-2", size=14, color=COLOR_ROJO_TEXTO),
-                    rx.text(
-                        UBICACION_FISICA,
-                        font_size="0.8125rem",
-                        font_weight="600",
-                        color=COLOR_TEXTO_CUERPO,
-                    ),
-                    align="center",
-                    gap="0.5rem",
-                ),
-                padding="0.75rem 1rem",
-                border_radius=RADIO_MEDIO,
-                background=COLOR_ROJO_FONDO,
-                border=f"1px solid {COLOR_ROJO_BORDE}",
-                margin_top="1.25rem",
-                width="100%",
-            ),
-            spacing="0",
-            width="100%",
-            height="100%",
-        ),
-        _hover={
-            "border_color": COLOR_ROJO_BORDE,
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 12px 30px -10px {COLOR_ROJO_SOLIDO}",
-        },
+def _tarjeta_contacto_direccion() -> rx.Component:
+    """Tarjeta con la dirección física."""
+    return _tarjeta_contacto(
+        icono="map-pin",
+        etiqueta="Dirección",
+        valor_principal=DIRECCION,
+        valor_secundario=UBICACION_FISICA,
     )
 
 
-def _tarjeta_horario() -> rx.Component:
+def _tarjeta_contacto_horario() -> rx.Component:
     """Tarjeta con el horario de atención."""
-    return _tarjeta_base(
-        rx.vstack(
-            rx.flex(
-                _icono_tarjeta("clock", COLOR_AZUL_TEXTO, COLOR_AZUL_FONDO),
-                rx.vstack(
-                    rx.text(
-                        "Horario de Atención",
-                        font_size="0.75rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        text_transform="uppercase",
-                        letter_spacing="0.05em",
-                        line_height="1.1",
-                    ),
-                    rx.text(
-                        HORARIO_ATENCION,
-                        font_size="0.9375rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        line_height="1.3",
-                    ),
-                    spacing="1",
-                    align="start",
-                    flex="1",
-                ),
-                align="start",
-                gap="1rem",
-                width="100%",
-            ),
-            rx.flex(
-                rx.box(
-                    width="0.5rem",
-                    height="0.5rem",
-                    border_radius=RADIO_PASTILLA,
-                    background=COLOR_VERDE_SOLIDO,
-                    animation="pulse 2s ease-in-out infinite",
-                ),
-                rx.text(
-                    "Atención presencial y telefónica",
-                    font_size="0.75rem",
-                    font_weight="600",
-                    color=COLOR_VERDE_TEXTO,
-                ),
-                align="center",
-                gap="0.5rem",
-                padding="0.5rem 0.875rem",
-                border_radius=RADIO_PASTILLA,
-                background=COLOR_VERDE_FONDO,
-                margin_top="1.25rem",
-                width="fit-content",
-            ),
-            spacing="0",
-            width="100%",
-            height="100%",
-        ),
-        _hover={
-            "border_color": COLOR_AZUL_BORDE,
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 12px 30px -10px {COLOR_AZUL_SOLIDO}",
-        },
+    return _tarjeta_contacto(
+        icono="clock",
+        etiqueta="Horario de atención",
+        valor_principal=HORARIO_ATENCION,
+        con_indicador=True,
+        texto_indicador="Atención presencial y telefónica",
     )
 
 
 # ======================================================================
-# Mapa
+# Grid de tarjetas de contacto
 # ======================================================================
 
 
-def _ubicacion_item(
+def _grid_tarjetas_contacto() -> rx.Component:
+    """Grid responsive con las 3 tarjetas de contacto."""
+    return rx.grid(
+        _tarjeta_contacto_telefono(),
+        _tarjeta_contacto_direccion(),
+        _tarjeta_contacto_horario(),
+        columns=rx.breakpoints(
+            initial="1",
+            sm="1",
+            md="2",
+            lg="3",
+        ),
+        spacing="4",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+# ======================================================================
+# Sección: Ubicación (mapa)
+# ======================================================================
+
+
+def _item_ubicacion(
     icono: str,
     etiqueta: str,
     valor: str,
-    color_texto: rx.Var,
-    color_fondo: rx.Var,
 ) -> rx.Component:
     """Item de ubicación (dirección, referencia, coordenadas)."""
     return rx.flex(
-        _icono_tarjeta(icono, color_texto, color_fondo),
+        rx.icon(
+            icono,
+            size=16,
+            color=AZUL_MARINO_NEON,
+            flex_shrink="0",
+        ),
         rx.vstack(
             rx.text(
                 etiqueta,
                 font_size="0.6875rem",
                 font_weight="700",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_transform="uppercase",
-                letter_spacing="0.05em",
-                line_height="1.1",
+                letter_spacing="0.1em",
+                line_height="1.2",
             ),
             rx.text(
                 valor,
-                font_size="0.8125rem",
+                font_size="0.875rem",
                 font_weight="600",
-                color=COLOR_TEXTO_PRINCIPAL,
-                line_height="1.3",
+                color=TEXTO_HOME_PRINCIPAL,
+                line_height="1.4",
             ),
             spacing="1",
             align="start",
+            flex="1",
+            min_width="0",
         ),
-        align="center",
+        align="start",
         gap="0.75rem",
         flex="1",
-        min_width="220px",
+        min_width=["100%", "220px"],
         padding="1rem",
-        border_radius=RADIO_GRANDE,
+        border_radius=RADIO_MEDIO,
         background=COLOR_FONDO_SUAVE,
         border=f"1px solid {COLOR_BORDE_SUAVE}",
     )
 
 
 def _bloque_mapa() -> rx.Component:
-    """Bloque con Google Maps embebido."""
+    """
+    Bloque con Google Maps embebido + datos de ubicación + CTA.
+    """
     url_mapa = (
         f"https://www.google.com/maps"
         f"?q={LATITUD},{LONGITUD}"
@@ -424,28 +536,7 @@ def _bloque_mapa() -> rx.Component:
     )
 
     return rx.vstack(
-        rx.flex(
-            rx.icon("map-pin", size=22, color=COLOR_ROJO_TEXTO),
-            rx.vstack(
-                rx.heading(
-                    "Ubícanos en el mapa",
-                    size="5",
-                    font_weight="700",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                ),
-                rx.text(
-                    "Estamos en una ubicación céntrica y de fácil acceso.",
-                    font_size="0.875rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                ),
-                spacing="1",
-                align="start",
-            ),
-            align="center",
-            gap="0.75rem",
-            width="100%",
-            margin_bottom="1.5rem",
-        ),
+        # ─── Mapa ──────────────────────────────────────────────
         rx.box(
             rx.el.iframe(
                 src=url_mapa,
@@ -455,67 +546,58 @@ def _bloque_mapa() -> rx.Component:
                 loading="lazy",
                 referrer_policy="no-referrer-when-downgrade",
                 allow_fullscreen=True,
+                title="Ubicación de INSTEIN en Google Maps",
             ),
             width="100%",
-            height=["20rem", "24rem", "28rem"],
+            height=["18rem", "22rem", "26rem"],
             border_radius=RADIO_EXTRA_GRANDE,
             overflow="hidden",
             border=f"1px solid {COLOR_BORDE_SUAVE}",
-            box_shadow="0 4px 12px -2px rgb(0 0 0 / 0.08)",
         ),
+        # ─── Datos de ubicación ─────────────────────────────────
         rx.flex(
-            _ubicacion_item(
+            _item_ubicacion(
                 icono="map-pin",
                 etiqueta="Dirección",
                 valor=DIRECCION,
-                color_texto=COLOR_ROJO_TEXTO,
-                color_fondo=COLOR_ROJO_FONDO,
             ),
-            _ubicacion_item(
+            _item_ubicacion(
                 icono="building-2",
                 etiqueta="Referencia",
                 valor=UBICACION_FISICA,
-                color_texto=COLOR_AZUL_TEXTO,
-                color_fondo=COLOR_AZUL_FONDO,
             ),
-            _ubicacion_item(
+            _item_ubicacion(
                 icono="compass",
                 etiqueta="Coordenadas",
                 valor=COORDENADAS_TEXTO,
-                color_texto=COLOR_VERDE_TEXTO,
-                color_fondo=COLOR_VERDE_FONDO,
             ),
             gap="1rem",
             width="100%",
             margin_top="1.5rem",
             flex_wrap="wrap",
         ),
+        # ─── CTA "Cómo llegar" ──────────────────────────────────
         rx.link(
-            rx.flex(
-                rx.icon("navigation", size=16, color="white"),
-                rx.text(
-                    "Cómo llegar",
-                    font_size="0.875rem",
-                    font_weight="700",
-                    color="white",
-                ),
-                align="center",
-                gap="0.5rem",
+            rx.text(
+                "Cómo llegar",
+                font_size="0.9375rem",
+                font_weight="600",
+                color="white",
             ),
+            rx.icon("navigation", size=16, color="white"),
             href=url_como_llegar,
             is_external=True,
             text_decoration="none",
-            padding="0.75rem 1.5rem",
+            display="inline-flex",
+            align_items="center",
+            gap="0.5rem",
+            padding="0.875rem 1.5rem",
             border_radius=RADIO_PASTILLA,
-            background=COLOR_AZUL_SOLIDO,
-            box_shadow=f"0 8px 20px -4px {COLOR_AZUL_SOLIDO}",
+            background=AZUL_MARINO_NEON,
             transition="all 0.2s",
             margin_top="1.5rem",
             width="fit-content",
-            _hover={
-                "transform": "translateY(-2px)",
-                "box_shadow": f"0 12px 30px -6px {COLOR_AZUL_SOLIDO}",
-            },
+            _hover={"filter": "brightness(1.1)"},
         ),
         spacing="0",
         width="100%",
@@ -524,129 +606,211 @@ def _bloque_mapa() -> rx.Component:
 
 
 # ======================================================================
+# Sección: Plataforma académica (tutorial)
+# ======================================================================
+
+
+def _bloque_tutorial() -> rx.Component:
+    """
+    Bloque que envuelve el tutorial de creación de cuenta.
+
+    Añade un encabezado de sección + el componente `cuadro_de_tutorial`.
+    """
+    return rx.box(
+        cuadro_de_tutorial(),
+        width="100%",
+    )
+
+
+# ======================================================================
+# CTA final
+# ======================================================================
+
+
+def _cta_final() -> rx.Component:
+    """
+    CTA final: "¿Listo para inscribirte?".
+    """
+    return rx.flex(
+        rx.text(
+            "¿Listo para inscribirte?",
+            font_size="1rem",
+            color=TEXTO_HOME_MAS_SUAVE,
+        ),
+        rx.link(
+            rx.text(
+                "Ver guía de admisión",
+                font_size="1rem",
+                font_weight="700",
+                color=AZUL_MARINO_NEON,
+            ),
+            rx.icon(
+                "arrow-right",
+                size=16,
+                color=AZUL_MARINO_NEON,
+            ),
+            href="/admision",
+            text_decoration="none",
+            display="inline-flex",
+            align_items="center",
+            gap="0.375rem",
+            transition="gap 0.2s",
+            _hover={"gap": "0.625rem"},
+        ),
+        align="center",
+        justify="start",
+        gap="0.5rem",
+        flex_wrap="wrap",
+        width="100%",
+        padding_top="3rem",
+        margin_top="2rem",
+        border_top=f"1px solid {COLOR_DIVISOR}",
+    )
+
+
+# ======================================================================
 # Vista completa
 # ======================================================================
 
 
-@rx.page(route="/contacto", title=f"Contacto | {NOMBRE_INSTITUTO}")
+@rx.page(
+    route="/contacto",
+    title=f"Contacto | {NOMBRE_INSTITUTO}",
+    description=(
+        "Contacta al Instituto Técnico Integrado San Antonio de "
+        "Padua (INSTEIN): teléfonos, WhatsApp, dirección y ubicación."
+    ),
+)
 def vista_contacto() -> rx.Component:
-    """Página de contacto."""
-    return rx.vstack(
-        barra_navegacion_superior(),
-        rx.box(
-            # =========================================================
-            # HERO
-            # =========================================================
-            rx.vstack(
-                rx.flex(
-                    rx.box(
-                        width="0.5rem",
-                        height="0.5rem",
-                        border_radius=RADIO_PASTILLA,
-                        background=COLOR_VERDE_SOLIDO,
-                        animation="pulse 2s ease-in-out infinite",
-                    ),
-                    rx.text(
-                        "MANTENTE EN CONTACTO",
-                        font_size="0.75rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        letter_spacing="0.15em",
-                    ),
-                    align="center",
-                    gap="0.5rem",
-                ),
-                rx.heading(
-                    "Comunícate con nosotros",
-                    size="8",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    line_height="1.1",
-                ),
-                rx.text(
-                    "Estamos disponibles para resolver tus dudas sobre "
-                    "admisiones, carreras, horarios y toda la información.",
-                    font_size="1rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                    line_height="1.6",
-                ),
-                align="center",
-                spacing="3",
-                margin_bottom="3rem",
-                width="100%",
-            ),
-            # =========================================================
-            # GRID DE TARJETAS
-            # =========================================================
-            rx.grid(
-                _tarjeta_telefono(),
-                _tarjeta_direccion(),
-                _tarjeta_horario(),
-                columns=rx.breakpoints(
-                    initial="1",
-                    sm="1",
-                    md="2",
-                    lg="3",
-                ),
-                spacing="4",
-                width="100%",
-                margin_bottom="3rem",
-                align_items="stretch",
-            ),
-            # =========================================================
-            # MAPA
-            # =========================================================
+    """
+    Página de contacto — estilo Neon.com.
+
+    Estructura semántica HTML5:
+    - `<header role="banner">`  → barra de navegación.
+    - `<main>`                  → contenido principal.
+    - `<section>`               → cada sección temática.
+    - `<footer role="contentinfo">` → pie de página.
+    """
+    return rx.box(
+        rx.vstack(
+            # =============================================================
+            # 1. HEADER
+            # =============================================================
             rx.box(
-                _bloque_mapa(),
+                barra_navegacion_superior(),
                 width="100%",
-                margin_bottom="3rem",
+                role="banner",
+                aria_label="Navegación principal",
             ),
-            # =========================================================
-            # TUTORIAL
-            # =========================================================
-            rx.box(
-                rx.vstack(
-                    rx.heading(
-                        "Plataforma de Seguimiento Académico",
-                        size="6",
-                        font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        text_align="center",
-                    ),
-                    rx.text(
-                        "Crea tu cuenta institucional y accede a tu "
-                        "historial académico.",
-                        font_size="0.9375rem",
-                        color=COLOR_TEXTO_SECUNDARIO,
-                        text_align="center",
-                        max_width="42rem",
-                    ),
+            # =============================================================
+            # 2. MAIN
+            # =============================================================
+            rx.el.main(
+                # ─── Hero ───────────────────────────────────────────
+                _hero_contacto(),
+                # ─── Sección 01 — Información de contacto ───────────
+                rx.el.section(
                     rx.box(
-                        cuadro_de_tutorial(),
-                        margin_top="1.5rem",
+                        encabezado_seccion(
+                            numero="01",
+                            etiqueta="Información de contacto",
+                            titulo="Cómo comunicarte",
+                            titulo_enfasis="con nosotros",
+                            subtitulo=(
+                                "Elige el canal que prefieras: "
+                                "teléfono, WhatsApp o visita nuestro "
+                                "campus."
+                            ),
+                        ),
+                        _grid_tarjetas_contacto(),
+                        max_width=ANCHO_MAXIMO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
                         width="100%",
-                        display="flex",
-                        justify_content="center",
                     ),
-                    align="center",
-                    spacing="2",
+                    width="100%",
+                    id="info-contacto",
+                    aria_label="Información de contacto",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO_CONTENIDO),
+                # ─── Sección 02 — Ubicación ─────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="02",
+                            etiqueta="Ubicación",
+                            titulo="Encuéntranos",
+                            titulo_enfasis="en el mapa",
+                            subtitulo=(
+                                "Estamos en una ubicación céntrica y "
+                                "de fácil acceso."
+                            ),
+                        ),
+                        _bloque_mapa(),
+                        max_width=ANCHO_MAXIMO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="ubicacion",
+                    aria_label="Ubicación en el mapa",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO_CONTENIDO),
+                # ─── Sección 03 — Plataforma académica ──────────────
+                rx.el.section(
+                    rx.box(
+                        _bloque_tutorial(),
+                        max_width=ANCHO_MAXIMO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="plataforma",
+                    aria_label="Plataforma académica",
+                ),
+                # ─── CTA final ──────────────────────────────────────
+                rx.box(
+                    _cta_final(),
+                    max_width=ANCHO_MAXIMO_CONTENIDO,
+                    margin="0 auto",
+                    padding_x=PADDING_SECCION_HORIZONTAL,
+                    padding_bottom="6rem",
                     width="100%",
                 ),
                 width="100%",
+                aria_label="Contacto",
             ),
-            max_width=ANCHO_CONTENIDO,
-            margin="0 auto",
-            padding=f"3rem {PADDING_LATERAL} 6rem {PADDING_LATERAL}",
+            # =============================================================
+            # 3. FOOTER
+            # =============================================================
+            rx.box(
+                pie_pagina_institucional(),
+                width="100%",
+                role="contentinfo",
+                aria_label="Información del sitio",
+            ),
+            align="center",
+            min_height="100vh",
             width="100%",
+            spacing="0",
+            background=FONDO_HOME,
         ),
-        pie_pagina_institucional(),
-        align="center",
-        min_height="100vh",
         width="100%",
         background=FONDO_HOME,
+        lang="es",
     )
 
 

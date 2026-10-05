@@ -1,27 +1,46 @@
 """
-Vista "Becas y Reconocimientos" (ruta "/becas").
+Vista "Becas y Reconocimientos" (ruta "/becas") — estilo Neon.com.
 
-Programa institucional de becas por innovación. No hay becas generales
-ni descuentos comerciales. Las becas se otorgan a estudiantes activos
-del instituto que presenten un proyecto con puntaje de innovación ≥ 90
-en las ferias internas.
+Programa institucional de becas por innovación. No hay becas
+generales ni descuentos comerciales. Las becas se otorgan a
+estudiantes activos que presenten un proyecto con puntaje de
+innovación ≥ 90 en las ferias internas.
 
-Contenido:
-- Hero con badge "Programa de becas por innovación".
-- Grid de 3 tarjetas con las bases del programa.
-- Sección explicativa: ¿cómo funciona el programa?
-- Timeline del proceso de evaluación (5 etapas).
-- Grid de áreas de innovación evaluadas (5 áreas).
-- Sección de niveles de beca por puntaje (3 niveles).
-- Requisitos para participar.
-- Proyectos ganadores (ejemplos destacados).
-- Preguntas frecuentes del programa.
-- CTA final hacia /contacto.
+Contenido
+---------
+1. Hero alineado a la izquierda.
+2. Sección 01 — Bases del programa (3 tarjetas).
+3. Sección 02 — Cómo funciona (timeline de 5 pasos).
+4. Sección 03 — Áreas de innovación (5 tarjetas).
+5. Sección 04 — Niveles de beca (3 tarjetas).
+6. Sección 05 — Requisitos (lista).
+7. Sección 06 — Proyectos ganadores (3 tarjetas).
+8. Sección 07 — Preguntas frecuentes (acordeón).
+9. CTA final hacia /contacto.
+
+Diseño
+------
+Refactorizado al estilo Neon.com:
+
+1. **Layout izquierdo** del hero.
+2. **Un solo acento** (azul marino) para todas las cards.
+3. **Sin glow ni translateY** en hover.
+4. **Iconos directos** (sin cajas).
+5. **Separadores** entre secciones (compartidos).
+6. **Encabezados numerados** (compartidos).
+7. **HTML5 semántico**.
+8. **Timeline con grid** (más robusto).
 
 Sistema de color
 ----------------
+✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
 ✅ ACENTO ÚNICO: azul marino neon.
-✅ ADAPTATIVO: fondo, textos y bordes respetan el `color_mode`.
+
+Excepciones de color
+--------------------
+- **Beca Oro**: usa crimson porque es el máximo premio.
+- **Badge de puntaje**: verde/ámbar/gris según nivel, porque
+  comunica un estado semántico real.
 
 Nota técnica: ACORDEÓN FAQ UNIFICADO
 ------------------------------------
@@ -30,8 +49,20 @@ Usa el `EstadoAcordeonFaq` global.
 
 Nota técnica: `ItemFaq` ES `TypedDict`
 --------------------------------------
-`PREGUNTAS_BECA` ahora es `list[ItemFaq]` (TypedDict), no `list[dict]`.
-Los items se construyen con dicts literales.
+`PREGUNTAS_BECA` es `list[ItemFaq]` (TypedDict). Los items se
+construyen con dicts literales.
+
+Nota técnica: COMPONENTES COMPARTIDOS
+-------------------------------------
+Este archivo usa los componentes compartidos:
+
+- `ItemFaq` y `acordeon_faq` (de `..componentes.base`).
+- `encabezado_seccion` (de `..componentes.base`).
+- `separador_secciones` (de `..componentes.base`).
+
+Antes tenía copias locales `_encabezado_seccion` y
+`_separador_secciones` (duplicadas en 6+ archivos). Ahora vive
+una sola implementación en `componentes/base/`.
 """
 
 from __future__ import annotations
@@ -40,9 +71,11 @@ from typing import TypedDict
 
 import reflex as rx
 
-from ..componentes.base.acordeon_faq import (
+from ..componentes.base import (
     ItemFaq,
     acordeon_faq,
+    encabezado_seccion,
+    separador_secciones,
 )
 from ..componentes.navegacion import (
     barra_navegacion_superior,
@@ -51,22 +84,19 @@ from ..componentes.navegacion import (
 from ..infraestructura import (
     ANCHO_CONTENIDO,
     AZUL_MARINO_NEON,
-    COLOR_ACENTO_FONDO,
-    COLOR_ACENTO_SOLIDO,
+    BORDE_HOME_AZUL,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    FONDO_AZUL_SUAVE,
     FONDO_HOME,
     NOMBRE_INSTITUTO,
-    PADDING_LATERAL,
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 
@@ -74,7 +104,26 @@ from ..infraestructura import (
 # Constantes locales
 # ======================================================================
 
-ANCHO_MAXIMO: str = "72rem"
+ANCHO_MAXIMO: str = "80rem"
+PADDING_SECCION_HORIZONTAL: str = "1.5rem"
+
+# Colores de los badges de demanda/nivel (semánticos reales)
+COLOR_VERDE_TEXTO = rx.color("green", 11)
+COLOR_VERDE_FONDO = rx.color("green", 3)
+COLOR_VERDE_BORDE = rx.color("green", 7)
+
+COLOR_AMBAR_TEXTO = rx.color("amber", 11)
+COLOR_AMBAR_FONDO = rx.color("amber", 3)
+COLOR_AMBAR_BORDE = rx.color("amber", 7)
+
+COLOR_GRIS_TEXTO = rx.color("gray", 11)
+COLOR_GRIS_FONDO = rx.color("gray", 3)
+COLOR_GRIS_BORDE = rx.color("gray", 7)
+
+# Color del nivel "Oro" (máximo premio)
+COLOR_ORO_TEXTO = rx.color("crimson", 11)
+COLOR_ORO_FONDO = rx.color("crimson", 3)
+COLOR_ORO_BORDE = rx.color("crimson", 7)
 
 
 # ======================================================================
@@ -83,17 +132,14 @@ ANCHO_MAXIMO: str = "72rem"
 
 
 class Base(TypedDict):
-    """Base del programa (card del hero)."""
-
+    """Base del programa."""
     icono: str
     titulo: str
     descripcion: str
-    color: str
 
 
 class PasoProceso(TypedDict):
-    """Paso del proceso de evaluación."""
-
+    """Paso del proceso."""
     numero: str
     icono: str
     titulo: str
@@ -101,44 +147,38 @@ class PasoProceso(TypedDict):
 
 
 class AreaInnovacion(TypedDict):
-    """Área de innovación evaluada."""
-
+    """Área de innovación."""
     icono: str
     titulo: str
     descripcion: str
     carrera: str
-    color: str
 
 
 class NivelBeca(TypedDict):
-    """Nivel de beca por puntaje."""
-
+    """Nivel de beca."""
     rango: str
     puntos: str
     titulo: str
     porcentaje: str
     descripcion: str
     icono: str
-    color: str
+    destacado: bool
 
 
 class Requisito(TypedDict):
-    """Requisito para participar."""
-
+    """Requisito."""
     icono: str
     texto: str
 
 
 class ProyectoGanador(TypedDict):
-    """Proyecto ganador destacado."""
-
+    """Proyecto ganador."""
     anio: str
     titulo: str
     equipo: str
     puntaje: str
     beca: str
     descripcion: str
-    color: str
 
 
 # ======================================================================
@@ -153,7 +193,6 @@ BASES_PROGRAMA: list[Base] = [
             "Las becas se otorgan en las ferias de innovación internas "
             "del instituto. No son automáticas ni por promedio."
         ),
-        "color": "amber",
     },
     {
         "icono": "target",
@@ -162,7 +201,6 @@ BASES_PROGRAMA: list[Base] = [
             "El proyecto debe obtener un puntaje de innovación igual o "
             "superior a 90 sobre 100 para ser elegible."
         ),
-        "color": "violet",
     },
     {
         "icono": "users",
@@ -171,7 +209,6 @@ BASES_PROGRAMA: list[Base] = [
             "Debes estar inscrito y cursando una carrera del instituto "
             "al momento de la feria."
         ),
-        "color": "blue",
     },
 ]
 
@@ -233,7 +270,6 @@ AREAS_INNOVACION: list[AreaInnovacion] = [
             "ciberseguridad."
         ),
         "carrera": "Sistemas Informáticos",
-        "color": "blue",
     },
     {
         "icono": "circuit-board",
@@ -243,7 +279,6 @@ AREAS_INNOVACION: list[AreaInnovacion] = [
             "energías renovables."
         ),
         "carrera": "Electrónica",
-        "color": "cyan",
     },
     {
         "icono": "globe",
@@ -253,7 +288,6 @@ AREAS_INNOVACION: list[AreaInnovacion] = [
             "trámites aduaneros."
         ),
         "carrera": "Comercio Internacional",
-        "color": "orange",
     },
     {
         "icono": "calculator",
@@ -263,7 +297,6 @@ AREAS_INNOVACION: list[AreaInnovacion] = [
             "automatización contable."
         ),
         "carrera": "Contaduría General",
-        "color": "violet",
     },
     {
         "icono": "briefcase",
@@ -273,7 +306,6 @@ AREAS_INNOVACION: list[AreaInnovacion] = [
             "organización empresarial."
         ),
         "carrera": "Secretariado Ejecutivo",
-        "color": "green",
     },
 ]
 
@@ -283,65 +315,38 @@ NIVELES_BECA: list[NivelBeca] = [
         "puntos": "90-93 pts",
         "titulo": "Beca Bronce",
         "porcentaje": "30%",
-        "descripcion": (
-            "Cubre el 30% de la mensualidad del siguiente semestre."
-        ),
+        "descripcion": "Cubre el 30% de la mensualidad del siguiente semestre.",
         "icono": "medal",
-        "color": "amber",
+        "destacado": False,
     },
     {
         "rango": "94 - 97",
         "puntos": "94-97 pts",
         "titulo": "Beca Plata",
         "porcentaje": "50%",
-        "descripcion": (
-            "Cubre el 50% de la mensualidad del siguiente semestre."
-        ),
+        "descripcion": "Cubre el 50% de la mensualidad del siguiente semestre.",
         "icono": "award",
-        "color": "violet",
+        "destacado": False,
     },
     {
         "rango": "98 - 100",
         "puntos": "98-100 pts",
         "titulo": "Beca Oro",
         "porcentaje": "100%",
-        "descripcion": (
-            "Cubre el 100% de la mensualidad del siguiente semestre."
-        ),
+        "descripcion": "Cubre el 100% de la mensualidad del siguiente semestre.",
         "icono": "trophy",
-        "color": "crimson",
+        "destacado": True,
     },
 ]
 
 REQUISITOS_BECA: list[Requisito] = [
-    {
-        "icono": "user-check",
-        "texto": "Ser estudiante activo del instituto al momento de la feria",
-    },
-    {
-        "icono": "users",
-        "texto": "Participar individualmente o en equipos de hasta 3 personas",
-    },
-    {
-        "icono": "lightbulb",
-        "texto": "Presentar un proyecto original de innovación en cualquier área",
-    },
-    {
-        "icono": "file-text",
-        "texto": "Documentar el proceso y entregar la memoria del proyecto",
-    },
-    {
-        "icono": "presentation",
-        "texto": "Exponer el proyecto en la feria con stand y presentación",
-    },
-    {
-        "icono": "shield-check",
-        "texto": "No tener sanciones disciplinarias vigentes",
-    },
-    {
-        "icono": "handshake",
-        "texto": "Aceptar los términos y condiciones del programa de becas",
-    },
+    {"icono": "user-check", "texto": "Ser estudiante activo del instituto al momento de la feria"},
+    {"icono": "users", "texto": "Participar individualmente o en equipos de hasta 3 personas"},
+    {"icono": "lightbulb", "texto": "Presentar un proyecto original de innovación en cualquier área"},
+    {"icono": "file-text", "texto": "Documentar el proceso y entregar la memoria del proyecto"},
+    {"icono": "presentation", "texto": "Exponer el proyecto en la feria con stand y presentación"},
+    {"icono": "shield-check", "texto": "No tener sanciones disciplinarias vigentes"},
+    {"icono": "handshake", "texto": "Aceptar los términos y condiciones del programa de becas"},
 ]
 
 PROYECTOS_GANADORES: list[ProyectoGanador] = [
@@ -355,7 +360,6 @@ PROYECTOS_GANADORES: list[ProyectoGanador] = [
             "Sistema de riego automatizado con sensores de humedad y "
             "control desde app móvil. Redujo el consumo de agua en 40%."
         ),
-        "color": "cyan",
     },
     {
         "anio": "2025",
@@ -367,7 +371,6 @@ PROYECTOS_GANADORES: list[ProyectoGanador] = [
             "Aplicación web para digitalizar inventarios, ventas y "
             "facturación de microempresas locales."
         ),
-        "color": "blue",
     },
     {
         "anio": "2024",
@@ -379,7 +382,6 @@ PROYECTOS_GANADORES: list[ProyectoGanador] = [
             "Modelo de optimización logística para reducir costos de "
             "transporte en exportaciones bolivianas."
         ),
-        "color": "orange",
     },
 ]
 
@@ -457,236 +459,173 @@ PREGUNTAS_BECA: list[ItemFaq] = [
 
 
 def _hero_becas() -> rx.Component:
-    """Hero con badge + título + subtítulo."""
-    return rx.vstack(
-        rx.flex(
-            rx.icon("trophy", size=12, color=AZUL_MARINO_NEON),
-            rx.text(
-                "PROGRAMA DE BECAS POR INNOVACIÓN",
-                font_size="0.75rem",
+    """
+    Hero alineado a la izquierda.
+
+    Estilo Neon.com:
+    - Badge con icono de trofeo.
+    - Título con énfasis bicolor.
+    - Subtítulo descriptivo.
+    """
+    return rx.box(
+        rx.vstack(
+            rx.flex(
+                rx.icon("trophy", size=12, color=AZUL_MARINO_NEON),
+                rx.text(
+                    "PROGRAMA DE BECAS POR INNOVACIÓN",
+                    font_size="0.6875rem",
+                    font_weight="700",
+                    color=AZUL_MARINO_NEON,
+                    letter_spacing="0.15em",
+                    text_transform="uppercase",
+                ),
+                align="center",
+                gap="0.5rem",
+                margin_bottom="1.5rem",
+            ),
+            # ─── Título con énfasis bicolor ────────────────────
+            rx.heading(
+                rx.text.span("Becas y "),
+                rx.text.span(
+                    "Reconocimientos",
+                    color=AZUL_MARINO_NEON,
+                ),
+                as_="h1",
+                font_size=["2rem", "2.5rem", "3rem"],
                 font_weight="700",
-                color=AZUL_MARINO_NEON,
-                letter_spacing="0.05em",
+                color=TEXTO_HOME_PRINCIPAL,
+                letter_spacing="-0.03em",
+                line_height="1.1",
+                max_width="56rem",
             ),
-            align="center",
-            gap="0.5rem",
-            padding="0.5rem 1rem",
-            border_radius=RADIO_PASTILLA,
-            background=COLOR_ACENTO_FONDO,
-            border=f"1px solid {AZUL_MARINO_NEON}",
-            width="fit-content",
-            margin_bottom="1rem",
-        ),
-        rx.heading(
-            "Becas y ",
-            rx.text.span(
-                "Reconocimientos",
-                color=AZUL_MARINO_NEON,
+            rx.text(
+                "En INSTEIN no damos becas por promedio ni descuentos "
+                "comerciales. Premiamos la innovación real: si tu "
+                "proyecto destaca en nuestras ferias internas, te "
+                "becamos.",
+                font_size=["1rem", "1.125rem"],
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.6",
+                max_width="48rem",
+                margin_top="1rem",
             ),
-            "",
-            size="8",
-            font_weight="900",
-            color=COLOR_TEXTO_PRINCIPAL,
-            text_align="center",
-            letter_spacing="-0.03em",
-            line_height="1.1",
+            align="start",
+            spacing="0",
+            width="100%",
         ),
-        rx.text(
-            "En INSTEIN no damos becas por promedio ni descuentos "
-            "comerciales. Premiamos la innovación real: si tu proyecto "
-            "destaca en nuestras ferias internas, te becamos.",
-            font_size="1rem",
-            color=COLOR_TEXTO_CUERPO,
-            text_align="center",
-            max_width="52rem",
-            line_height="1.7",
-            margin_top="0.5rem",
-        ),
-        align="center",
-        spacing="3",
-        padding=f"5rem {PADDING_LATERAL} 3rem {PADDING_LATERAL}",
         max_width=ANCHO_MAXIMO,
         margin="0 auto",
+        padding=[
+            f"4rem {PADDING_SECCION_HORIZONTAL} 3rem {PADDING_SECCION_HORIZONTAL}",
+            f"6rem {PADDING_SECCION_HORIZONTAL} 4rem {PADDING_SECCION_HORIZONTAL}",
+        ],
         width="100%",
     )
 
 
 # ======================================================================
-# Bases del programa
+# Sección 01 — Bases del programa
 # ======================================================================
 
 
 def _tarjeta_base(item: Base) -> rx.Component:
     """Tarjeta de base del programa."""
-    color_scheme = item["color"]
-
     return rx.box(
         rx.vstack(
-            rx.flex(
-                rx.icon(
-                    item["icono"],
-                    size=22,
-                    color=rx.color(color_scheme, 11),
-                ),
-                height="2.75rem",
-                width="2.75rem",
-                border_radius=RADIO_GRANDE,
-                background=rx.color(color_scheme, 3),
-                border=f"1px solid {rx.color(color_scheme, 7)}",
-                align="center",
-                justify="center",
-                margin_bottom="0.75rem",
-            ),
+            rx.icon(item["icono"], size=24, color=AZUL_MARINO_NEON),
             rx.text(
                 item["titulo"],
-                font_size="0.9375rem",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                font_size="1rem",
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
+                margin_top="0.75rem",
             ),
             rx.text(
                 item["descripcion"],
-                font_size="0.8125rem",
-                color=COLOR_TEXTO_CUERPO,
+                font_size="0.875rem",
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
+                margin_top="0.5rem",
             ),
             align="start",
-            spacing="1",
+            spacing="0",
             width="100%",
+            height="100%",
         ),
-        padding="1.5rem",
+        padding="2rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
         background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {AZUL_MARINO_NEON}",
         width="100%",
         height="100%",
         transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-4px)",
-            "border_color": rx.color(color_scheme, 7),
-            "box_shadow": (
-                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
-            ),
-        },
+        _hover={"border_color": AZUL_MARINO_NEON},
     )
 
 
-def _grid_bases() -> rx.Component:
+def _seccion_bases() -> rx.Component:
     """Grid con las 3 bases del programa."""
-    return rx.box(
-        rx.grid(
-            *[_tarjeta_base(item) for item in BASES_PROGRAMA],
-            columns=rx.breakpoints(initial="1", md="3"),
-            spacing="4",
-            width="100%",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"0 {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
+    return rx.grid(
+        *[_tarjeta_base(item) for item in BASES_PROGRAMA],
+        columns=rx.breakpoints(initial="1", md="3"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# Proceso (timeline)
+# Sección 02 — Cómo funciona (timeline)
 # ======================================================================
 
 
-def _paso_timeline(
-    paso: PasoProceso,
-    indice: int,
-    total: int,
-) -> rx.Component:
+def _paso_timeline(paso: PasoProceso) -> rx.Component:
     """Paso individual del timeline."""
-    es_ultimo = indice == total - 1
-
     return rx.flex(
-        rx.vstack(
-            rx.box(
-                rx.text(
-                    paso["numero"],
-                    font_size="0.875rem",
-                    font_weight="900",
-                    color="white",
-                    line_height="1",
-                ),
-                height="2.5rem",
-                width="2.5rem",
-                border_radius=RADIO_PASTILLA,
-                background=AZUL_MARINO_NEON,
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                flex_shrink="0",
-                box_shadow=f"0 4px 12px -2px {AZUL_MARINO_NEON}",
+        # ─── Número ─────────────────────────────────────────────
+        rx.box(
+            rx.text(
+                paso["numero"],
+                font_size="0.875rem",
+                font_weight="900",
+                color="white",
+                line_height="1",
             ),
-            rx.cond(
-                not es_ultimo,
-                rx.box(
-                    width="2px",
-                    background=COLOR_DIVISOR,
-                    flex="1",
-                    min_height="2rem",
-                ),
-                rx.fragment(),
-            ),
-            align="center",
-            spacing="0",
-            height="100%",
+            height="2.5rem",
+            width="2.5rem",
+            border_radius=RADIO_PASTILLA,
+            background=AZUL_MARINO_NEON,
+            display="flex",
+            align_items="center",
+            justify_content="center",
             flex_shrink="0",
         ),
-        rx.box(
+        # ─── Contenido ──────────────────────────────────────────
+        rx.vstack(
             rx.flex(
-                rx.flex(
-                    rx.icon(
-                        paso["icono"],
-                        size=20,
-                        color=AZUL_MARINO_NEON,
-                    ),
-                    height="2.5rem",
-                    width="2.5rem",
-                    border_radius=RADIO_MEDIO,
-                    background=COLOR_ACENTO_FONDO,
-                    border=f"1px solid {AZUL_MARINO_NEON}",
-                    align="center",
-                    justify="center",
-                    flex_shrink="0",
+                rx.icon(paso["icono"], size=16, color=AZUL_MARINO_NEON),
+                rx.text(
+                    paso["titulo"],
+                    font_size="1rem",
+                    font_weight="700",
+                    color=TEXTO_HOME_PRINCIPAL,
                 ),
-                rx.vstack(
-                    rx.text(
-                        paso["titulo"],
-                        font_size="1rem",
-                        font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        line_height="1.3",
-                    ),
-                    rx.text(
-                        paso["descripcion"],
-                        font_size="0.875rem",
-                        color=COLOR_TEXTO_CUERPO,
-                        line_height="1.6",
-                    ),
-                    align="start",
-                    spacing="1",
-                    flex="1",
-                    min_width="0",
-                ),
-                align="start",
-                gap="1rem",
-                width="100%",
+                align="center",
+                gap="0.5rem",
             ),
-            padding="1.25rem",
-            border_radius=RADIO_EXTRA_GRANDE,
-            background=COLOR_FONDO_CARTA,
-            border=f"1px solid {COLOR_BORDE_SUAVE}",
-            width="100%",
-            margin_bottom="1rem" if not es_ultimo else "0",
-            margin_left="0.75rem",
-            transition="all 0.2s",
-            _hover={
-                "border_color": AZUL_MARINO_NEON,
-                "box_shadow": f"0 8px 20px -8px {AZUL_MARINO_NEON}",
-            },
+            rx.text(
+                paso["descripcion"],
+                font_size="0.875rem",
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.6",
+                margin_top="0.5rem",
+            ),
+            align="start",
+            spacing="0",
+            flex="1",
+            min_width="0",
         ),
         align="start",
         gap="1rem",
@@ -695,519 +634,308 @@ def _paso_timeline(
 
 
 def _seccion_proceso() -> rx.Component:
-    """Sección del proceso de evaluación."""
-    total = len(PASOS_PROCESO)
-
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "CÓMO FUNCIONA",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "El camino a la beca",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "De la idea al reconocimiento en 5 etapas claras.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="3rem",
-            ),
-            rx.vstack(
-                *[
-                    _paso_timeline(paso, i, total)
-                    for i, paso in enumerate(PASOS_PROCESO)
-                ],
-                spacing="0",
-                width="100%",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_CONTENIDO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    """Timeline con los 5 pasos."""
+    return rx.vstack(
+        *[_paso_timeline(paso) for paso in PASOS_PROCESO],
+        spacing="6",
         width="100%",
     )
 
 
 # ======================================================================
-# Áreas de innovación
+# Sección 03 — Áreas de innovación
 # ======================================================================
 
 
 def _tarjeta_area(item: AreaInnovacion) -> rx.Component:
     """Tarjeta de área de innovación."""
-    color_scheme = item["color"]
-
     return rx.box(
         rx.vstack(
-            rx.flex(
-                rx.icon(
-                    item["icono"],
-                    size=20,
-                    color=rx.color(color_scheme, 11),
-                ),
-                height="2.5rem",
-                width="2.5rem",
-                border_radius=RADIO_GRANDE,
-                background=rx.color(color_scheme, 3),
-                border=f"1px solid {rx.color(color_scheme, 7)}",
-                align="center",
-                justify="center",
-                margin_bottom="0.75rem",
-            ),
+            rx.icon(item["icono"], size=20, color=AZUL_MARINO_NEON),
             rx.text(
                 item["titulo"],
-                font_size="0.9375rem",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                font_size="1rem",
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
+                margin_top="0.75rem",
             ),
             rx.text(
                 item["descripcion"],
                 font_size="0.8125rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
+                margin_top="0.5rem",
             ),
             rx.flex(
-                rx.icon(
-                    "graduation-cap",
-                    size=12,
-                    color=rx.color(color_scheme, 11),
-                ),
+                rx.icon("graduation-cap", size=12, color=AZUL_MARINO_NEON),
                 rx.text(
                     item["carrera"],
                     font_size="0.6875rem",
                     font_weight="700",
-                    color=rx.color(color_scheme, 11),
+                    color=AZUL_MARINO_NEON,
                     text_transform="uppercase",
-                    letter_spacing="0.05em",
+                    letter_spacing="0.1em",
                 ),
                 align="center",
                 gap="0.375rem",
-                margin_top="0.5rem",
-                padding="0.25rem 0.625rem",
-                border_radius=RADIO_PASTILLA,
-                background=rx.color(color_scheme, 3),
-                border=f"1px solid {rx.color(color_scheme, 7)}",
-                width="fit-content",
+                margin_top="1rem",
             ),
             align="start",
-            spacing="1",
+            spacing="0",
             width="100%",
             height="100%",
         ),
         padding="1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
         background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {AZUL_MARINO_NEON}",
         width="100%",
         height="100%",
         transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-4px)",
-            "border_color": rx.color(color_scheme, 7),
-        },
+        _hover={"border_color": AZUL_MARINO_NEON},
     )
 
 
 def _seccion_areas() -> rx.Component:
-    """Sección con las áreas de innovación."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "ÁREAS DE INNOVACIÓN",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Compite en tu área",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Puedes presentar tu proyecto en cualquiera de las "
-                    "5 áreas de innovación, alineadas con las carreras "
-                    "del instituto.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.grid(
-                *[_tarjeta_area(item) for item in AREAS_INNOVACION],
-                columns=rx.breakpoints(initial="1", sm="2", lg="3"),
-                spacing="4",
-                width="100%",
-                align_items="stretch",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    """Grid con las 5 áreas de innovación."""
+    return rx.grid(
+        *[_tarjeta_area(item) for item in AREAS_INNOVACION],
+        columns=rx.breakpoints(initial="1", sm="2", lg="3"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# Niveles de beca
+# Sección 04 — Niveles de beca
 # ======================================================================
 
 
-def _tarjeta_nivel(
-    nivel: NivelBeca,
-    destacado: bool = False,
-) -> rx.Component:
-    """Tarjeta de nivel de beca."""
-    color_scheme = nivel["color"]
+def _tarjeta_nivel(nivel: NivelBeca) -> rx.Component:
+    """
+    Tarjeta de nivel de beca.
+
+    El nivel "Oro" (destacado) usa crimson. El resto usa azul marino.
+    """
+    destacado = nivel["destacado"]
+
+    color_texto = COLOR_ORO_TEXTO if destacado else AZUL_MARINO_NEON
+    color_fondo = COLOR_ORO_FONDO if destacado else FONDO_AZUL_SUAVE
+    color_borde = COLOR_ORO_BORDE if destacado else BORDE_HOME_AZUL
 
     return rx.box(
         rx.vstack(
+            # ─── Badge de puntos ────────────────────────────────
             rx.flex(
                 rx.text(
                     nivel["puntos"],
                     font_size="0.6875rem",
                     font_weight="700",
-                    color=rx.color(color_scheme, 11),
+                    color=color_texto,
                     letter_spacing="0.05em",
                     text_transform="uppercase",
                 ),
                 padding="0.25rem 0.625rem",
                 border_radius=RADIO_PASTILLA,
-                background=rx.color(color_scheme, 3),
-                border=f"1px solid {rx.color(color_scheme, 7)}",
+                background=color_fondo,
+                border=f"1px solid {color_borde}",
                 width="fit-content",
             ),
-            rx.flex(
-                rx.icon(
-                    nivel["icono"],
-                    size=28,
-                    color=rx.color(color_scheme, 11),
-                ),
-                height="3.5rem",
-                width="3.5rem",
-                border_radius=RADIO_EXTRA_GRANDE,
-                background=rx.color(color_scheme, 3),
-                border=f"2px solid {rx.color(color_scheme, 7)}",
-                align="center",
-                justify="center",
-                margin_top="0.5rem",
+            # ─── Icono ──────────────────────────────────────────
+            rx.icon(
+                nivel["icono"],
+                size=28,
+                color=color_texto,
+                margin_top="1rem",
             ),
+            # ─── Título ─────────────────────────────────────────
             rx.text(
                 nivel["titulo"],
                 font_size="1.125rem",
-                font_weight="900",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
+                font_weight="800",
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.2",
+                margin_top="0.75rem",
             ),
-            rx.flex(
-                rx.text(
-                    nivel["porcentaje"],
-                    font_size="3rem",
-                    font_weight="900",
-                    color=rx.color(color_scheme, 11),
-                    line_height="1",
-                    letter_spacing="-0.03em",
-                ),
-                align="center",
-                justify="center",
+            # ─── Porcentaje grande ──────────────────────────────
+            rx.text(
+                nivel["porcentaje"],
+                font_size="3rem",
+                font_weight="900",
+                color=color_texto,
+                line_height="1",
+                letter_spacing="-0.03em",
+                margin_top="0.75rem",
             ),
             rx.text(
                 "de la mensualidad",
                 font_size="0.75rem",
                 font_weight="600",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_transform="uppercase",
-                letter_spacing="0.05em",
+                letter_spacing="0.1em",
+                margin_top="0.25rem",
             ),
+            # ─── Descripción ────────────────────────────────────
             rx.text(
                 nivel["descripcion"],
-                font_size="0.8125rem",
-                color=COLOR_TEXTO_CUERPO,
+                font_size="0.875rem",
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
-                text_align="center",
-                margin_top="0.5rem",
+                margin_top="1rem",
             ),
-            align="center",
-            spacing="2",
+            align="start",
+            spacing="0",
             width="100%",
             height="100%",
         ),
-        padding="2rem 1.5rem",
+        padding="2rem",
         border_radius=RADIO_EXTRA_GRANDE,
         background=COLOR_FONDO_CARTA,
-        border=rx.cond(
-            destacado,
-            f"2px solid {rx.color(color_scheme, 9)}",
-            f"1px solid {COLOR_BORDE_SUAVE}",
-        ),
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {color_texto}",
         width="100%",
         height="100%",
-        transition="all 0.3s",
-        position="relative",
-        _hover={
-            "transform": "translateY(-6px)",
-            "border_color": rx.color(color_scheme, 9),
-            "box_shadow": (
-                f"0 16px 40px -10px {rx.color(color_scheme, 9)}"
-            ),
-        },
+        transition="all 0.2s",
+        _hover={"border_color": color_texto},
     )
 
 
 def _seccion_niveles() -> rx.Component:
-    """Sección con los 3 niveles de beca."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "NIVELES DE BECA",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Según tu puntaje de innovación",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "A mayor puntaje, mayor porcentaje de beca. Todos "
-                    "los niveles se aplican al siguiente semestre.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2.5rem",
-            ),
-            rx.grid(
-                _tarjeta_nivel(NIVELES_BECA[0]),
-                _tarjeta_nivel(NIVELES_BECA[1]),
-                _tarjeta_nivel(NIVELES_BECA[2], destacado=True),
-                columns=rx.breakpoints(initial="1", md="3"),
-                spacing="4",
-                width="100%",
-                align_items="stretch",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    """Grid con los 3 niveles de beca."""
+    return rx.grid(
+        *[_tarjeta_nivel(nivel) for nivel in NIVELES_BECA],
+        columns=rx.breakpoints(initial="1", md="3"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# Requisitos
+# Sección 05 — Requisitos
 # ======================================================================
 
 
 def _item_requisito(item: Requisito) -> rx.Component:
     """Item individual de requisito."""
     return rx.flex(
-        rx.flex(
-            rx.icon(
-                item["icono"],
-                size=16,
-                color=AZUL_MARINO_NEON,
-            ),
-            height="2rem",
-            width="2rem",
-            border_radius=RADIO_MEDIO,
-            background=COLOR_ACENTO_FONDO,
-            border=f"1px solid {AZUL_MARINO_NEON}",
-            align="center",
-            justify="center",
+        rx.icon(
+            item["icono"],
+            size=16,
+            color=AZUL_MARINO_NEON,
             flex_shrink="0",
+            margin_top="0.1875rem",
         ),
         rx.text(
             item["texto"],
-            font_size="0.875rem",
-            color=COLOR_TEXTO_CUERPO,
-            line_height="1.5",
+            font_size="0.9375rem",
+            color=TEXTO_HOME_MAS_SUAVE,
+            line_height="1.6",
             flex="1",
         ),
-        align="center",
-        gap="0.875rem",
+        align="start",
+        gap="0.75rem",
         width="100%",
-        padding="0.875rem 1rem",
+        padding="1rem",
         border_radius=RADIO_MEDIO,
         background=COLOR_FONDO_SUAVE,
         border=f"1px solid {COLOR_BORDE_SUAVE}",
         transition="all 0.2s",
-        _hover={
-            "border_color": AZUL_MARINO_NEON,
-            "transform": "translateX(4px)",
-        },
+        _hover={"border_color": AZUL_MARINO_NEON},
     )
 
 
 def _seccion_requisitos() -> rx.Component:
-    """Sección con los requisitos para participar."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "REQUISITOS",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Para participar en la feria",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Cumpliendo estos requisitos, cualquier estudiante "
-                    "activo puede competir por una beca.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.vstack(
-                *[_item_requisito(item) for item in REQUISITOS_BECA],
-                spacing="2",
-                width="100%",
-                max_width="48rem",
-                margin="0 auto",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    """Lista de requisitos."""
+    return rx.vstack(
+        *[_item_requisito(item) for item in REQUISITOS_BECA],
+        spacing="3",
         width="100%",
+        max_width="48rem",
     )
 
 
 # ======================================================================
-# Proyectos ganadores
+# Sección 06 — Proyectos ganadores
 # ======================================================================
 
 
 def _tarjeta_ganador(proyecto: ProyectoGanador) -> rx.Component:
     """Tarjeta de proyecto ganador."""
-    color_scheme = proyecto["color"]
-
     return rx.box(
         rx.vstack(
+            # ─── Año + puntaje ──────────────────────────────────
             rx.flex(
-                rx.flex(
-                    rx.text(
-                        proyecto["anio"],
-                        font_size="0.6875rem",
-                        font_weight="700",
-                        color=rx.color(color_scheme, 11),
-                        letter_spacing="0.05em",
-                    ),
-                    padding="0.25rem 0.625rem",
-                    border_radius=RADIO_PASTILLA,
-                    background=rx.color(color_scheme, 3),
-                    border=f"1px solid {rx.color(color_scheme, 7)}",
-                    width="fit-content",
+                rx.text(
+                    proyecto["anio"],
+                    font_size="0.6875rem",
+                    font_weight="700",
+                    color=AZUL_MARINO_NEON,
+                    letter_spacing="0.05em",
+                ),
+                rx.text(
+                    "·",
+                    font_size="0.6875rem",
+                    color=TEXTO_HOME_MAS_SUAVE,
                 ),
                 rx.flex(
                     rx.icon(
                         "star",
                         size=12,
-                        color=rx.color("amber", 9),
-                        fill=rx.color("amber", 9),
+                        color=COLOR_AMBAR_TEXTO,
+                        fill=COLOR_AMBAR_TEXTO,
                     ),
                     rx.text(
                         f"{proyecto['puntaje']} pts",
                         font_size="0.6875rem",
                         font_weight="700",
-                        color=rx.color(color_scheme, 11),
+                        color=COLOR_AMBAR_TEXTO,
                     ),
                     align="center",
                     gap="0.25rem",
-                    padding="0.25rem 0.625rem",
-                    border_radius=RADIO_PASTILLA,
-                    background=rx.color(color_scheme, 3),
-                    border=f"1px solid {rx.color(color_scheme, 7)}",
-                    width="fit-content",
                 ),
+                align="center",
                 gap="0.5rem",
-                flex_wrap="wrap",
                 margin_bottom="0.75rem",
             ),
+            # ─── Título ─────────────────────────────────────────
             rx.text(
                 proyecto["titulo"],
                 font_size="1rem",
                 font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
             ),
+            # ─── Equipo ─────────────────────────────────────────
             rx.text(
                 proyecto["equipo"],
                 font_size="0.75rem",
                 font_weight="600",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_transform="uppercase",
-                letter_spacing="0.05em",
+                letter_spacing="0.1em",
+                margin_top="0.5rem",
             ),
+            # ─── Descripción ────────────────────────────────────
             rx.text(
                 proyecto["descripcion"],
                 font_size="0.875rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
-                margin_top="0.5rem",
+                margin_top="0.75rem",
             ),
+            # ─── Badge de beca ──────────────────────────────────
             rx.flex(
-                rx.icon("trophy", size=12, color=rx.color("amber", 11)),
+                rx.icon("trophy", size=12, color=COLOR_ORO_TEXTO),
                 rx.text(
                     proyecto["beca"],
                     font_size="0.6875rem",
                     font_weight="700",
-                    color=rx.color("amber", 11),
+                    color=COLOR_ORO_TEXTO,
                     text_transform="uppercase",
                     letter_spacing="0.05em",
                 ),
@@ -1215,131 +943,52 @@ def _tarjeta_ganador(proyecto: ProyectoGanador) -> rx.Component:
                 gap="0.375rem",
                 padding="0.375rem 0.75rem",
                 border_radius=RADIO_PASTILLA,
-                background=rx.color("amber", 3),
-                border=f"1px solid {rx.color('amber', 7)}",
+                background=COLOR_ORO_FONDO,
+                border=f"1px solid {COLOR_ORO_BORDE}",
                 width="fit-content",
-                margin_top="0.5rem",
+                margin_top="1rem",
             ),
             align="start",
-            spacing="1",
+            spacing="0",
             width="100%",
             height="100%",
         ),
         padding="1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
         background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {AZUL_MARINO_NEON}",
         width="100%",
         height="100%",
         transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-4px)",
-            "border_color": rx.color(color_scheme, 7),
-            "box_shadow": (
-                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
-            ),
-        },
+        _hover={"border_color": AZUL_MARINO_NEON},
     )
 
 
 def _seccion_ganadores() -> rx.Component:
-    """Sección con proyectos ganadores destacados."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "PROYECTOS GANADORES",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Ejemplos que ya ganaron beca",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Algunos de los proyectos destacados en ferias "
-                    "anteriores. ¿Será el tuyo el próximo?",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.grid(
-                *[_tarjeta_ganador(p) for p in PROYECTOS_GANADORES],
-                columns=rx.breakpoints(initial="1", sm="2", lg="3"),
-                spacing="4",
-                width="100%",
-                align_items="stretch",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    """Grid con los proyectos ganadores."""
+    return rx.grid(
+        *[_tarjeta_ganador(p) for p in PROYECTOS_GANADORES],
+        columns=rx.breakpoints(initial="1", sm="2", lg="3"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# FAQ
+# Sección 07 — FAQ
 # ======================================================================
 
 
 def _seccion_faq() -> rx.Component:
-    """Sección de preguntas frecuentes del programa."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "PREGUNTAS FRECUENTES",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Dudas sobre las becas",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Todo lo que necesitas saber antes de participar.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            acordeon_faq(
-                items=PREGUNTAS_BECA,
-                variante="light",
-                icono="help-circle",
-                color_acento=AZUL_MARINO_NEON,
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_CONTENIDO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
-        width="100%",
+    """Acordeón de FAQ del programa."""
+    return acordeon_faq(
+        items=PREGUNTAS_BECA,
+        variante="light",
+        icono="help-circle",
+        color_acento=AZUL_MARINO_NEON,
+        max_width="56rem",
     )
 
 
@@ -1348,106 +997,38 @@ def _seccion_faq() -> rx.Component:
 # ======================================================================
 
 
-def _cta_becas() -> rx.Component:
-    """Bloque CTA final."""
-    return rx.box(
-        rx.vstack(
-            rx.flex(
-                rx.icon("trophy", size=14, color=AZUL_MARINO_NEON),
-                rx.text(
-                    "PRÓXIMA FERIA DE INNOVACIÓN",
-                    font_size="0.6875rem",
-                    font_weight="700",
-                    color=AZUL_MARINO_NEON,
-                    letter_spacing="0.1em",
-                ),
-                align="center",
-                gap="0.5rem",
-                margin_bottom="1rem",
-            ),
-            rx.heading(
-                "¿Tienes una idea innovadora?",
-                size="7",
-                font_weight="900",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
-                letter_spacing="-0.03em",
-            ),
-            rx.text(
-                "Consulta las fechas de la próxima feria interna y "
-                "comienza a preparar tu proyecto. Te apoyamos con "
-                "mentores y recursos.",
-                font_size="1rem",
-                color=COLOR_TEXTO_CUERPO,
-                text_align="center",
-                max_width="42rem",
-                line_height="1.6",
-                margin_top="0.5rem",
-            ),
-            rx.flex(
-                rx.link(
-                    rx.icon("message-circle", size=18),
-                    rx.text(
-                        "Consultar por WhatsApp",
-                        as_="span",
-                        font_weight="700",
-                    ),
-                    href="/contacto",
-                    text_decoration="none",
-                    display="inline-flex",
-                    align_items="center",
-                    gap="0.5rem",
-                    background=AZUL_MARINO_NEON,
-                    color="white",
-                    padding="1rem 2rem",
-                    border_radius=RADIO_PASTILLA,
-                    font_size="1rem",
-                    box_shadow=(
-                        f"0 10px 25px -5px {AZUL_MARINO_NEON}"
-                    ),
-                    transition="all 0.2s",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "filter": "brightness(1.1)",
-                    },
-                ),
-                rx.link(
-                    rx.icon("calendar-check", size=18),
-                    rx.text(
-                        "Ver calendario",
-                        as_="span",
-                        font_weight="600",
-                    ),
-                    href="/calendario",
-                    text_decoration="none",
-                    display="inline-flex",
-                    align_items="center",
-                    gap="0.5rem",
-                    background="transparent",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    padding="1rem 2rem",
-                    border_radius=RADIO_PASTILLA,
-                    font_size="1rem",
-                    border=f"1px solid {COLOR_BORDE_SUAVE}",
-                    transition="all 0.2s",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "border_color": AZUL_MARINO_NEON,
-                    },
-                ),
-                gap="0.75rem",
-                flex_direction=rx.breakpoints(initial="column", sm="row"),
-                align="center",
-                justify="center",
-                margin_top="1.5rem",
-            ),
-            align="center",
-            spacing="2",
+def _cta_final() -> rx.Component:
+    """CTA final hacia /contacto."""
+    return rx.flex(
+        rx.text(
+            "¿Tienes una idea innovadora?",
+            font_size="1rem",
+            color=TEXTO_HOME_MAS_SUAVE,
         ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"4rem {PADDING_LATERAL} 5rem {PADDING_LATERAL}",
+        rx.link(
+            rx.text(
+                "Consultar por WhatsApp",
+                font_size="1rem",
+                font_weight="700",
+                color=AZUL_MARINO_NEON,
+            ),
+            rx.icon("arrow-right", size=16, color=AZUL_MARINO_NEON),
+            href="/contacto",
+            text_decoration="none",
+            display="inline-flex",
+            align_items="center",
+            gap="0.375rem",
+            transition="gap 0.2s",
+            _hover={"gap": "0.625rem"},
+        ),
+        align="center",
+        justify="start",
+        gap="0.5rem",
+        flex_wrap="wrap",
         width="100%",
+        padding_top="3rem",
+        margin_top="2rem",
+        border_top=f"1px solid {COLOR_DIVISOR}",
     )
 
 
@@ -1459,32 +1040,262 @@ def _cta_becas() -> rx.Component:
 @rx.page(
     route="/becas",
     title=f"Becas y Reconocimientos | {NOMBRE_INSTITUTO}",
+    description=(
+        "Programa de becas por innovación del Instituto Técnico "
+        "Integrado San Antonio de Padua (INSTEIN). Becas de hasta "
+        "100% de la mensualidad por proyectos destacados."
+    ),
 )
 def vista_becas() -> rx.Component:
     """
-    Página del programa de becas y reconocimientos del instituto.
+    Página del programa de becas — estilo Neon.com.
 
     Aclaración importante: NO hay becas generales ni descuentos
     comerciales. El único programa de becas es el de innovación,
     que se gana en las ferias internas.
     """
-    return rx.vstack(
-        barra_navegacion_superior(),
-        _hero_becas(),
-        _grid_bases(),
-        _seccion_proceso(),
-        _seccion_areas(),
-        _seccion_niveles(),
-        _seccion_requisitos(),
-        _seccion_ganadores(),
-        _seccion_faq(),
-        _cta_becas(),
-        pie_pagina_institucional(),
-        align="center",
-        min_height="100vh",
+    return rx.box(
+        rx.vstack(
+            # =============================================================
+            # 1. HEADER
+            # =============================================================
+            rx.box(
+                barra_navegacion_superior(),
+                width="100%",
+                role="banner",
+                aria_label="Navegación principal",
+            ),
+            # =============================================================
+            # 2. MAIN
+            # =============================================================
+            rx.el.main(
+                # ─── Hero ───────────────────────────────────────────
+                _hero_becas(),
+                # ─── Sección 01 — Bases del programa ────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="01",
+                            etiqueta="Bases del programa",
+                            titulo="Cómo funciona",
+                            titulo_enfasis="el programa de becas",
+                            subtitulo=(
+                                "El programa de becas por innovación "
+                                "tiene 3 reglas simples."
+                            ),
+                        ),
+                        _seccion_bases(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="bases",
+                    aria_label="Bases del programa",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 02 — Cómo funciona ─────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="02",
+                            etiqueta="El camino a la beca",
+                            titulo="De la idea al reconocimiento",
+                            titulo_enfasis="en 5 etapas",
+                            subtitulo=(
+                                "Un proceso claro para que sepas qué "
+                                "esperar en cada momento."
+                            ),
+                        ),
+                        _seccion_proceso(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="proceso",
+                    aria_label="Proceso de evaluación",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 03 — Áreas de innovación ───────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="03",
+                            etiqueta="Áreas de innovación",
+                            titulo="Compite",
+                            titulo_enfasis="en tu área",
+                            subtitulo=(
+                                "5 áreas de innovación alineadas con "
+                                "las carreras del instituto."
+                            ),
+                        ),
+                        _seccion_areas(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="areas",
+                    aria_label="Áreas de innovación",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 04 — Niveles de beca ───────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="04",
+                            etiqueta="Niveles de beca",
+                            titulo="Según",
+                            titulo_enfasis="tu puntaje de innovación",
+                            subtitulo=(
+                                "A mayor puntaje, mayor porcentaje de "
+                                "beca. Se aplica al siguiente semestre."
+                            ),
+                        ),
+                        _seccion_niveles(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="niveles",
+                    aria_label="Niveles de beca",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 05 — Requisitos ────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="05",
+                            etiqueta="Requisitos",
+                            titulo="Para participar",
+                            titulo_enfasis="en la feria",
+                            subtitulo=(
+                                "Cumpliendo estos requisitos, cualquier "
+                                "estudiante activo puede competir."
+                            ),
+                        ),
+                        _seccion_requisitos(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="requisitos",
+                    aria_label="Requisitos para participar",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 06 — Proyectos ganadores ───────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="06",
+                            etiqueta="Proyectos ganadores",
+                            titulo="Ejemplos que",
+                            titulo_enfasis="ya ganaron beca",
+                            subtitulo=(
+                                "Algunos de los proyectos destacados en "
+                                "ferias anteriores."
+                            ),
+                        ),
+                        _seccion_ganadores(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="ganadores",
+                    aria_label="Proyectos ganadores",
+                    scroll_margin_top="5rem",
+                ),
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 07 — FAQ ───────────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="07",
+                            etiqueta="Preguntas frecuentes",
+                            titulo="Dudas",
+                            titulo_enfasis="sobre las becas",
+                            subtitulo=(
+                                "Todo lo que necesitas saber antes de "
+                                "participar."
+                            ),
+                        ),
+                        _seccion_faq(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="faq",
+                    aria_label="Preguntas frecuentes sobre becas",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── CTA final ──────────────────────────────────────
+                rx.box(
+                    _cta_final(),
+                    max_width=ANCHO_CONTENIDO,
+                    margin="0 auto",
+                    padding_x=PADDING_SECCION_HORIZONTAL,
+                    padding_bottom="6rem",
+                    width="100%",
+                ),
+                width="100%",
+                aria_label="Programa de becas",
+            ),
+            # =============================================================
+            # 3. FOOTER
+            # =============================================================
+            rx.box(
+                pie_pagina_institucional(),
+                width="100%",
+                role="contentinfo",
+                aria_label="Información del sitio",
+            ),
+            align="center",
+            min_height="100vh",
+            width="100%",
+            spacing="0",
+            background=FONDO_HOME,
+        ),
         width="100%",
-        spacing="0",
         background=FONDO_HOME,
+        lang="es",
     )
 
 

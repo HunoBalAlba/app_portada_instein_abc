@@ -57,7 +57,6 @@ import reflex as rx
 
 from ...base.acordeon_faq import acordeon_faq
 from ...base.primitivos import contenedor_clicable
-from ..tarjeta_carrera import fila_materia
 
 # ======================================================================
 # Imports de dominio (fachada)

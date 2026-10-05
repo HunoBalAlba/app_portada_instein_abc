@@ -44,13 +44,11 @@ simple y robusto.
 from __future__ import annotations
 
 from ...dominio.modelos.blog import (
-    Categoria,
     CategoriaId,
     Post,
 )
 from ...infraestructura.repositorios.repositorio_blog import (
     obtener_post as _obtener_post_repo,
-    obtener_post_destacado as _obtener_post_destacado_repo,
     obtener_posts as _obtener_posts_repo,
 )
 

@@ -19,7 +19,6 @@ from ...dominio.modelos.calendario import (
 from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
-    BORDE_HOME_SUAVE,
     COLOR_ACENTO_FONDO,
     COLOR_ACENTO_SOLIDO,
     COLOR_BORDE_SUAVE,

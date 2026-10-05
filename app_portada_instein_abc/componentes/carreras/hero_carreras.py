@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import reflex as rx
 
-from ..base.primitivos import enlace_navegacion
 from ...dominio import (
     CarreraConEtiqueta,
     EstadoInstitucional,

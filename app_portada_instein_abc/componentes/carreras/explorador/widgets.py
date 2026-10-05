@@ -47,12 +47,10 @@ from ....infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     COLOR_TEXTO_PRINCIPAL,
     COLOR_TEXTO_SECUNDARIO,
-    FONDO_AZUL_SUAVE,
 )
 from ....infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
-    RADIO_MEDIO,
     RADIO_PASTILLA,
 )
 

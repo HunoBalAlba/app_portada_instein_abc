@@ -67,9 +67,7 @@ from ...dominio import (
 )
 from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
     COLOR_ACENTO_FONDO,
-    COLOR_ACENTO_SOLIDO,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,

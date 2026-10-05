@@ -6,6 +6,14 @@ Contenido
 - `seccion_perfil_y_campo_laboral`: grid de 2 columnas con el perfil
   profesional del egresado y las salidas laborales.
 
+Diseño UX
+---------
+1. **Encabezados limpios**: icono directo + título + badge contador.
+2. **Borde superior de acento** (2px) en cada tarjeta.
+3. **Hover sutil**: solo cambio de borde.
+4. **Sin glow ni translateY**.
+5. **Coherencia visual** con el resto del sitio (Neon).
+
 Sistema de color
 ----------------
 ✅ ACENTO ÚNICO: `AZUL_MARINO_NEON` para los iconos de las viñetas.
@@ -21,6 +29,16 @@ Nota técnica: `rx.foreach` CON `Var`
 `items` es un `Var` reactivo (viene del State). Por eso `rx.foreach`
 itera en el frontend y cada `item` es un `Var`. NO se puede iterar en
 Python puro.
+
+Nota técnica: COMPONENTES COMPARTIDOS
+-------------------------------------
+Este archivo usa los componentes compartidos:
+
+- `vineta_campo_laboral` (de `..base`).
+- `vineta_perfil_profesional` (de `..base`).
+
+Antes se importaban desde `..base.vinetas` (módulo interno).
+Ahora viven en la fachada `..base/`.
 
 Nota técnica: RUTAS DE IMPORT
 -----------------------------
@@ -63,17 +81,14 @@ from ....dominio import EstadoInstitucional
 from ....infraestructura import (
     ANCHO_SECCION,
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
+    BORDE_HOME_AZUL,
     COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
     FONDO_AZUL_SUAVE,
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
-    RADIO_MEDIO,
     RADIO_PASTILLA,
-    SOMBRA_SUAVE,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 
@@ -81,11 +96,8 @@ from ....infraestructura import (
 # Constantes locales
 # ======================================================================
 
-PADDING_TARJETA: str = "1.5rem"
+PADDING_TARJETA: str = "1.75rem"
 """Padding interno de las tarjetas de perfil/campo."""
-
-RADIO_TARJETA: str = "1.25rem"
-"""Border-radius de las tarjetas de perfil/campo."""
 
 
 # ======================================================================
@@ -93,40 +105,14 @@ RADIO_TARJETA: str = "1.25rem"
 # ======================================================================
 
 
-def _estilo_tarjeta_detalle() -> dict:
-    """
-    Estilo común para las tarjetas de detalle.
-
-    Aplica:
-    - Fondo neutro.
-    - Borde neutro sutil.
-    - Borde superior grueso con el acento azul marino.
-    - Hover: borde + sombra tintados con el acento.
-
-    Returns:
-        Dict con el estilo completo de la tarjeta.
-    """
-    return {
-        "padding": PADDING_TARJETA,
-        "border_radius": RADIO_TARJETA,
-        "background": COLOR_FONDO_CARTA,
-        "border": f"1px solid {COLOR_BORDE_SUAVE}",
-        "border_top": f"4px solid {AZUL_MARINO_NEON}",
-        "box_shadow": SOMBRA_SUAVE,
-        "width": "100%",
-        "height": "100%",
-        "transition": "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-        "_hover": {
-            "border_color": AZUL_MARINO_NEON,
-            "box_shadow": f"0 12px 32px -8px {AZUL_MARINO_NEON}",
-            "transform": "translateY(-2px)",
-        },
-    }
-
-
 def _badge_contador(texto: str) -> rx.Component:
     """
     Badge pill con el contador de items de una sección.
+
+    Estilo Neon.com:
+    - Fondo con tinte azul muy suave.
+    - Borde sutil azul marino.
+    - Texto azul marino.
 
     Args:
         texto: Texto del contador (ej: "5 habilidades").
@@ -139,7 +125,7 @@ def _badge_contador(texto: str) -> rx.Component:
             texto,
             font_size="0.6875rem",
             font_weight="700",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=AZUL_MARINO_NEON,
             text_transform="uppercase",
             letter_spacing="0.05em",
             white_space="nowrap",
@@ -147,7 +133,7 @@ def _badge_contador(texto: str) -> rx.Component:
         padding="0.25rem 0.625rem",
         border_radius=RADIO_PASTILLA,
         background=FONDO_AZUL_SUAVE,
-        border=f"1px solid {AZUL_MARINO_NEON}",
+        border=f"1px solid {BORDE_HOME_AZUL}",
         flex_shrink="0",
     )
 
@@ -159,57 +145,60 @@ def _encabezado_seccion(
     badge: str | None = None,
 ) -> rx.Component:
     """
-    Encabezado consistente para las secciones del detalle.
+    Encabezado limpio para las secciones del detalle.
+
+    Estilo Neon.com:
+    - Icono directo (sin caja).
+    - Título en mayúsculas con acento.
+    - Subtítulo en gris.
+    - Badge opcional a la derecha.
 
     Estructura:
-    - Icono en caja neutra (izquierda).
-    - Título + subtítulo (centro).
-    - Badge opcional (derecha).
+    ┌─────────────────────────────────────────┐
+    │  ✓  PERFIL PROFESIONAL       [5 skills] │
+    │     Competencias que...                  │
+    └─────────────────────────────────────────┘
 
     Args:
         icono: Nombre del icono Lucide (kebab-case).
-        titulo: Título principal de la sección.
+        titulo: Título de la sección (mayúsculas).
         subtitulo: Texto opcional debajo del título.
-        badge: Texto opcional para un badge a la derecha.
+        badge: Texto opcional para el badge a la derecha.
 
     Returns:
         Fila con icono + título/subtítulo + badge opcional.
     """
     hijos: list[rx.Component] = [
-        # --- Icono en caja neutra ---
-        rx.box(
-            rx.icon(icono, size=20, color=COLOR_TEXTO_SECUNDARIO),
-            padding="0.625rem",
-            border_radius=RADIO_MEDIO,
-            background=FONDO_AZUL_SUAVE,
-            border=f"1px solid {BORDE_HOME_SUAVE}",
-            display="flex",
-            align_items="center",
-            justify_content="center",
+        # ─── Icono directo (sin caja) ──────────────────────────
+        rx.icon(
+            icono,
+            size=18,
+            color=AZUL_MARINO_NEON,
             flex_shrink="0",
         ),
-        # --- Título + subtítulo ---
+        # ─── Título + subtítulo ────────────────────────────────
         rx.vstack(
             rx.text(
                 titulo,
-                font_size="0.9375rem",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                font_size="0.6875rem",
+                font_weight="700",
+                color=AZUL_MARINO_NEON,
+                letter_spacing="0.15em",
                 text_transform="uppercase",
-                letter_spacing="0.05em",
                 line_height="1.2",
             ),
             rx.cond(
                 subtitulo is not None,
                 rx.text(
                     subtitulo or "",
-                    font_size="0.75rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    line_height="1.4",
+                    font_size="0.8125rem",
+                    color=TEXTO_HOME_MAS_SUAVE,
+                    line_height="1.5",
+                    margin_top="0.25rem",
                 ),
                 rx.fragment(),
             ),
-            spacing="1",
+            spacing="0",
             align="start",
             flex="1",
             min_width="0",
@@ -224,7 +213,7 @@ def _encabezado_seccion(
         align="center",
         gap="0.75rem",
         width="100%",
-        margin_bottom="1.25rem",
+        margin_bottom="1.5rem",
         flex_wrap="wrap",
     )
 
@@ -245,6 +234,12 @@ def _tarjeta_lista(
     """
     Tarjeta genérica para listas (perfil, campo laboral).
 
+    Estilo Neon.com:
+    - Fondo plano (COLOR_FONDO_CARTA).
+    - Borde sutil + borde superior de acento (2px).
+    - Hover: solo cambio de borde.
+    - Sin glow ni translateY.
+
     Args:
         icono: Nombre del icono Lucide del encabezado.
         titulo: Título de la sección.
@@ -263,7 +258,15 @@ def _tarjeta_lista(
             gap="0.75rem",
             width="100%",
         ),
-        **_estilo_tarjeta_detalle(),
+        padding=PADDING_TARJETA,
+        border_radius=RADIO_EXTRA_GRANDE,
+        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border_top=f"2px solid {AZUL_MARINO_NEON}",
+        width="100%",
+        height="100%",
+        transition="all 0.2s",
+        _hover={"border_color": AZUL_MARINO_NEON},
     )
 
 
@@ -279,6 +282,12 @@ def seccion_perfil_y_campo_laboral() -> rx.Component:
     - **Campo Laboral**: dónde puede trabajar el egresado.
 
     Grid responsive que colapsa a 1 columna en móvil.
+
+    Estilo Neon.com:
+    - Grid de 2 columnas (`md+`).
+    - Tarjetas con borde superior de acento.
+    - Hover sutil.
+    - Alineado con el ancho de sección del sitio.
 
     Returns:
         Grid con las 2 tarjetas.

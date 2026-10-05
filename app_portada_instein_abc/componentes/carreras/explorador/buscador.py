@@ -48,7 +48,6 @@ from ....infraestructura import (
     BORDE_HOME_SUAVE,
     FONDO_AZUL_SUAVE,
     FONDO_HOME_CARD,
-    RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,

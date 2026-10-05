@@ -7,11 +7,13 @@ concreto) y se usan transversalmente en múltiples vistas.
 
 Contenido
 ---------
-- **acordeon_faq**:  acordeón de preguntas frecuentes reutilizable.
-- **badge**:         badges unificados (icono+texto, sólido, contador, estado).
-- **estado_vacio**:  estado vacío (sin resultados, error, etc.).
-- **primitivos**:    bloques base (contenedor clicable, enlace, tarjetas).
-- **vinetas**:       viñetas con icono para listas (perfil, campo laboral, etc.).
+- **acordeon_faq**:          acordeón de preguntas frecuentes reutilizable.
+- **badge**:                 badges unificados (icono+texto, sólido, contador, estado).
+- **encabezado_seccion**:    encabezado numerado de sección (01, 02, 03...).
+- **estado_vacio**:          estado vacío (sin resultados, error, etc.).
+- **primitivos**:            bloques base (contenedor clicable, enlace, tarjetas).
+- **separador_secciones**:   línea horizontal sutil entre secciones.
+- **vinetas**:               viñetas con icono para listas (perfil, campo laboral, etc.).
 
 Convención de imports
 ---------------------
@@ -73,6 +75,12 @@ from .badge import (
 )
 
 # ======================================================================
+# Encabezado de sección
+# ======================================================================
+
+from .encabezado_seccion import encabezado_seccion
+
+# ======================================================================
 # Estado vacío
 # ======================================================================
 
@@ -88,6 +96,12 @@ from .primitivos import (
     tarjeta_dato,
     tarjeta_estilizada,
 )
+
+# ======================================================================
+# Separador de secciones
+# ======================================================================
+
+from .separador_secciones import separador_secciones
 
 # ======================================================================
 # Viñetas
@@ -123,6 +137,10 @@ __all__ = [
     "badge_icono_texto",
     "badge_solido",
     # ==================================================================
+    # Encabezado de sección
+    # ==================================================================
+    "encabezado_seccion",
+    # ==================================================================
     # Estado vacío
     # ==================================================================
     "estado_vacio",
@@ -133,6 +151,10 @@ __all__ = [
     "enlace_navegacion",
     "tarjeta_dato",
     "tarjeta_estilizada",
+    # ==================================================================
+    # Separador de secciones
+    # ==================================================================
+    "separador_secciones",
     # ==================================================================
     # Viñetas
     # ==================================================================

@@ -81,7 +81,7 @@ from .multimedia_institucional import seccion_multimedia_institucional
 # Por qué elegir INSTEIN
 # ======================================================================
 
-from .por_que_instein import (
+from .seccion_por_que_instein import (
     RAZONES,
     Razon,
     seccion_por_que_instein,
@@ -94,6 +94,12 @@ from .por_que_instein import (
 from .seccion_faq import (
     PREGUNTAS_FRECUENTES,
     seccion_preguntas_frecuentes,
+)
+
+from .seccion_carreras import (                    # ← NUEVO
+    CARRERAS_DESTACADAS,
+    CarreraDestacada,
+    seccion_carreras_inicio,
 )
 
 
@@ -117,4 +123,9 @@ __all__ = [
     "seccion_multimedia_institucional",
     "seccion_por_que_instein",
     "seccion_preguntas_frecuentes",
+
+    # ─── Carreras (NUEVO) ────────────────────────────────────
+    "CARRERAS_DESTACADAS",
+    "CarreraDestacada",
+    "seccion_carreras_inicio",
 ]

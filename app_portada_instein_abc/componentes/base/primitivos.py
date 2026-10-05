@@ -51,7 +51,6 @@ import reflex as rx
 
 from ...infraestructura.constantes.colores import (
     BORDE_PREDETERMINADO,
-    COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
     COLOR_TEXTO_CUERPO,

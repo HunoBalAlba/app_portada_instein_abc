@@ -1,12 +1,19 @@
 """
-Tab 2: Fechas importantes de Bolivia y el mundo.
+Tab 2: Fechas importantes de Bolivia y el mundo — estilo Neon.com.
+
+Diseño UX
+---------
+1. **Leyenda arriba** (colores por tipo).
+2. **Agrupación por mes**.
+3. **Cards compactas** con día destacado.
+4. **Hover sutil** (solo borde).
 """
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...componentes.base.badge import (
+from ...componentes.base import (
     badge_icono_texto,
 )
 from ...dominio.modelos.calendario import (
@@ -14,19 +21,16 @@ from ...dominio.modelos.calendario import (
     TIPOS_FECHA,
     FechaImportante,
 )
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
+    BORDE_HOME_AZUL,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
-)
-from ...infraestructura.constantes.dimensiones import (
     RADIO_GRANDE,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 from .helpers import color_por_tipo_fecha
@@ -53,7 +57,7 @@ def _leyenda_fechas() -> rx.Component:
                     info["etiqueta"],
                     font_size="0.75rem",
                     font_weight="600",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,
                 ),
                 align="center",
                 gap="0.375rem",
@@ -62,24 +66,17 @@ def _leyenda_fechas() -> rx.Component:
         ],
         gap="1rem",
         flex_wrap="wrap",
-        margin_bottom="1.5rem",
+        margin_bottom="2rem",
     )
 
 
 # ======================================================================
-# Badge de tipo de fecha (delegado al badge unificado)
+# Badge de tipo de fecha
 # ======================================================================
 
 
 def _badge_tipo_fecha(tipo: str) -> rx.Component:
-    """
-    Badge con el tipo de fecha importante.
-
-    Delega en `badge_icono_texto` del paquete base.
-
-    Args:
-        tipo: Clave del tipo de fecha (ej: "feriado_nacional").
-    """
+    """Badge con el tipo de fecha importante."""
     info = color_por_tipo_fecha(tipo)
 
     return badge_icono_texto(
@@ -99,7 +96,11 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
     """
     Card individual de fecha importante.
 
-    Layout: día (izquierda) + título + tipo (derecha).
+    Estructura:
+    ┌──────────────────────────────────────┐
+    │  [DÍA]     [Feriado nacional]        │
+    │    01      Año Nuevo                 │
+    └──────────────────────────────────────┘
 
     Args:
         fecha: `FechaImportante` con `mes`, `dia`, `titulo`, `tipo`.
@@ -116,17 +117,18 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
                     "DÍA",
                     font_size="0.5625rem",
                     font_weight="700",
-                    color=rx.color(info["color"], 11),
+                    color=AZUL_MARINO_NEON,
                     text_transform="uppercase",
-                    letter_spacing="0.05em",
+                    letter_spacing="0.1em",
                 ),
                 rx.text(
                     fecha["dia"],
                     font_size="1.5rem",
-                    font_weight="900",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    font_weight="800",
+                    color=TEXTO_HOME_PRINCIPAL,
                     line_height="1",
                     letter_spacing="-0.03em",
+                    font_family="JetBrains Mono",
                 ),
                 align="center",
                 spacing="0",
@@ -134,8 +136,9 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
             height="4.5rem",
             width="4.5rem",
             border_radius=RADIO_GRANDE,
-            background=rx.color(info["color"], 3),
-            border=f"2px solid {rx.color(info['color'], 7)}",
+            background=COLOR_FONDO_CARTA,
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
+            border_top=f"2px solid {AZUL_MARINO_NEON}",
             display="flex",
             align_items="center",
             justify_content="center",
@@ -150,7 +153,7 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
                 fecha["titulo"],
                 font_size="0.9375rem",
                 font_weight="600",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.4",
             ),
             align="start",
@@ -167,9 +170,7 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
         border=f"1px solid {COLOR_BORDE_SUAVE}",
         transition="all 0.2s",
         _hover={
-            "transform": "translateY(-2px)",
-            "border_color": rx.color(info["color"], 7),
-            "box_shadow": f"0 8px 20px -8px {rx.color(info['color'], 9)}",
+            "border_color": AZUL_MARINO_NEON,
         },
     )
 
@@ -209,10 +210,14 @@ def _grupo_mes(mes: str, fechas: list[FechaImportante]) -> rx.Component:
                 str(len(fechas)),
                 font_size="0.75rem",
                 font_weight="700",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 padding="0.125rem 0.5rem",
-                background=COLOR_FONDO_SUAVE,
                 border_radius=RADIO_PASTILLA,
+                background=rx.color_mode_cond(
+                    light="rgba(59, 91, 219, 0.08)",
+                    dark="rgba(59, 91, 219, 0.15)",
+                ),
+                border=f"1px solid {BORDE_HOME_AZUL}",
             ),
             align="center",
             gap="0.75rem",

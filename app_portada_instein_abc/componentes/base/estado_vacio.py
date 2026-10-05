@@ -58,7 +58,6 @@ from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
     BORDE_HOME_SUAVE,
-    COLOR_ACENTO_SOLIDO,
     COLOR_ACENTO_TEXTO,
     COLOR_BORDE_SUAVE,
     COLOR_FONDO_SUAVE,

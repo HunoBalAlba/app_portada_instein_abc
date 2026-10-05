@@ -1,29 +1,12 @@
 """
-Banner CTA final del home — estilo Neon adaptativo.
+Banner CTA final del home — estilo Neon.com (v2).
 
-Banner de llamada a la acción con trust indicators y micro-interacciones.
-Cierra visualmente el home con impacto.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-
-- Fondo: gradiente adaptativo (`GRADIENTE_HOME_BANNER`).
-- Acentos: azul marino neon en ambos modos.
-- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO`.
-- Avatares: tintes azul marino con borde adaptativo.
-- Punto verde: `#22c55e` semántico.
-
-Mejoras UX aplicadas
---------------------
-1. Badge "Inscripciones abiertas" con punto verde pulsante.
-2. Microcopy específico con urgencia y escasez ("30 cupos").
-3. Trust indicators: avatares + rating + egresados.
-4. Trust badges inline: título nacional + empleabilidad + convenios.
-5. Dos orbes radiales decorativos (arriba-izq + abajo-der).
-6. Botón primario con flecha animada en hover.
-7. Botón secundario con WhatsApp (canal directo).
+Cambios sobre v1:
+- Más padding horizontal en desktop.
+- Trust badges con más contraste.
+- Botón primario con glow azul marino.
+- Subtítulo con mejor jerarquía.
+- Sin "30 cupos" (evita microcopy de urgencia artificial).
 """
 
 from __future__ import annotations
@@ -38,7 +21,6 @@ from ...infraestructura.constantes.colores import (
     BORDE_HOME_AZUL,
     BORDE_HOME_MEDIO,
     GRADIENTE_HOME_BANNER,
-    TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
     TEXTO_HOME_SUAVE,
 )
@@ -55,218 +37,37 @@ from ...infraestructura.constantes.identidad import (
 # Constantes locales
 # ======================================================================
 
-ANCHO_MAXIMO_BANNER: str = "72rem"
-PADDING_CONTENIDO: str = "4.5rem 1.5rem"
-
+ANCHO_MAXIMO_BANNER: str = "80rem"
+PADDING_CONTENIDO: str = "6rem 2rem"
 COLOR_VERDE_ACTIVO: str = "#22c55e"
-"""Color del punto verde semántico (activo)."""
-
-COLORES_AVATARES: list[str] = [
-    "#3b5bdb",   # azul marino neon
-    "#1a237e",   # azul marino profundo
-    "#283593",   # azul índigo
-    "#3949ab",   # azul indigo claro
-    "#5c6bc0",   # azul medio
-]
-"""Tintes azul marino para los avatares apilados."""
 
 
 # ======================================================================
-# Orbes radiales decorativos
+# Trust badges
 # ======================================================================
 
 
-def _orbes_radiales_fondo() -> rx.Component:
-    """
-    Dos orbes radiales decorativos en esquinas opuestas.
-
-    Añade profundidad visual. Opacidad reducida en light mode.
-    """
-    return rx.fragment(
-        rx.box(
-            position="absolute",
-            top="-20%",
-            left="-10%",
-            width="50%",
-            height="80%",
-            background=(
-                f"radial-gradient(circle at center, "
-                f"{AZUL_MARINO_NEON} 0%, transparent 60%)"
-            ),
-            opacity=rx.color_mode_cond(light="0.15", dark="0.30"),
-            filter="blur(60px)",
-            z_index="0",
-            pointer_events="none",
-        ),
-        rx.box(
-            position="absolute",
-            bottom="-20%",
-            right="-10%",
-            width="50%",
-            height="80%",
-            background=(
-                "radial-gradient(circle at center, "
-                "#1a237e 0%, transparent 60%)"
-            ),
-            opacity=rx.color_mode_cond(light="0.12", dark="0.25"),
-            filter="blur(60px)",
-            z_index="0",
-            pointer_events="none",
-        ),
-    )
-
-
-# ======================================================================
-# Badge de inscripciones
-# ======================================================================
-
-
-def _badge_inscripciones_abiertas() -> rx.Component:
-    """Badge con punto verde pulsante + texto "INSCRIPCIONES ABIERTAS"."""
-    return rx.flex(
-        rx.box(
-            height="0.5rem",
-            width="0.5rem",
-            border_radius=RADIO_PASTILLA,
-            background=COLOR_VERDE_ACTIVO,
-            box_shadow=f"0 0 12px {COLOR_VERDE_ACTIVO}",
-            animation="pulse 2s ease-in-out infinite",
-            flex_shrink="0",
-        ),
-        rx.text(
-            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
-            font_size="0.75rem",
-            font_weight="700",
-            color=TEXTO_HOME_PRINCIPAL,
-            letter_spacing="0.1em",
-        ),
-        align="center",
-        gap="0.5rem",
-        padding="0.5rem 1rem",
-        border_radius=RADIO_PASTILLA,
-        background=rx.color_mode_cond(
-            light="rgba(59, 91, 219, 0.08)",
-            dark="rgba(59, 91, 219, 0.1)",
-        ),
-        border=f"1px solid {BORDE_HOME_AZUL}",
-        backdrop_filter="blur(12px)",
-        width="fit-content",
-        margin_bottom="1.5rem",
-    )
-
-
-# ======================================================================
-# Trust indicators
-# ======================================================================
-
-
-def _avatars_apilados() -> rx.Component:
-    """Fila de 5 avatares apilados con tintes azul marino."""
-    letras = ["A", "M", "J", "L", "S"]
-
-    return rx.flex(
-        *[
-            rx.box(
-                rx.text(
-                    letra,
-                    font_size="0.6875rem",
-                    font_weight="800",
-                    color="white",
-                    line_height="1",
-                ),
-                height="1.75rem",
-                width="1.75rem",
-                border_radius=RADIO_PASTILLA,
-                background=color,
-                border=rx.color_mode_cond(
-                    light="2px solid #eef2ff",
-                    dark="2px solid #0a0f1f",
-                ),
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                margin_left="-0.5rem" if i > 0 else "0",
-                flex_shrink="0",
-            )
-            for i, (letra, color) in enumerate(zip(letras, COLORES_AVATARES))
-        ],
-        align="center",
-    )
-
-
-def _trust_indicators() -> rx.Component:
-    """Bloque avatares + rating + egresados."""
-    return rx.flex(
-        _avatars_apilados(),
-        rx.flex(
-            rx.icon("star", size=14, color="#fbbf24", fill="#fbbf24"),
-            rx.text(
-                "4.9/5",
-                font_size="0.8125rem",
-                font_weight="700",
-                color=TEXTO_HOME_PRINCIPAL,
-            ),
-            rx.text(
-                "·",
-                font_size="0.8125rem",
-                color=TEXTO_HOME_MAS_SUAVE,
-            ),
-            rx.text(
-                "500+ egresados",
-                font_size="0.8125rem",
-                font_weight="600",
-                color=TEXTO_HOME_SUAVE,
-            ),
-            align="center",
-            gap="0.375rem",
-        ),
-        align="center",
-        gap="1rem",
-        margin_top="1.5rem",
-        flex_wrap="wrap",
-        justify="center",
-    )
-
-
-# ======================================================================
-# Trust badges inline
-# ======================================================================
-
-
-def _trust_badge_inline(icono: str, texto: str) -> rx.Component:
+def _trust_badge(icono: str, texto: str) -> rx.Component:
     """Badge inline con icono + texto."""
     return rx.flex(
-        rx.icon(icono, size=12, color=AZUL_MARINO_NEON),
+        rx.icon(icono, size=14, color=AZUL_MARINO_NEON),
         rx.text(
             texto,
-            font_size="0.6875rem",
+            font_size="0.75rem",
             font_weight="600",
-            color=TEXTO_HOME_SUAVE,
+            color=TEXTO_HOME_PRINCIPAL,
             white_space="nowrap",
         ),
         align="center",
-        gap="0.375rem",
-        padding="0.375rem 0.75rem",
+        gap="0.5rem",
+        padding="0.5rem 0.875rem",
         border_radius=RADIO_PASTILLA,
         background=rx.color_mode_cond(
-            light="rgba(59, 91, 219, 0.06)",
-            dark="rgba(59, 91, 219, 0.08)",
+            light="rgba(255, 255, 255, 0.7)",
+            dark="rgba(59, 91, 219, 0.1)",
         ),
         border=f"1px solid {BORDE_HOME_MEDIO}",
         backdrop_filter="blur(12px)",
-    )
-
-
-def _trust_badges_row() -> rx.Component:
-    """Fila de trust badges inline."""
-    return rx.flex(
-        _trust_badge_inline("award", "Título Nacional"),
-        _trust_badge_inline("trending-up", "100% Empleabilidad"),
-        _trust_badge_inline("building-2", "Convenios Empresariales"),
-        gap="0.5rem",
-        margin_top="1.25rem",
-        flex_wrap="wrap",
-        justify="center",
     )
 
 
@@ -276,16 +77,11 @@ def _trust_badges_row() -> rx.Component:
 
 
 def _boton_primario() -> rx.Component:
-    """Botón "Ver Carreras" con azul marino + flecha animada."""
+    """Botón "Ver Carreras" con glow."""
     return enlace_navegacion(
         "/carreras",
         rx.text("Ver Carreras", as_="span", font_weight="700"),
-        rx.icon(
-            "arrow-right",
-            size=18,
-            class_name="arrow-icon",
-            transition="transform 0.2s",
-        ),
+        rx.icon("arrow-right", size=18),
         display="flex",
         align_items="center",
         gap="0.5rem",
@@ -295,100 +91,133 @@ def _boton_primario() -> rx.Component:
         border_radius=RADIO_PASTILLA,
         font_size="1rem",
         font_weight="700",
-        box_shadow=f"0 0 40px {AZUL_MARINO_NEON}80",
+        box_shadow=f"0 0 30px {AZUL_MARINO_NEON}40",
         transition="all 0.2s",
         _hover={
             "transform": "translateY(-2px)",
-            "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
-            "& .arrow-icon": {"transform": "translateX(4px)"},
+            "box_shadow": f"0 0 40px {AZUL_MARINO_NEON}70",
+            "filter": "brightness(1.1)",
         },
     )
 
 
 def _boton_secundario() -> rx.Component:
-    """Botón "WhatsApp" con glassmorphism."""
+    """Botón "WhatsApp"."""
     return enlace_navegacion(
         WHATSAPP_URL,
         rx.icon("message-circle", size=18),
-        rx.text("WhatsApp", as_="span", font_weight="600"),
+        rx.text("Contactar por WhatsApp", as_="span", font_weight="600"),
         display="flex",
         align_items="center",
         gap="0.5rem",
-        background=rx.color_mode_cond(
-            light="rgba(255, 255, 255, 0.6)",
-            dark="rgba(255, 255, 255, 0.05)",
-        ),
+        background="transparent",
         color=TEXTO_HOME_PRINCIPAL,
         padding="1rem 2rem",
         border_radius=RADIO_PASTILLA,
         font_size="1rem",
         border=f"1px solid {BORDE_HOME_MEDIO}",
-        backdrop_filter="blur(12px)",
         transition="all 0.2s",
         _hover={
-            "background": rx.color_mode_cond(
-                light="rgba(255, 255, 255, 0.9)",
-                dark="rgba(255, 255, 255, 0.1)",
-            ),
+            "transform": "translateY(-2px)",
             "border_color": BORDE_HOME_AZUL,
+            "background": rx.color_mode_cond(
+                light="rgba(255, 255, 255, 0.5)",
+                dark="rgba(59, 91, 219, 0.08)",
+            ),
         },
     )
 
 
 # ======================================================================
-# Banner CTA completo
+# Banner completo
 # ======================================================================
 
 
 def banner_cta_final() -> rx.Component:
     """
-    Banner de llamada a la acción final.
+    Banner de llamada a la acción final (estilo Neon.com).
 
     Estructura:
-    - 2 orbes radiales decorativos.
-    - Badge "Inscripciones abiertas" con punto pulsante.
-    - Título + subtítulo con urgencia.
-    - Trust indicators (avatares + rating).
+    - Badge "Inscripciones abiertas".
+    - Título grande.
+    - Subtítulo con propuesta de valor.
     - Trust badges inline.
-    - Par de botones (primario + WhatsApp).
+    - Par de botones.
     """
     return rx.box(
-        _orbes_radiales_fondo(),
         rx.vstack(
-            _badge_inscripciones_abiertas(),
+            # ─── Badge ────────────────────────────────────────
+            rx.flex(
+                rx.box(
+                    height="0.5rem",
+                    width="0.5rem",
+                    border_radius=RADIO_PASTILLA,
+                    background=COLOR_VERDE_ACTIVO,
+                    box_shadow=f"0 0 12px {COLOR_VERDE_ACTIVO}",
+                    animation="pulse 2s ease-in-out infinite",
+                    flex_shrink="0",
+                ),
+                rx.text(
+                    "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
+                    font_size="0.75rem",
+                    font_weight="700",
+                    color=TEXTO_HOME_PRINCIPAL,
+                    letter_spacing="0.1em",
+                ),
+                align="center",
+                gap="0.5rem",
+                padding="0.5rem 1rem",
+                border_radius=RADIO_PASTILLA,
+                background=rx.color_mode_cond(
+                    light="rgba(255, 255, 255, 0.7)",
+                    dark="rgba(59, 91, 219, 0.1)",
+                ),
+                border=f"1px solid {BORDE_HOME_AZUL}",
+                width="fit-content",
+                margin_bottom="1.5rem",
+            ),
+            # ─── Título ────────────────────────────────────────
             rx.heading(
-                "¿Listo para empezar?",
+                "Tu futuro profesional empieza hoy",
                 size="8",
                 color=TEXTO_HOME_PRINCIPAL,
                 text_align="center",
                 font_weight="900",
                 letter_spacing="-0.03em",
-                line_height="1.1",
+                line_height="1.05",
+                max_width="42rem",
             ),
+            # ─── Subtítulo ─────────────────────────────────────
             rx.text(
-                "Solo ",
-                rx.text.span(
-                    "30 cupos",
-                    font_weight="800",
-                    color=TEXTO_HOME_PRINCIPAL,
-                ),
-                " disponibles por carrera. "
-                "Asegura tu lugar en la Gestión 2026 hoy mismo.",
+                "Formación práctica, títulos oficiales y una red de "
+                "egresados que te acompañan desde el primer día.",
                 font_size="1.125rem",
                 color=TEXTO_HOME_SUAVE,
                 text_align="center",
                 max_width="42rem",
-                margin_top="0.5rem",
+                margin_top="0.75rem",
                 line_height="1.6",
             ),
-            _trust_indicators(),
-            _trust_badges_row(),
+            # ─── Trust badges inline ────────────────────────────
+            rx.flex(
+                _trust_badge("award", "Título Nacional"),
+                _trust_badge("trending-up", "100% Empleabilidad"),
+                _trust_badge("building-2", "Convenios Empresariales"),
+                gap="0.5rem",
+                margin_top="2rem",
+                flex_wrap="wrap",
+                justify="center",
+            ),
+            # ─── Botones ────────────────────────────────────────
             rx.flex(
                 _boton_primario(),
                 _boton_secundario(),
                 gap="0.75rem",
                 margin_top="2.5rem",
-                flex_direction=rx.breakpoints(initial="column", sm="row"),
+                direction=rx.breakpoints(
+                    initial="column",
+                    sm="row",
+                ),
                 align="center",
                 justify="center",
             ),

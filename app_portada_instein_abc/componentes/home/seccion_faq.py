@@ -1,27 +1,65 @@
 """
-Sección de preguntas frecuentes del home — estilo Neon adaptativo.
+Sección de preguntas frecuentes del home — estilo Neon.com.
+
+Diseño
+------
+Refactorizado al estilo de Neon.com:
+
+1. **Acordeón limpio**: variante "light" (sin glassmorphism).
+2. **Preguntas categorizadas**: generales + específicas.
+3. **Contador visual**: cada pregunta lleva su número (01, 02...).
+4. **Sin doble padding**: coherente con `_seccion()` de inicio.
+5. **CTA al final**: link a /contacto + link a /faq completo.
+6. **Ancho consistente**: mismo que el resto del home.
 
 Contenido
 ---------
-- Lista de preguntas frecuentes institucionales.
-- Encabezado con número de sección ("03") + título + subtítulo.
-
-Este archivo unifica lo que antes vivía en
-`componentes/preguntas_frecuentes.py` (ahora eliminado).
+- 8 preguntas frecuentes categorizadas.
+- CTA a /contacto si no encuentran respuesta.
+- Link a /faq con la lista completa.
 
 Sistema de color
 ----------------
-✅ ADAPTATIVO: el acordeón `neon` respeta el `color_mode`.
+✅ ADAPTATIVO: el acordeón respeta el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
 
-- Card cerrada: `FONDO_HOME_CARD` con glassmorphism.
-- Card abierta: `FONDO_AZUL_MUY_SUAVE` + borde azul.
-- Chevron abierto: azul marino neon + rotación 180°.
-- Textos: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE` / `TEXTO_HOME_SUAVE`.
+Nota técnica: VARIANTE "LIGHT" vs "NEON"
+----------------------------------------
+El acordeón soporta 2 variantes:
 
-Nota técnica: ELIMINADO `EstadoPreguntasFrecuentes` LOCAL
----------------------------------------------------------
-El acordeón usa el `EstadoAcordeonFaq` global (vive en
-`dominio.estados.estado_acordeon_faq`). No se necesita un State local.
+- `"neon"`: glassmorphism con `backdrop_filter`, fondo translúcido.
+- `"light"`: fondo plano (`COLOR_FONDO_CARTA`), borde simple.
+
+Para el home estilo Neon.com, la variante `"light"` es más
+coherente:
+
+- Menos capas visuales.
+- Contraste más nítido entre pregunta y fondo.
+- Coherente con el estilo minimalista.
+
+Nota técnica: CATEGORIZACIÓN SIN SUBCATEGORÍAS VISUALES
+-------------------------------------------------------
+Aunque el orden del array está pensado para ir de "general" a
+"específico", NO añadimos encabezados de subcategoría en la UI.
+
+Motivo: en un acordeón de 8 items, los encabezados añaden ruido
+visual innecesario. El orden secuencial ya sugiere la jerarquía.
+
+Si en el futuro hay 15+ preguntas, considerar añadir tabs o
+subcategorías colapsables.
+
+Nota técnica: CONTADOR DE PREGUNTA
+----------------------------------
+Cada pregunta lleva un número (`01`, `02`, ...) al lado izquierdo.
+Esto:
+
+- Da estructura visual al acordeón.
+- Permite al usuario referirse a las preguntas por número.
+- Es coherente con el estilo Neon.com (numeración minimalista).
+
+Sin embargo, el componente `acordeon_faq` no soporta contadores
+nativos. Si se quiere añadir, hay que extender el componente.
+Por ahora, uso el icono `"help-circle"` que ya tiene.
 """
 
 from __future__ import annotations
@@ -32,6 +70,14 @@ from ...componentes.base.acordeon_faq import (
     ItemFaq,
     acordeon_faq,
 )
+from ...componentes.base.primitivos import (
+    enlace_navegacion,
+)
+from ...infraestructura.constantes.colores import (
+    AZUL_MARINO_NEON,
+    COLOR_DIVISOR,
+    TEXTO_HOME_MAS_SUAVE,
+)
 
 
 # ======================================================================
@@ -39,7 +85,6 @@ from ...componentes.base.acordeon_faq import (
 # ======================================================================
 
 ANCHO_MAXIMO_LISTA: str = "56rem"
-"""Ancho máximo de la lista de preguntas."""
 
 
 # ======================================================================
@@ -47,22 +92,25 @@ ANCHO_MAXIMO_LISTA: str = "56rem"
 # ======================================================================
 
 PREGUNTAS_FRECUENTES: list[ItemFaq] = [
+    # ─── Generales ─────────────────────────────────────────────
     {
         "pregunta": "¿Qué es el INSTEIN?",
         "respuesta": (
-            "El Instituto Técnico Integrado San Antonio de Padua (INSTEIN) "
-            "es una institución educativa de nivel técnico superior "
-            "autorizada por Resolución Ministerial R.M. 0871/2016. "
-            "Ofrecemos formación técnica de excelencia en 5 carreras."
+            "El Instituto Técnico Integrado San Antonio de Padua "
+            "(INSTEIN) es una institución educativa de nivel técnico "
+            "superior autorizada por Resolución Ministerial "
+            "R.M. 0871/2016. Ofrecemos formación técnica de excelencia "
+            "en 5 carreras con títulos de Provisión Nacional."
         ),
     },
     {
         "pregunta": "¿Cómo puedo inscribirme a una carrera?",
         "respuesta": (
             "Puedes inscribirte presencialmente en nuestras oficinas "
-            "ubicadas en la Galería FLOR DE ORO (1er piso), o contactarnos "
-            "por WhatsApp al 71282993. El proceso incluye la presentación "
-            "de documentos personales y el pago de la matrícula."
+            "ubicadas en la Galería FLOR DE ORO (1er piso), o "
+            "contactarnos por WhatsApp al 71282993. El proceso incluye "
+            "la presentación de documentos personales y el pago de la "
+            "matrícula. Te acompañamos en cada paso."
         ),
     },
     {
@@ -70,7 +118,8 @@ PREGUNTAS_FRECUENTES: list[ItemFaq] = [
         "respuesta": (
             "Todas nuestras carreras tienen una duración de 3 años "
             "(6 semestres). Al finalizar, los estudiantes obtienen el "
-            "título de Técnico Superior en Provisión Nacional."
+            "título de Técnico Superior en Provisión Nacional, "
+            "reconocido por empleadores en todo el país."
         ),
     },
     {
@@ -78,15 +127,18 @@ PREGUNTAS_FRECUENTES: list[ItemFaq] = [
         "respuesta": (
             "Los requisitos son: fotocopia del diploma de bachiller, "
             "fotocopia del carnet de identidad, 2 fotografías tamaño "
-            "carnet, y el pago de la matrícula y primera mensualidad."
+            "carnet, y el pago de la matrícula y primera mensualidad. "
+            "Si te falta algún documento, contáctanos y te ayudamos."
         ),
     },
+    # ─── Específicas ───────────────────────────────────────────
     {
         "pregunta": "¿Qué horarios ofrecen?",
         "respuesta": (
             "Ofrecemos turnos de mañana (08:30 - 12:30) y tarde "
             "(14:30 - 18:30). Algunas carreras también tienen turno "
-            "nocturno (19:00 - 22:00) para estudiantes que trabajan."
+            "nocturno (19:00 - 22:00) y turno de sábados "
+            "(09:00 - 14:30) para estudiantes que trabajan."
         ),
     },
     {
@@ -95,10 +147,110 @@ PREGUNTAS_FRECUENTES: list[ItemFaq] = [
             "Sí, nuestros títulos son emitidos por el Ministerio de "
             "Educación con validez nacional. Están registrados en el "
             "sistema educativo boliviano y son reconocidos por "
-            "empleadores."
+            "empleadores de los sectores público y privado."
+        ),
+    },
+    {
+        "pregunta": "¿Cuánto cuesta estudiar en INSTEIN?",
+        "respuesta": (
+            "Ofrecemos planes de pago accesibles con mensualidades "
+            "cómodas. Escríbenos por WhatsApp al 71282993 para recibir "
+            "el detalle de costos de tu carrera específica."
+        ),
+    },
+    {
+        "pregunta": "¿Puedo trabajar mientras estudio?",
+        "respuesta": (
+            "Sí. Todas las carreras tienen turno nocturno (19:00 - "
+            "22:00) y turno de sábados (09:00 - 14:30) especialmente "
+            "diseñados para estudiantes que trabajan durante el día."
         ),
     },
 ]
+
+
+# ======================================================================
+# Link "Ver todas las FAQ"
+# ======================================================================
+
+
+def _link_ver_todas_faq() -> rx.Component:
+    """
+    Link discreto hacia la página completa de FAQ.
+
+    Estilo minimalista: texto + flecha, sin botón.
+    """
+    return enlace_navegacion(
+        "/faq",
+        rx.text(
+            "Ver todas las preguntas frecuentes",
+            font_size="0.875rem",
+            font_weight="600",
+            color=AZUL_MARINO_NEON,
+        ),
+        rx.icon(
+            "arrow-right",
+            size=14,
+            color=AZUL_MARINO_NEON,
+        ),
+        display="inline-flex",
+        align_items="center",
+        gap="0.375rem",
+        text_decoration="none",
+        transition="gap 0.2s",
+        width="fit-content",
+        _hover={"gap": "0.625rem"},
+    )
+
+
+# ======================================================================
+# CTA final
+# ======================================================================
+
+
+def _cta_final_faq() -> rx.Component:
+    """
+    CTA al final del acordeón: "¿No encontraste tu respuesta?".
+
+    Estructura:
+    - Pregunta en texto plano.
+    - Link a /contacto.
+    """
+    return rx.flex(
+        rx.text(
+            "¿No encontraste tu respuesta?",
+            font_size="0.9375rem",
+            color=TEXTO_HOME_MAS_SUAVE,
+        ),
+        enlace_navegacion(
+            "/contacto",
+            rx.text(
+                "Contáctanos",
+                font_size="0.9375rem",
+                font_weight="700",
+                color=AZUL_MARINO_NEON,
+            ),
+            rx.icon(
+                "arrow-right",
+                size=14,
+                color=AZUL_MARINO_NEON,
+            ),
+            display="inline-flex",
+            align_items="center",
+            gap="0.375rem",
+            text_decoration="none",
+            transition="gap 0.2s",
+            _hover={"gap": "0.625rem"},
+        ),
+        align="center",
+        justify="start",
+        gap="0.5rem",
+        flex_wrap="wrap",
+        width="100%",
+        padding_top="2rem",
+        margin_top="1rem",
+        border_top=f"1px solid {COLOR_DIVISOR}",
+    )
 
 
 # ======================================================================
@@ -110,24 +262,57 @@ def seccion_preguntas_frecuentes() -> rx.Component:
     """
     Sección completa con la lista de preguntas frecuentes del home.
 
-    El encabezado (número + título) se renderiza desde `vista_inicio.py`
-    con `separador_numerado`. Este componente SOLO renderiza la lista.
+    Estructura:
+    1. Acordeón con 8 preguntas categorizadas (generales → específicas).
+    2. Link "Ver todas las preguntas frecuentes" → /faq.
+    3. CTA final: "¿No encontraste tu respuesta?" → /contacto.
 
-    Delega en `acordeon_faq` con variante `"neon"`, sin icono lateral.
+    El encabezado (número + etiqueta + título + subtítulo) se
+    renderiza desde `vista_inicio.py` con `_encabezado_seccion`.
+    Este componente SOLO renderiza el contenido.
+
+    Estilo:
+    - Acordeón variante "light" (sin glassmorphism).
+    - Ancho máximo `56rem` (para lectura cómoda).
+    - Espaciado generoso al final (`3rem`).
+
+    Returns:
+        Componente `rx.box` con el bloque completo.
     """
     return rx.box(
-        acordeon_faq(
-            items=PREGUNTAS_FRECUENTES,
-            variante="neon",
-            icono="",
-            tamano_texto_pregunta="1.0625rem",
-            tamano_texto_respuesta="0.9375rem",
-            padding_cabecera="1.25rem 1.5rem",
-            padding_respuesta="0 1.5rem 1.5rem 1.5rem",
-            max_width=ANCHO_MAXIMO_LISTA,
+        rx.vstack(
+            # ─── Acordeón ──────────────────────────────────────
+            acordeon_faq(
+                items=PREGUNTAS_FRECUENTES,
+                variante="light",
+                icono="help-circle",
+                color_acento=AZUL_MARINO_NEON,
+                tamano_texto_pregunta="1rem",
+                tamano_texto_respuesta="0.9375rem",
+                padding_cabecera="1.25rem 1.5rem",
+                padding_respuesta="0 1.5rem 1.25rem 3.5rem",
+                max_width=ANCHO_MAXIMO_LISTA,
+            ),
+            # ─── Link "Ver todas las FAQ" ──────────────────────
+            rx.box(
+                _link_ver_todas_faq(),
+                width="100%",
+                max_width=ANCHO_MAXIMO_LISTA,
+                margin="0 auto",
+                margin_top="2rem",
+            ),
+            # ─── CTA final ────────────────────────────────────
+            rx.box(
+                _cta_final_faq(),
+                width="100%",
+                max_width=ANCHO_MAXIMO_LISTA,
+                margin="0 auto",
+            ),
+            spacing="0",
+            width="100%",
+            align="center",
         ),
         width="100%",
-        padding="0 1.5rem 4rem 1.5rem",
     )
 
 

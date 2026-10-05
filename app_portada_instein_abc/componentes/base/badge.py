@@ -86,7 +86,6 @@ from ...infraestructura.constantes.colores import (
     COLOR_ERROR_TEXTO,
     COLOR_EXITO_FONDO,
     COLOR_EXITO_TEXTO,
-    COLOR_TEXTO_SECUNDARIO,
 )
 from ...infraestructura.constantes.dimensiones import (
     RADIO_PASTILLA,

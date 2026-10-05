@@ -1,15 +1,21 @@
 """
-Tab 1: Actividades del instituto (timeline con filtros).
+Tab 1: Actividades del instituto (timeline con filtros) — estilo Neon.com.
+
+Diseño UX
+---------
+1. **Timeline vertical** con línea conectora.
+2. **Card por evento** con fecha destacada.
+3. **Badge por tipo** con color semántico.
+4. **Hover sutil** (solo borde).
+5. **Sin glow excesivo** (coherente con el sitio).
 """
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...componentes.base.badge import (
+from ...componentes.base import (
     badge_icono_texto,
-)
-from ...componentes.base.estado_vacio import (
     estado_vacio,
 )
 from ...dominio.estados.estado_calendario import (
@@ -18,22 +24,16 @@ from ...dominio.estados.estado_calendario import (
 from ...dominio.modelos.calendario import (
     ProximoEvento,
 )
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
-    BORDE_HOME_SUAVE,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
-)
-from ...infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 from .filtros import barra_filtros
@@ -41,7 +41,7 @@ from .helpers import color_por_tipo_evento
 
 
 # ======================================================================
-# Badge de tipo de evento (delegado al badge unificado)
+# Badge de tipo de evento
 # ======================================================================
 
 
@@ -50,9 +50,6 @@ def _badge_tipo_evento(tipo: str) -> rx.Component:
     Badge con el tipo de evento.
 
     Delega en `badge_icono_texto` del paquete base.
-
-    Args:
-        tipo: Clave del tipo de evento (ej: "taller").
     """
     info = color_por_tipo_evento(tipo)
 
@@ -73,7 +70,12 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
     """
     Card individual de evento del instituto.
 
-    Layout: fecha (izquierda) + contenido (derecha).
+    Estructura:
+    ┌──────────────────────────────────────────┐
+    │  [ABR]         Título del evento         │
+    │   05           Descripción...            │
+    │  2026          [Taller] · Campus         │
+    └──────────────────────────────────────────┘
 
     Args:
         evento: `ProximoEvento` con `mes`, `dia`, `anio`, `titulo`,
@@ -83,7 +85,7 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
 
     return rx.flex(
         # ==========================================================
-        # Columna izquierda: fecha (día + mes)
+        # Columna izquierda: fecha (día + mes + año)
         # ==========================================================
         rx.box(
             rx.vstack(
@@ -91,22 +93,23 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
                     evento["mes"],
                     font_size="0.625rem",
                     font_weight="700",
-                    color=rx.color(info["color"], 11),
+                    color=AZUL_MARINO_NEON,
                     text_transform="uppercase",
-                    letter_spacing="0.05em",
+                    letter_spacing="0.1em",
                 ),
                 rx.text(
                     evento["dia"],
                     font_size="1.75rem",
-                    font_weight="900",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    font_weight="800",
+                    color=TEXTO_HOME_PRINCIPAL,
                     line_height="1",
                     letter_spacing="-0.03em",
+                    font_family="JetBrains Mono",
                 ),
                 rx.text(
                     evento["anio"],
                     font_size="0.625rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,
                 ),
                 align="center",
                 spacing="0",
@@ -114,8 +117,9 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
             height="6rem",
             width="6rem",
             border_radius=RADIO_EXTRA_GRANDE,
-            background=rx.color(info["color"], 3),
-            border=f"2px solid {rx.color(info['color'], 7)}",
+            background=COLOR_FONDO_CARTA,
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
+            border_top=f"2px solid {AZUL_MARINO_NEON}",
             display="flex",
             align_items="center",
             justify_content="center",
@@ -125,28 +129,32 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
         # Columna derecha: contenido
         # ==========================================================
         rx.vstack(
+            # ─── Badge de tipo + lugar ─────────────────────────
             rx.flex(
                 _badge_tipo_evento(evento["tipo"]),
                 rx.text(
                     evento["lugar"],
                     font_size="0.6875rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,
                 ),
                 align="center",
                 gap="0.5rem",
                 flex_wrap="wrap",
             ),
+            # ─── Título ────────────────────────────────────────
             rx.heading(
                 evento["titulo"],
-                size="4",
+                as_="h3",
+                font_size="1rem",
                 font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
             ),
+            # ─── Descripción ───────────────────────────────────
             rx.text(
                 evento["descripcion"],
                 font_size="0.875rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
             ),
             align="start",
@@ -171,27 +179,21 @@ def _item_timeline(evento: ProximoEvento, indice, total) -> rx.Component:
 
     ⚠️ `indice` y `total` son Vars reactivos porque vienen de un
     `rx.foreach`. Por eso usamos `rx.cond` en lugar de `if/not`.
-
-    Args:
-        evento: `ProximoEvento`.
-        indice: Índice del evento en la lista (Var).
-        total: Cantidad total de eventos (Var).
     """
-    info = color_por_tipo_evento(evento["tipo"])
     es_ultimo = indice == (total - 1)
 
     return rx.flex(
         # ==========================================================
-        # Indicador (círculo + línea)
+        # Indicador (círculo + línea conectora)
         # ==========================================================
         rx.vstack(
             rx.box(
                 height="1rem",
                 width="1rem",
                 border_radius=RADIO_PASTILLA,
-                background=rx.color(info["color"], 9),
+                background=AZUL_MARINO_NEON,
                 border=f"3px solid {COLOR_FONDO_CARTA}",
-                box_shadow=f"0 0 0 2px {rx.color(info['color'], 7)}",
+                box_shadow=f"0 0 0 2px {BORDE_HOME_AZUL}",
                 flex_shrink="0",
             ),
             rx.cond(
@@ -223,10 +225,7 @@ def _item_timeline(evento: ProximoEvento, indice, total) -> rx.Component:
             margin_bottom=rx.cond(es_ultimo, "0", "1rem"),
             transition="all 0.2s",
             _hover={
-                "border_color": rx.color(info["color"], 7),
-                "box_shadow": (
-                    f"0 8px 20px -8px {rx.color(info['color'], 9)}"
-                ),
+                "border_color": AZUL_MARINO_NEON,
             },
         ),
         align="start",
@@ -236,21 +235,15 @@ def _item_timeline(evento: ProximoEvento, indice, total) -> rx.Component:
 
 
 # ======================================================================
-# Estado vacío (delegado al unificado)
+# Estado vacío
 # ======================================================================
 
 
 def _estado_vacio_filtros() -> rx.Component:
-    """
-    Estado vacío cuando los filtros no devuelven resultados.
-
-    Delega en `componentes.base.estado_vacio`.
-    """
+    """Estado vacío cuando los filtros no devuelven resultados."""
     return estado_vacio(
         titulo="No hay eventos con esos filtros",
-        mensaje=(
-            "Prueba ajustando los filtros o limpiando la búsqueda."
-        ),
+        mensaje="Prueba ajustando los filtros o limpiando la búsqueda.",
         icono="search-x",
         tamano_icono=48,
         boton_accion_etiqueta="Limpiar filtros",

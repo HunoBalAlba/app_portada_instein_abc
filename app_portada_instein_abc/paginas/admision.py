@@ -1,5 +1,5 @@
 """
-Vista "Guía de Admisión" (ruta "/admision").
+Vista "Guía de Admisión" (ruta "/admision") — estilo Neon.com.
 
 Contenido:
 - Hero con badge "Inscripciones abiertas todo el año".
@@ -11,15 +11,46 @@ Contenido:
 - Preguntas frecuentes de admisión (acordeón).
 - CTA final hacia /contacto.
 
+Diseño
+------
+Refactorizado al estilo Neon.com:
+
+1. **Layout izquierdo** del hero.
+2. **Encabezados numerados** (01–06) con `encabezado_seccion`.
+3. **Separadores** entre secciones (compartidos).
+4. **Sin glow** excesivo ni `translateY` agresivo.
+5. **Acento único** (azul marino) para toda la UI.
+6. **Colores semánticos** solo en badges de estado y ventajas.
+7. **HTML5 semántico** (`main`, `section`, `footer`).
+
 Sistema de color
 ----------------
 ✅ ACENTO ÚNICO: azul marino neon.
 ✅ ADAPTATIVO: fondo, textos y bordes respetan el `color_mode`.
 
+Nota técnica: COMPONENTES COMPARTIDOS
+-------------------------------------
+Este archivo usa los componentes compartidos:
+
+- `ItemFaq` y `acordeon_faq` (de `..componentes.base`).
+- `encabezado_seccion` (de `..componentes.base`).
+- `separador_secciones` (de `..componentes.base`).
+
+Antes tenía copias locales `_encabezado_seccion` y
+`_separador_secciones`. Ahora vive una sola implementación en
+`componentes/base/`.
+
 Nota técnica: ACORDEÓN FAQ UNIFICADO
 ------------------------------------
 La sección de FAQ delega en `acordeon_faq` con variante `"light"`.
 Usa el `EstadoAcordeonFaq` global.
+
+Nota técnica: JERARQUÍA DE TÍTULOS
+----------------------------------
+- `h1` → Solo en el hero ("Guía de Admisión").
+- `h2` → Encabezados de sección numerados (`encabezado_seccion`).
+- `h3` → Subtítulos dentro de secciones (títulos de tarjetas).
+- `h4` → Nombres de items individuales (pasos, requisitos).
 """
 
 from __future__ import annotations
@@ -28,9 +59,11 @@ from typing import TypedDict
 
 import reflex as rx
 
-from ..componentes.base.acordeon_faq import (
+from ..componentes.base import (
     ItemFaq,
     acordeon_faq,
+    encabezado_seccion,
+    separador_secciones,
 )
 from ..componentes.navegacion import (
     barra_navegacion_superior,
@@ -39,27 +72,21 @@ from ..componentes.navegacion import (
 from ..infraestructura import (
     ANCHO_CONTENIDO,
     AZUL_MARINO_NEON,
-    BORDE_HOME_AZUL,
-    BORDE_HOME_SUAVE,
-    COLOR_ACENTO_FONDO,
-    COLOR_ACENTO_SOLIDO,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
     EMAIL_CONTACTO,
     FONDO_AZUL_SUAVE,
     FONDO_HOME,
     NOMBRE_INSTITUTO,
-    PADDING_LATERAL,
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
     TELEFONO_PRINCIPAL,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
     WHATSAPP_URL,
 )
 
@@ -68,7 +95,8 @@ from ..infraestructura import (
 # Constantes locales
 # ======================================================================
 
-ANCHO_MAXIMO: str = "72rem"
+ANCHO_MAXIMO: str = "80rem"
+PADDING_SECCION_HORIZONTAL: str = "1.5rem"
 
 
 # ======================================================================
@@ -78,7 +106,6 @@ ANCHO_MAXIMO: str = "72rem"
 
 class Paso(TypedDict):
     """Paso del proceso de admisión."""
-
     numero: str
     icono: str
     titulo: str
@@ -87,14 +114,12 @@ class Paso(TypedDict):
 
 class Requisito(TypedDict):
     """Requisito individual (documento o académico)."""
-
     icono: str
     texto: str
 
 
 class Beneficio(TypedDict):
     """Beneficio de estudiar en el instituto."""
-
     icono: str
     titulo: str
     descripcion: str
@@ -103,7 +128,6 @@ class Beneficio(TypedDict):
 
 class FormaInscripcion(TypedDict):
     """Forma de inscripción (presencial, WhatsApp, email)."""
-
     icono: str
     titulo: str
     subtitulo: str
@@ -400,68 +424,81 @@ PREGUNTAS_ADMISION: list[ItemFaq] = [
 
 
 def _hero_admision() -> rx.Component:
-    """Hero con badge + título + subtítulo."""
-    return rx.vstack(
-        rx.flex(
-            rx.box(
-                height="0.5rem",
-                width="0.5rem",
-                border_radius=RADIO_PASTILLA,
-                background=rx.color("green", 9),
-                animation="pulse 2s ease-in-out infinite",
+    """
+    Hero de la página de admisión.
+
+    Estilo Neon.com:
+    - Badge con punto verde pulsante.
+    - Título con énfasis bicolor.
+    - Subtítulo descriptivo.
+    - Alineado a la izquierda (no centrado).
+    """
+    return rx.box(
+        rx.vstack(
+            # ─── Badge ─────────────────────────────────────────
+            rx.flex(
+                rx.box(
+                    height="0.5rem",
+                    width="0.5rem",
+                    border_radius=RADIO_PASTILLA,
+                    background=rx.color("green", 9),
+                    animation="pulse 2s ease-in-out infinite",
+                    flex_shrink="0",
+                ),
+                rx.text(
+                    "INSCRIPCIONES ABIERTAS TODO EL AÑO",
+                    font_size="0.6875rem",
+                    font_weight="700",
+                    color=AZUL_MARINO_NEON,
+                    letter_spacing="0.15em",
+                    text_transform="uppercase",
+                ),
+                align="center",
+                gap="0.5rem",
+                margin_bottom="1.5rem",
             ),
-            rx.text(
-                "INSCRIPCIONES ABIERTAS TODO EL AÑO",
-                font_size="0.75rem",
+            # ─── Título con énfasis bicolor ────────────────────
+            rx.heading(
+                rx.text.span("Guía de "),
+                rx.text.span(
+                    "Admisión",
+                    color=AZUL_MARINO_NEON,
+                ),
+                as_="h1",
+                font_size=["2rem", "2.5rem", "3rem"],
                 font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
-                letter_spacing="0.05em",
+                color=TEXTO_HOME_PRINCIPAL,
+                letter_spacing="-0.03em",
+                line_height="1.1",
+                max_width="48rem",
             ),
-            align="center",
-            gap="0.5rem",
-            padding="0.5rem 1rem",
-            border_radius=RADIO_PASTILLA,
-            background=COLOR_ACENTO_FONDO,
-            border=f"1px solid {AZUL_MARINO_NEON}",
-            width="fit-content",
-            margin_bottom="1rem",
-        ),
-        rx.heading(
-            "Guía de ",
-            rx.text.span(
-                "Admisión",
-                color=AZUL_MARINO_NEON,
+            # ─── Subtítulo ─────────────────────────────────────
+            rx.text(
+                "Todo lo que necesitas saber para convertirte en "
+                "Técnico Superior. Sin fechas límite, sin sorteo, "
+                "sin complicaciones.",
+                font_size=["1rem", "1.125rem"],
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.6",
+                max_width="48rem",
+                margin_top="1rem",
             ),
-            "",
-            size="9",
-            font_weight="900",
-            color=COLOR_TEXTO_PRINCIPAL,
-            text_align="center",
-            letter_spacing="-0.03em",
-            line_height="1.1",
+            align="start",
+            spacing="0",
+            width="100%",
         ),
-        rx.text(
-            "Todo lo que necesitas saber para convertirte en Técnico "
-            "Superior. Sin fechas límite, sin sorteo, sin "
-            "complicaciones.",
-            font_size="1rem",
-            color=COLOR_TEXTO_CUERPO,
-            text_align="center",
-            max_width="48rem",
-            line_height="1.7",
-            margin_top="0.5rem",
-        ),
-        align="center",
-        spacing="3",
-        padding=f"5rem {PADDING_LATERAL} 3rem {PADDING_LATERAL}",
         max_width=ANCHO_MAXIMO,
         margin="0 auto",
+        padding=[
+            f"4rem {PADDING_SECCION_HORIZONTAL} 2rem {PADDING_SECCION_HORIZONTAL}",
+            f"6rem {PADDING_SECCION_HORIZONTAL} 3rem {PADDING_SECCION_HORIZONTAL}",
+        ],
         width="100%",
     )
 
 
 # ======================================================================
-# Ventajas destacadas
+# Grid de ventajas destacadas
 # ======================================================================
 
 
@@ -485,23 +522,25 @@ def _tarjeta_ventaja(item: dict) -> rx.Component:
                 align="center",
                 justify="center",
                 margin_bottom="0.75rem",
+                flex_shrink="0",
             ),
             rx.text(
                 item["titulo"],
                 font_size="0.9375rem",
                 font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
             ),
             rx.text(
                 item["descripcion"],
                 font_size="0.8125rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
             ),
             align="start",
             spacing="1",
             width="100%",
+            height="100%",
         ),
         padding="1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
@@ -511,11 +550,7 @@ def _tarjeta_ventaja(item: dict) -> rx.Component:
         height="100%",
         transition="all 0.2s",
         _hover={
-            "transform": "translateY(-4px)",
             "border_color": rx.color(color_scheme, 7),
-            "box_shadow": (
-                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
-            ),
         },
     )
 
@@ -531,13 +566,16 @@ def _grid_ventajas() -> rx.Component:
         ),
         max_width=ANCHO_MAXIMO,
         margin="0 auto",
-        padding=f"0 {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
+        padding=[
+            f"0 {PADDING_SECCION_HORIZONTAL} 3rem {PADDING_SECCION_HORIZONTAL}",
+            f"0 {PADDING_SECCION_HORIZONTAL} 4rem {PADDING_SECCION_HORIZONTAL}",
+        ],
         width="100%",
     )
 
 
 # ======================================================================
-# Proceso de admisión (timeline)
+# Sección 01 — Proceso de admisión (timeline)
 # ======================================================================
 
 
@@ -550,6 +588,7 @@ def _paso_timeline(
     es_ultimo = indice == total - 1
 
     return rx.flex(
+        # ─── Número + línea vertical ────────────────────────────
         rx.vstack(
             rx.box(
                 rx.text(
@@ -567,7 +606,6 @@ def _paso_timeline(
                 align_items="center",
                 justify_content="center",
                 flex_shrink="0",
-                box_shadow=f"0 4px 12px -2px {AZUL_MARINO_NEON}",
             ),
             rx.cond(
                 not es_ultimo,
@@ -584,6 +622,7 @@ def _paso_timeline(
             height="100%",
             flex_shrink="0",
         ),
+        # ─── Tarjeta con contenido del paso ─────────────────────
         rx.box(
             rx.flex(
                 rx.flex(
@@ -606,13 +645,13 @@ def _paso_timeline(
                         paso["titulo"],
                         font_size="1rem",
                         font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
+                        color=TEXTO_HOME_PRINCIPAL,
                         line_height="1.3",
                     ),
                     rx.text(
                         paso["descripcion"],
                         font_size="0.875rem",
-                        color=COLOR_TEXTO_CUERPO,
+                        color=TEXTO_HOME_MAS_SUAVE,
                         line_height="1.6",
                     ),
                     align="start",
@@ -634,7 +673,6 @@ def _paso_timeline(
             transition="all 0.2s",
             _hover={
                 "border_color": AZUL_MARINO_NEON,
-                "box_shadow": f"0 8px 20px -8px {AZUL_MARINO_NEON}",
             },
         ),
         align="start",
@@ -647,56 +685,18 @@ def _seccion_proceso() -> rx.Component:
     """Sección del proceso de admisión paso a paso."""
     total = len(PASOS_ADMISION)
 
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "PROCESO DE ADMISIÓN",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Inscríbete en 5 pasos",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Un proceso simple y rápido. Sin exámenes de "
-                    "admisión, sin sorteos, sin complicaciones.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="3rem",
-            ),
-            rx.vstack(
-                *[
-                    _paso_timeline(paso, i, total)
-                    for i, paso in enumerate(PASOS_ADMISION)
-                ],
-                spacing="0",
-                width="100%",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_CONTENIDO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    return rx.vstack(
+        *[
+            _paso_timeline(paso, i, total)
+            for i, paso in enumerate(PASOS_ADMISION)
+        ],
+        spacing="0",
         width="100%",
     )
 
 
 # ======================================================================
-# Requisitos
+# Sección 02 — Requisitos
 # ======================================================================
 
 
@@ -707,13 +707,13 @@ def _tarjeta_requisito(item: Requisito) -> rx.Component:
             rx.icon(
                 item["icono"],
                 size=16,
-                color=rx.color("violet", 11),
+                color=AZUL_MARINO_NEON,
             ),
             height="2rem",
             width="2rem",
             border_radius=RADIO_MEDIO,
-            background=rx.color("violet", 3),
-            border=f"1px solid {rx.color('violet', 7)}",
+            background=FONDO_AZUL_SUAVE,
+            border=f"1px solid {AZUL_MARINO_NEON}",
             align="center",
             justify="center",
             flex_shrink="0",
@@ -721,7 +721,7 @@ def _tarjeta_requisito(item: Requisito) -> rx.Component:
         rx.text(
             item["texto"],
             font_size="0.875rem",
-            color=COLOR_TEXTO_CUERPO,
+            color=TEXTO_HOME_MAS_SUAVE,
             line_height="1.5",
             flex="1",
         ),
@@ -734,8 +734,7 @@ def _tarjeta_requisito(item: Requisito) -> rx.Component:
         border=f"1px solid {COLOR_BORDE_SUAVE}",
         transition="all 0.2s",
         _hover={
-            "border_color": rx.color("violet", 7),
-            "transform": "translateX(4px)",
+            "border_color": AZUL_MARINO_NEON,
         },
     )
 
@@ -753,13 +752,13 @@ def _columna_requisitos(
                     rx.icon(
                         icono,
                         size=18,
-                        color=rx.color("violet", 11),
+                        color=AZUL_MARINO_NEON,
                     ),
                     height="2.25rem",
                     width="2.25rem",
                     border_radius=RADIO_MEDIO,
-                    background=rx.color("violet", 3),
-                    border=f"1px solid {rx.color('violet', 7)}",
+                    background=FONDO_AZUL_SUAVE,
+                    border=f"1px solid {AZUL_MARINO_NEON}",
                     align="center",
                     justify="center",
                     flex_shrink="0",
@@ -768,7 +767,7 @@ def _columna_requisitos(
                     titulo,
                     font_size="1rem",
                     font_weight="700",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,
                 ),
                 align="center",
                 gap="0.75rem",
@@ -782,6 +781,7 @@ def _columna_requisitos(
             align="start",
             spacing="2",
             width="100%",
+            height="100%",
         ),
         padding="1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
@@ -794,64 +794,26 @@ def _columna_requisitos(
 
 def _seccion_requisitos() -> rx.Component:
     """Sección con los requisitos de admisión."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "REQUISITOS",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Lo que necesitas para inscribirte",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Documentos personales y académicos. Si te falta "
-                    "algo, contáctanos y te ayudamos a resolverlo.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.grid(
-                _columna_requisitos(
-                    "Documentos personales",
-                    "file-text",
-                    REQUISITOS_DOCUMENTOS,
-                ),
-                _columna_requisitos(
-                    "Requisitos académicos",
-                    "graduation-cap",
-                    REQUISITOS_ACADEMICOS,
-                ),
-                columns=rx.breakpoints(initial="1", md="2"),
-                spacing="4",
-                width="100%",
-                align_items="stretch",
-            ),
-            width="100%",
-            align="center",
+    return rx.grid(
+        _columna_requisitos(
+            "Documentos personales",
+            "file-text",
+            REQUISITOS_DOCUMENTOS,
         ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+        _columna_requisitos(
+            "Requisitos académicos",
+            "graduation-cap",
+            REQUISITOS_ACADEMICOS,
+        ),
+        columns=rx.breakpoints(initial="1", md="2"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# Beneficios
+# Sección 03 — Beneficios
 # ======================================================================
 
 
@@ -875,23 +837,25 @@ def _tarjeta_beneficio(item: Beneficio) -> rx.Component:
                 align="center",
                 justify="center",
                 margin_bottom="0.75rem",
+                flex_shrink="0",
             ),
             rx.text(
                 item["titulo"],
                 font_size="0.875rem",
                 font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
             ),
             rx.text(
                 item["descripcion"],
                 font_size="0.75rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.5",
             ),
             align="start",
             spacing="1",
             width="100%",
+            height="100%",
         ),
         padding="1.25rem",
         border_radius=RADIO_EXTRA_GRANDE,
@@ -901,65 +865,24 @@ def _tarjeta_beneficio(item: Beneficio) -> rx.Component:
         height="100%",
         transition="all 0.2s",
         _hover={
-            "transform": "translateY(-4px)",
             "border_color": rx.color(color_scheme, 7),
-            "box_shadow": (
-                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
-            ),
         },
     )
 
 
 def _seccion_beneficios() -> rx.Component:
     """Sección con los beneficios de elegir INSTEIN."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "¿POR QUÉ ELEGIRNOS?",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Razones para estudiar en INSTEIN",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Formación de excelencia con respaldo oficial y "
-                    "proyección profesional real.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.grid(
-                *[_tarjeta_beneficio(item) for item in BENEFICIOS],
-                columns=rx.breakpoints(initial="1", sm="2", lg="4"),
-                spacing="4",
-                width="100%",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    return rx.grid(
+        *[_tarjeta_beneficio(item) for item in BENEFICIOS],
+        columns=rx.breakpoints(initial="1", sm="2", lg="4"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# Formas de inscripción
+# Sección 04 — Formas de inscripción
 # ======================================================================
 
 
@@ -973,24 +896,23 @@ def _tarjeta_forma_inscripcion(item: FormaInscripcion) -> rx.Component:
                 rx.icon(
                     item["icono"],
                     size=24,
-                    color="white",
+                    color=rx.color(color_scheme, 11),
                 ),
                 height="3rem",
                 width="3rem",
                 border_radius=RADIO_GRANDE,
-                background=rx.color(color_scheme, 9),
+                background=rx.color(color_scheme, 3),
+                border=f"1px solid {rx.color(color_scheme, 7)}",
                 align="center",
                 justify="center",
                 margin_bottom="1rem",
-                box_shadow=(
-                    f"0 8px 20px -6px {rx.color(color_scheme, 9)}"
-                ),
+                flex_shrink="0",
             ),
             rx.text(
                 item["titulo"],
                 font_size="1rem",
                 font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.2",
             ),
             rx.text(
@@ -1004,7 +926,7 @@ def _tarjeta_forma_inscripcion(item: FormaInscripcion) -> rx.Component:
             rx.text(
                 item["descripcion"],
                 font_size="0.875rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
                 margin_top="0.5rem",
             ),
@@ -1014,8 +936,9 @@ def _tarjeta_forma_inscripcion(item: FormaInscripcion) -> rx.Component:
                     as_="span",
                     font_size="0.875rem",
                     font_weight="700",
+                    color=rx.color(color_scheme, 11),
                 ),
-                rx.icon("arrow-right", size=14),
+                rx.icon("arrow-right", size=14, color=rx.color(color_scheme, 11)),
                 href=item["cta_url"],
                 is_external=item["externo"],
                 text_decoration="none",
@@ -1025,12 +948,11 @@ def _tarjeta_forma_inscripcion(item: FormaInscripcion) -> rx.Component:
                 margin_top="1rem",
                 padding="0.625rem 1.25rem",
                 border_radius=RADIO_PASTILLA,
-                background=rx.color(color_scheme, 9),
-                color="white",
+                background=rx.color(color_scheme, 3),
+                border=f"1px solid {rx.color(color_scheme, 7)}",
                 transition="all 0.2s",
                 _hover={
-                    "transform": "translateY(-2px)",
-                    "filter": "brightness(1.1)",
+                    "background": rx.color(color_scheme, 4),
                 },
             ),
             align="start",
@@ -1053,219 +975,71 @@ def _tarjeta_forma_inscripcion(item: FormaInscripcion) -> rx.Component:
 
 def _seccion_formas_inscripcion() -> rx.Component:
     """Sección con las 3 formas de inscripción."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "FORMAS DE INSCRIPCIÓN",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Elige cómo contactarnos",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Tres canales para iniciar tu proceso de admisión. "
-                    "Elige el que más te convenga.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            rx.grid(
-                *[
-                    _tarjeta_forma_inscripcion(item)
-                    for item in FORMAS_INSCRIPCION
-                ],
-                columns=rx.breakpoints(initial="1", md="3"),
-                spacing="4",
-                width="100%",
-                align_items="stretch",
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
+    return rx.grid(
+        *[
+            _tarjeta_forma_inscripcion(item)
+            for item in FORMAS_INSCRIPCION
+        ],
+        columns=rx.breakpoints(initial="1", md="3"),
+        spacing="4",
         width="100%",
+        align_items="stretch",
     )
 
 
 # ======================================================================
-# FAQ
+# Sección 05 — FAQ
 # ======================================================================
 
 
 def _seccion_faq() -> rx.Component:
     """Sección de preguntas frecuentes de admisión."""
-    return rx.box(
-        rx.vstack(
-            rx.vstack(
-                rx.text(
-                    "PREGUNTAS FRECUENTES",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=AZUL_MARINO_NEON,
-                ),
-                rx.heading(
-                    "Dudas comunes sobre admisión",
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                    letter_spacing="-0.03em",
-                ),
-                rx.text(
-                    "Las preguntas que más nos hacen quienes quieren "
-                    "estudiar con nosotros.",
-                    font_size="0.9375rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="2rem",
-            ),
-            acordeon_faq(
-                items=PREGUNTAS_ADMISION,
-                variante="light",
-                icono="help-circle",
-                color_acento=AZUL_MARINO_NEON,
-            ),
-            width="100%",
-            align="center",
-        ),
-        max_width=ANCHO_CONTENIDO,
-        margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL}",
-        width="100%",
+    return acordeon_faq(
+        items=PREGUNTAS_ADMISION,
+        variante="light",
+        icono="help-circle",
+        color_acento=AZUL_MARINO_NEON,
+        max_width="56rem",
     )
 
 
 # ======================================================================
-# CTA final
+# Sección 06 — CTA final
 # ======================================================================
 
 
 def _cta_admision() -> rx.Component:
     """Bloque CTA final hacia /contacto."""
-    return rx.box(
-        rx.vstack(
-            rx.flex(
-                rx.box(
-                    height="0.5rem",
-                    width="0.5rem",
-                    border_radius=RADIO_PASTILLA,
-                    background=rx.color("green", 9),
-                    animation="pulse 2s ease-in-out infinite",
-                ),
-                rx.text(
-                    "INSCRIPCIONES ABIERTAS",
-                    font_size="0.6875rem",
-                    font_weight="700",
-                    color=AZUL_MARINO_NEON,
-                    letter_spacing="0.1em",
-                ),
-                align="center",
-                gap="0.5rem",
-                margin_bottom="1rem",
-            ),
-            rx.heading(
-                "¿Listo para dar el primer paso?",
-                size="7",
-                font_weight="900",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
-                letter_spacing="-0.03em",
-            ),
-            rx.text(
-                "Nuestro equipo de admisiones está disponible para "
-                "guiarte en cada paso del proceso.",
-                font_size="1rem",
-                color=COLOR_TEXTO_CUERPO,
-                text_align="center",
-                max_width="36rem",
-                line_height="1.6",
-                margin_top="0.5rem",
-            ),
-            rx.flex(
-                rx.link(
-                    rx.icon("message-circle", size=18),
-                    rx.text(
-                        "Contactar ahora",
-                        as_="span",
-                        font_weight="700",
-                    ),
-                    href="/contacto",
-                    text_decoration="none",
-                    display="inline-flex",
-                    align_items="center",
-                    gap="0.5rem",
-                    background=AZUL_MARINO_NEON,
-                    color="white",
-                    padding="1rem 2rem",
-                    border_radius=RADIO_PASTILLA,
-                    font_size="1rem",
-                    box_shadow=(
-                        f"0 10px 25px -5px {AZUL_MARINO_NEON}"
-                    ),
-                    transition="all 0.2s",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "filter": "brightness(1.1)",
-                    },
-                ),
-                rx.link(
-                    rx.icon("phone", size=18),
-                    rx.text(
-                        "Llamar: " + TELEFONO_PRINCIPAL,
-                        as_="span",
-                        font_weight="600",
-                    ),
-                    href=f"tel:+591{TELEFONO_PRINCIPAL}",
-                    text_decoration="none",
-                    display="inline-flex",
-                    align_items="center",
-                    gap="0.5rem",
-                    background="transparent",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    padding="1rem 2rem",
-                    border_radius=RADIO_PASTILLA,
-                    font_size="1rem",
-                    border=f"1px solid {COLOR_BORDE_SUAVE}",
-                    transition="all 0.2s",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "border_color": AZUL_MARINO_NEON,
-                    },
-                ),
-                gap="0.75rem",
-                flex_direction=rx.breakpoints(initial="column", sm="row"),
-                align="center",
-                justify="center",
-                margin_top="1.5rem",
-            ),
-            align="center",
-            spacing="2",
+    return rx.flex(
+        rx.text(
+            "¿Listo para dar el primer paso?",
+            font_size="1rem",
+            color=TEXTO_HOME_MAS_SUAVE,
         ),
-        max_width=ANCHO_MAXIMO,
-        margin="0 auto",
-        padding=f"4rem {PADDING_LATERAL} 5rem {PADDING_LATERAL}",
+        rx.link(
+            rx.text(
+                "Contáctanos",
+                font_size="1rem",
+                font_weight="700",
+                color=AZUL_MARINO_NEON,
+            ),
+            rx.icon("arrow-right", size=16, color=AZUL_MARINO_NEON),
+            href="/contacto",
+            text_decoration="none",
+            display="inline-flex",
+            align_items="center",
+            gap="0.375rem",
+            transition="gap 0.2s",
+            _hover={"gap": "0.625rem"},
+        ),
+        align="center",
+        justify="start",
+        gap="0.5rem",
+        flex_wrap="wrap",
         width="100%",
+        padding_top="3rem",
+        margin_top="2rem",
+        border_top=f"1px solid {COLOR_DIVISOR}",
     )
 
 
@@ -1277,25 +1051,225 @@ def _cta_admision() -> rx.Component:
 @rx.page(
     route="/admision",
     title=f"Guía de Admisión | {NOMBRE_INSTITUTO}",
+    description=(
+        "Guía completa de admisión del Instituto Técnico Integrado "
+        "San Antonio de Padua (INSTEIN): proceso paso a paso, "
+        "requisitos, formas de inscripción y beneficios."
+    ),
 )
 def vista_admision() -> rx.Component:
-    """Página de la guía de admisión del instituto."""
-    return rx.vstack(
-        barra_navegacion_superior(),
-        _hero_admision(),
-        _grid_ventajas(),
-        _seccion_proceso(),
-        _seccion_requisitos(),
-        _seccion_beneficios(),
-        _seccion_formas_inscripcion(),
-        _seccion_faq(),
-        _cta_admision(),
-        pie_pagina_institucional(),
-        align="center",
-        min_height="100vh",
+    """
+    Página de la guía de admisión del instituto — estilo Neon.com.
+
+    Estructura semántica HTML5:
+    - `<header role="banner">`      → barra de navegación.
+    - `<main>`                      → contenido principal.
+    - `<section>`                   → cada sección temática.
+    - `<footer role="contentinfo">` → pie de página.
+    """
+    return rx.box(
+        rx.vstack(
+            # =============================================================
+            # 1. HEADER
+            # =============================================================
+            rx.box(
+                barra_navegacion_superior(),
+                width="100%",
+                role="banner",
+                aria_label="Navegación principal",
+            ),
+            # =============================================================
+            # 2. MAIN
+            # =============================================================
+            rx.el.main(
+                # ─── Hero ───────────────────────────────────────────
+                _hero_admision(),
+                # ─── Grid de ventajas destacadas ────────────────────
+                _grid_ventajas(),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 01 — Proceso ───────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="01",
+                            etiqueta="Proceso de admisión",
+                            titulo="Inscríbete",
+                            titulo_enfasis="en 5 pasos",
+                            subtitulo=(
+                                "Un proceso simple y rápido. Sin "
+                                "exámenes de admisión, sin sorteos, "
+                                "sin complicaciones."
+                            ),
+                        ),
+                        _seccion_proceso(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="proceso",
+                    aria_label="Proceso de admisión",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 02 — Requisitos ────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="02",
+                            etiqueta="Requisitos",
+                            titulo="Lo que necesitas",
+                            titulo_enfasis="para inscribirte",
+                            subtitulo=(
+                                "Documentos personales y académicos. "
+                                "Si te falta algo, contáctanos y te "
+                                "ayudamos a resolverlo."
+                            ),
+                        ),
+                        _seccion_requisitos(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="requisitos",
+                    aria_label="Requisitos de admisión",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 03 — Beneficios ────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="03",
+                            etiqueta="¿Por qué elegirnos?",
+                            titulo="Razones para estudiar",
+                            titulo_enfasis="en INSTEIN",
+                            subtitulo=(
+                                "Formación de excelencia con respaldo "
+                                "oficial y proyección profesional real."
+                            ),
+                        ),
+                        _seccion_beneficios(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="beneficios",
+                    aria_label="Beneficios de estudiar en INSTEIN",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 04 — Formas de inscripción ─────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="04",
+                            etiqueta="Formas de inscripción",
+                            titulo="Elige cómo",
+                            titulo_enfasis="contactarnos",
+                            subtitulo=(
+                                "Tres canales para iniciar tu proceso "
+                                "de admisión. Elige el que más te "
+                                "convenga."
+                            ),
+                        ),
+                        _seccion_formas_inscripcion(),
+                        max_width=ANCHO_MAXIMO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="formas",
+                    aria_label="Formas de inscripción",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_MAXIMO),
+                # ─── Sección 05 — FAQ ───────────────────────────────
+                rx.el.section(
+                    rx.box(
+                        encabezado_seccion(
+                            numero="05",
+                            etiqueta="Preguntas frecuentes",
+                            titulo="Dudas comunes",
+                            titulo_enfasis="sobre admisión",
+                            subtitulo=(
+                                "Las preguntas que más nos hacen "
+                                "quienes quieren estudiar con nosotros."
+                            ),
+                        ),
+                        _seccion_faq(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding=[
+                            f"4rem {PADDING_SECCION_HORIZONTAL}",
+                            f"6rem {PADDING_SECCION_HORIZONTAL}",
+                        ],
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="faq",
+                    aria_label="Preguntas frecuentes sobre admisión",
+                    scroll_margin_top="5rem",
+                ),
+                # ─── Sección 06 — CTA final ─────────────────────────
+                rx.el.section(
+                    rx.box(
+                        _cta_admision(),
+                        max_width=ANCHO_CONTENIDO,
+                        margin="0 auto",
+                        padding_x=PADDING_SECCION_HORIZONTAL,
+                        padding_bottom="6rem",
+                        width="100%",
+                    ),
+                    width="100%",
+                    id="cta-final",
+                    aria_label="Contacto final",
+                    scroll_margin_top="5rem",
+                ),
+                width="100%",
+                aria_label="Guía de admisión",
+            ),
+            # =============================================================
+            # 3. FOOTER
+            # =============================================================
+            rx.box(
+                pie_pagina_institucional(),
+                width="100%",
+                role="contentinfo",
+                aria_label="Información del sitio",
+            ),
+            align="center",
+            min_height="100vh",
+            width="100%",
+            spacing="0",
+            background=FONDO_HOME,
+        ),
         width="100%",
-        spacing="0",
         background=FONDO_HOME,
+        lang="es",
     )
 
 

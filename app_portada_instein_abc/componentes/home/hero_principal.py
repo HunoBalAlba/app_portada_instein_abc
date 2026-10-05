@@ -1,28 +1,45 @@
 """
-Hero principal del home — estilo Neon adaptativo.
+Hero principal del home — estilo Neon.com adaptado a INSTEIN.
 
-Capas (de fondo a frente)
--------------------------
-- CAPA 0: Gradiente adaptativo (light: claro, dark: oscuro).
-- CAPA 1: Orbes de glow azul marino en esquinas.
-- CAPA 2: Partículas (iconos flotantes) en azul marino.
-- CAPA 3: Contenido principal (título, CTA, trust badges) + explorador.
+Diseño
+------
+Inspirado en Neon.com:
+
+1. **Fondo oscuro casi puro** con gradiente radial sutil.
+2. **Barras verticales tipo "datacenter"** (patrón de columnas
+   animadas con iconos de carreras).
+3. **Título hero grande** con jerarquía clara (2-3 líneas).
+4. **Dos CTAs** side-by-side (primario + secundario).
+5. **Badge superior** tipo "parte de la plataforma".
+6. **Carrusel infinito** (marquee) con iconos de carreras.
+7. **Trust badges** inline con credenciales.
 
 Sistema de color
 ----------------
 ✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
 
-- Fondo: `FONDO_HOME_HERO` (adaptativo).
-- Acentos: `AZUL_MARINO_NEON` en ambos modos.
-- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
-- Punto verde: `#22c55e` semántico.
-- Título: gradiente adaptativo (`GRADIENTE_TEXTO_HOME`).
+Nota técnica: CARRUSEL INFINITO (MARQUEE)
+-----------------------------------------
+El carrusel infinito usa una técnica CSS pura:
 
-Notas técnicas
---------------
-- `rx.icon(size=...)` NO acepta `rx.breakpoints(...)`.
-- Las opacidades de partículas y orbes son mayores en dark.
+1. Duplicar la lista de iconos `[iconos, iconos]` (2x).
+2. Animar `translateX(-50%)` en `@keyframes marquee`.
+3. Al terminar la animación, el segundo bloque reemplaza al primero
+   visualmente, creando la ilusión de scroll infinito.
+
+Ventajas:
+- No usa JavaScript (CSS puro).
+- No interfiere con el evento de scroll.
+- Suave y sin saltos visuales.
+
+Nota técnica: BARRAS VERTICALES TIPO DATACENTER
+-----------------------------------------------
+Las barras verticales se renderizan como un grid de columnas con
+alturas variables (con semilla fija para reproducibilidad).
+Cada barra contiene iconos de carreras apilados verticalmente.
+
+Es el patrón característico de Neon.com.
 """
 
 from __future__ import annotations
@@ -32,9 +49,6 @@ from typing import TypedDict
 
 import reflex as rx
 
-from ...componentes.carreras.explorador import (
-    explorador_carrera_destacada,
-)
 from ...componentes.base.primitivos import (
     enlace_navegacion,
 )
@@ -48,7 +62,6 @@ from ...infraestructura.constantes.colores import (
     GRADIENTE_TEXTO_HOME,
     TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
-    TEXTO_HOME_SUAVE,
 )
 from ...infraestructura.constantes.dimensiones import (
     RADIO_PASTILLA,
@@ -56,133 +69,177 @@ from ...infraestructura.constantes.dimensiones import (
 
 
 # ======================================================================
-# Tipos
+# Catálogo de iconos de carreras (para el marquee y las barras)
 # ======================================================================
 
-
-class Particula(TypedDict):
-    """Partícula decorativa del fondo del hero."""
-
-    icono: str
-    x: float
-    y: float
-    tamano: int
-    opacidad: float
-    delay: float
-    duracion: float
-    rotacion: float
-
-
-# ======================================================================
-# Catálogo de iconos para las partículas
-# ======================================================================
-
-ICONOS_PARTICULAS: list[str] = [
-    # Sistemas Informáticos
-    "cpu", "code-2", "database", "wifi", "terminal", "binary", "hard-drive",
-    # Contaduría General
-    "calculator", "receipt", "coins", "chart-line", "wallet", "trending-up",
-    # Secretariado Ejecutivo
-    "briefcase", "calendar-clock", "mail", "users", "file-text",
-    "clipboard-list",
-    # Comercio Internacional
-    "globe", "ship", "package", "truck", "plane",
+ICONOS_CARRERAS: list[str] = [
+    # Sistemas
+    "cpu", "code-2", "database", "terminal", "binary", "hard-drive",
+    # Contaduría
+    "calculator", "receipt", "coins", "chart-line", "wallet",
+    # Secretariado
+    "briefcase", "calendar-clock", "mail", "clipboard-list",
+    # Comercio
+    "globe", "ship", "package", "truck",
     # Electrónica
-    "zap", "circuit-board", "radio", "plug-zap", "settings",
+    "zap", "circuit-board", "radio", "plug-zap",
     # Académicos generales
-    "graduation-cap", "book-open", "award", "lightbulb", "target", "rocket",
+    "graduation-cap", "book-open", "award", "lightbulb", "target",
 ]
 
 
 # ======================================================================
-# Configuración de las partículas
+# Configuración del marquee
 # ======================================================================
 
-CANTIDAD_PARTICULAS: int = 50
-SEMILLA_PARTICULAS: int = 42
-TAMANOS_PARTICULAS: list[int] = [14, 18, 20, 24, 28, 32]
-
-OPACIDAD_MINIMA: float = 0.08
-OPACIDAD_MAXIMA: float = 0.20
-
-DURACION_MINIMA: float = 4.0
-DURACION_MAXIMA: float = 8.0
-ROTACION_MINIMA: float = -25
-ROTACION_MAXIMA: float = 25
+CANTIDAD_ICONOS_MARQUEE: int = 30
+DURACION_MARQUEE_SEGUNDOS: int = 40
+ALTURA_MARQUEE: str = "4rem"
 
 
 # ======================================================================
-# Generador de partículas
+# Configuración de las barras verticales (datacenter)
 # ======================================================================
 
+CANTIDAD_BARRAS_VERTICALES: int = 12
+SEMILLA_BARRAS: int = 42
+ICONOS_POR_BARRA_MIN: int = 3
+ICONOS_POR_BARRA_MAX: int = 8
 
-def _generar_particulas(
-    cantidad: int = CANTIDAD_PARTICULAS,
-    semilla: int = SEMILLA_PARTICULAS,
-) -> list[Particula]:
+
+class BarraVertical(TypedDict):
+    """Configuración de una barra vertical del fondo."""
+
+    iconos: list[str]
+    altura: str
+    opacidad: float
+    delay: float
+    duracion: float
+
+
+def _generar_barras_verticales(
+    cantidad: int = CANTIDAD_BARRAS_VERTICALES,
+    semilla: int = SEMILLA_BARRAS,
+) -> list[BarraVertical]:
     """
-    Genera partículas reproducibles con semilla fija.
+    Genera la configuración de las barras verticales.
+
+    Cada barra contiene N iconos apilados verticalmente con opacidad
+    y animación aleatoria.
 
     Args:
-        cantidad: Número de partículas.
+        cantidad: Número de barras.
         semilla: Semilla para reproducibilidad.
 
     Returns:
-        Lista de `Particula` con configuración aleatoria pero estable.
+        Lista de `BarraVertical` con la configuración.
     """
     rng = random.Random(semilla)
-    return [
-        {
-            "icono": rng.choice(ICONOS_PARTICULAS),
-            "x": rng.uniform(0, 100),
-            "y": rng.uniform(0, 100),
-            "tamano": rng.choice(TAMANOS_PARTICULAS),
-            "opacidad": rng.uniform(OPACIDAD_MINIMA, OPACIDAD_MAXIMA),
-            "delay": rng.uniform(0, 5),
-            "duracion": rng.uniform(DURACION_MINIMA, DURACION_MAXIMA),
-            "rotacion": rng.uniform(ROTACION_MINIMA, ROTACION_MAXIMA),
-        }
-        for _ in range(cantidad)
-    ]
+    barras: list[BarraVertical] = []
+
+    for _ in range(cantidad):
+        n_iconos = rng.randint(
+            ICONOS_POR_BARRA_MIN,
+            ICONOS_POR_BARRA_MAX,
+        )
+        iconos = [rng.choice(ICONOS_CARRERAS) for _ in range(n_iconos)]
+        altura = f"{rng.uniform(40, 90)}%"
+        opacidad = rng.uniform(0.03, 0.10)
+        delay = rng.uniform(0, 3)
+        duracion = rng.uniform(4, 8)
+
+        barras.append({
+            "iconos": iconos,
+            "altura": altura,
+            "opacidad": opacidad,
+            "delay": delay,
+            "duracion": duracion,
+        })
+
+    return barras
 
 
-PARTICULAS_FONDO: list[Particula] = _generar_particulas()
-"""Partículas precalculadas (constante de módulo)."""
+BARRAS_VERTICALES: list[BarraVertical] = _generar_barras_verticales()
 
 
 # ======================================================================
-# CAPA 2: Partículas
+# CAPA 1: Barras verticales tipo datacenter
 # ======================================================================
 
 
-def _icono_particula(particula: Particula) -> rx.Component:
-    """Renderiza una partícula flotante."""
+def _barra_vertical(barra: BarraVertical) -> rx.Component:
+    """
+    Renderiza una barra vertical con iconos apilados.
+
+    La barra tiene:
+    - Una columna delgada (2-3px de ancho) con gradiente vertical.
+    - Iconos superpuestos verticalmente.
+    - Animación de pulso sutil.
+    """
     return rx.box(
-        rx.icon(
-            particula["icono"],
-            size=particula["tamano"],
-            color=AZUL_MARINO_NEON,
+        # Columna vertical con gradiente
+        rx.box(
+            position="absolute",
+            top="0",
+            left="50%",
+            transform="translateX(-50%)",
+            width="2px",
+            height=barra["altura"],
+            background=(
+                f"linear-gradient(180deg, "
+                f"{AZUL_MARINO_NEON} 0%, "
+                f"transparent 100%)"
+            ),
+            opacity=barra["opacidad"],
+            border_radius=RADIO_PASTILLA,
         ),
-        position="absolute",
-        left=f"{particula['x']}%",
-        top=f"{particula['y']}%",
-        opacity=rx.color_mode_cond(
-            light=f"{particula['opacidad'] * 0.5}",
-            dark=f"{particula['opacidad']}",
+        # Iconos apilados verticalmente
+        rx.vstack(
+            *[
+                rx.icon(
+                    icono,
+                    size=16,
+                    color=AZUL_MARINO_NEON,
+                    opacity="0.5",
+                )
+                for icono in barra["iconos"]
+            ],
+            spacing="2",
+            align="center",
+            justify="start",
+            position="absolute",
+            top="0",
+            left="50%",
+            transform="translateX(-50%)",
+            height=barra["altura"],
+            overflow="hidden",
         ),
-        style={"--rotacion": f"{particula['rotacion']}deg"},
+        position="relative",
+        width="100%",
+        height="100%",
         animation=(
-            f"flotar_icono_particula {particula['duracion']}s ease-in-out "
-            f"{particula['delay']}s infinite"
+            f"pulso_columna {barra['duracion']}s ease-in-out "
+            f"{barra['delay']}s infinite"
         ),
         pointer_events="none",
     )
 
 
-def _capa_particulas() -> rx.Component:
-    """Capa completa de partículas."""
+def _capa_barras_verticales() -> rx.Component:
+    """
+    Capa con el grid de barras verticales.
+
+    Layout: grid de 12 columnas que ocupa todo el ancho del hero.
+    En móvil, solo 6 columnas visibles.
+    """
     return rx.box(
-        *[_icono_particula(p) for p in PARTICULAS_FONDO],
+        rx.grid(
+            *[_barra_vertical(b) for b in BARRAS_VERTICALES],
+            columns="12",
+            spacing="0",
+            width="100%",
+            height="100%",
+        ),
         position="absolute",
         top="0",
         left="0",
@@ -195,263 +252,14 @@ def _capa_particulas() -> rx.Component:
 
 
 # ======================================================================
-# CAPA 1: Orbes de glow
+# CAPA 0: Fondo gradiente + orbes sutiles
 # ======================================================================
 
 
-def _orbes_glow() -> rx.Component:
-    """Orbes de glow azul marino en las esquinas del hero."""
-    return rx.fragment(
-        rx.box(
-            position="absolute",
-            top="-30%",
-            right="-15%",
-            width="60%",
-            height="100%",
-            background=(
-                f"radial-gradient(circle, {AZUL_MARINO_NEON} 0%, "
-                f"transparent 60%)"
-            ),
-            opacity=rx.color_mode_cond(light="0.12", dark="0.25"),
-            filter="blur(80px)",
-            z_index="0",
-            pointer_events="none",
-        ),
-        rx.box(
-            position="absolute",
-            bottom="-30%",
-            left="-15%",
-            width="60%",
-            height="100%",
-            background=(
-                "radial-gradient(circle, #1a237e 0%, transparent 60%)"
-            ),
-            opacity=rx.color_mode_cond(light="0.15", dark="0.30"),
-            filter="blur(80px)",
-            z_index="0",
-            pointer_events="none",
-        ),
-    )
-
-
-# ======================================================================
-# Badge de inscripciones
-# ======================================================================
-
-
-def _badge_inscripciones_abiertas() -> rx.Component:
-    """Badge "INSCRIPCIONES ABIERTAS · GESTIÓN 2026" con punto verde."""
-    return rx.flex(
-        rx.box(
-            height="0.5rem",
-            width="0.5rem",
-            border_radius=RADIO_PASTILLA,
-            background="#22c55e",
-            animation="pulse 2s ease-in-out infinite",
-            box_shadow="0 0 12px #22c55e",
-            flex_shrink="0",
-        ),
-        rx.text(
-            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
-            font_size="0.75rem",
-            font_weight="700",
-            color=TEXTO_HOME_PRINCIPAL,
-            letter_spacing="0.1em",
-        ),
-        align="center",
-        gap="0.5rem",
-        padding="0.5rem 1rem",
-        border_radius=RADIO_PASTILLA,
-        background=FONDO_AZUL_SUAVE,
-        border=f"1px solid {BORDE_HOME_AZUL}",
-        backdrop_filter="blur(12px)",
-        width="fit-content",
-    )
-
-
-# ======================================================================
-# CTA dual
-# ======================================================================
-
-
-def _cta_primario() -> rx.Component:
-    """CTA primario "Explorar Carreras" con azul marino + glow."""
-    return enlace_navegacion(
-        "/carreras",
-        rx.text("Explorar Carreras", as_="span", font_weight="700"),
-        rx.icon(
-            "arrow-right",
-            size=18,
-            class_name="arrow-icon",
-            transition="transform 0.2s",
-        ),
-        display="flex",
-        align_items="center",
-        gap="0.5rem",
-        background=AZUL_MARINO_NEON,
-        color="white",
-        padding="1rem 2rem",
-        border_radius=RADIO_PASTILLA,
-        font_size="1rem",
-        font_weight="700",
-        box_shadow=f"0 0 40px {AZUL_MARINO_NEON}80",
-        transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
-            "& .arrow-icon": {"transform": "translateX(4px)"},
-        },
-    )
-
-
-def _cta_secundario() -> rx.Component:
-    """CTA secundario "Conocer más" con glassmorphism."""
-    return enlace_navegacion(
-        "/contacto",
-        rx.icon("message-circle", size=18),
-        rx.text("Conocer más", as_="span", font_weight="600"),
-        display="flex",
-        align_items="center",
-        gap="0.5rem",
-        background=rx.color_mode_cond(
-            light="rgba(255, 255, 255, 0.6)",
-            dark="rgba(255, 255, 255, 0.05)",
-        ),
-        color=TEXTO_HOME_PRINCIPAL,
-        padding="1rem 2rem",
-        border_radius=RADIO_PASTILLA,
-        font_size="1rem",
-        border=f"1px solid {BORDE_HOME_MEDIO}",
-        backdrop_filter="blur(12px)",
-        transition="all 0.2s",
-        _hover={
-            "background": rx.color_mode_cond(
-                light="rgba(255, 255, 255, 0.9)",
-                dark="rgba(255, 255, 255, 0.1)",
-            ),
-            "border_color": BORDE_HOME_AZUL,
-        },
-    )
-
-
-# ======================================================================
-# Trust badges
-# ======================================================================
-
-
-def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
-    """Badge individual con icono + texto."""
-    return rx.flex(
-        rx.icon(icono, size=14, color=AZUL_MARINO_NEON),
-        rx.text(
-            etiqueta,
-            font_size="0.75rem",
-            font_weight="600",
-            color=TEXTO_HOME_SUAVE,
-        ),
-        align="center",
-        gap="0.4rem",
-        padding="0.5rem 0.875rem",
-        border_radius=RADIO_PASTILLA,
-        background=rx.color_mode_cond(
-            light="rgba(255, 255, 255, 0.7)",
-            dark="rgba(255, 255, 255, 0.03)",
-        ),
-        border=f"1px solid {BORDE_HOME_SUAVE}",
-        backdrop_filter="blur(12px)",
-    )
-
-
-# ======================================================================
-# Título + CTA
-# ======================================================================
-
-
-def _hero_titulo_y_cta() -> rx.Component:
-    """Bloque superior del hero con título, subtítulo, CTA y badges."""
-    return rx.vstack(
-        rx.box(
-            _badge_inscripciones_abiertas(),
-            margin_bottom="1.5rem",
-        ),
-        rx.heading(
-            "Forja tu futuro como ",
-            rx.text.span(
-                "Técnico Superior",
-                background=GRADIENTE_TEXTO_HOME,
-                background_clip="text",
-                color="transparent",
-                webkit_background_clip="text",
-            ),
-            "",
-            size="9",
-            text_align="center",
-            font_weight="900",
-            letter_spacing="-0.04em",
-            line_height="1.05",
-            color=TEXTO_HOME_PRINCIPAL,
-            max_width="60rem",
-        ),
-        rx.text(
-            "Formación técnica de excelencia con títulos de Provisión "
-            "Nacional. 5 carreras, equipamiento moderno y docentes "
-            "especializados.",
-            font_size=["1rem", "1.125rem", "1.25rem"],
-            text_align="center",
-            color=TEXTO_HOME_MAS_SUAVE,
-            max_width="42rem",
-            line_height="1.6",
-            margin_top="1.5rem",
-        ),
-        rx.flex(
-            _cta_primario(),
-            _cta_secundario(),
-            gap="0.75rem",
-            margin_top="2.5rem",
-            flex_direction=rx.breakpoints(initial="column", sm="row"),
-            align="center",
-            justify="center",
-        ),
-        rx.flex(
-            _trust_badge("award", "R.M. 0871/2016"),
-            _trust_badge("shield-check", "Título Nacional"),
-            _trust_badge("users", "500+ Egresados"),
-            _trust_badge("trending-up", "100% Empleabilidad"),
-            gap="0.5rem",
-            margin_top="3rem",
-            flex_wrap="wrap",
-            justify="center",
-            max_width="48rem",
-        ),
-        align="center",
-        text_align="center",
-        padding="6rem 1.5rem 4rem 1.5rem",
-        position="relative",
-        z_index="2",
-        width="100%",
-        max_width="72rem",
-        margin="0 auto",
-    )
-
-
-# ======================================================================
-# Hero completo
-# ======================================================================
-
-
-def hero_principal() -> rx.Component:
-    """
-    Hero completo del home con sistema de capas apiladas.
-
-    Orden de renderizado (de atrás hacia adelante):
-    1. Gradiente adaptativo.
-    2. Orbes de glow.
-    3. Partículas.
-    4. Contenido principal (título + CTA + badges).
-    5. Explorador de carreras.
-    """
+def _capa_fondo() -> rx.Component:
+    """Fondo con gradiente radial sutil y orbes de glow."""
     return rx.box(
-        # CAPA 0: Fondo gradiente
+        # Gradiente radial sutil
         rx.box(
             position="absolute",
             top="0",
@@ -459,27 +267,396 @@ def hero_principal() -> rx.Component:
             right="0",
             bottom="0",
             background=FONDO_HOME_HERO,
+            z_index="-2",
+            pointer_events="none",
+        ),
+        # Orbe superior derecha
+        rx.box(
+            position="absolute",
+            top="-20%",
+            right="-10%",
+            width="50%",
+            height="80%",
+            background=(
+                f"radial-gradient(circle, "
+                f"{AZUL_MARINO_NEON} 0%, transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(light="0.08", dark="0.15"),
+            filter="blur(120px)",
             z_index="-1",
             pointer_events="none",
         ),
-        # CAPA 1: Orbes de glow
-        _orbes_glow(),
-        # CAPA 2: Partículas
-        _capa_particulas(),
-        # CAPA 3: Contenido principal
-        rx.vstack(
-            _hero_titulo_y_cta(),
-            explorador_carrera_destacada(),
-            width="100%",
-            align="center",
-            spacing="0",
-            position="relative",
-            z_index="2",
+        # Orbe inferior izquierda
+        rx.box(
+            position="absolute",
+            bottom="-20%",
+            left="-10%",
+            width="50%",
+            height="80%",
+            background=(
+                "radial-gradient(circle, "
+                "#1a237e 0%, transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(light="0.10", dark="0.18"),
+            filter="blur(120px)",
+            z_index="-1",
+            pointer_events="none",
         ),
+        position="absolute",
+        top="0",
+        left="0",
+        right="0",
+        bottom="0",
+        pointer_events="none",
+        z_index="0",
+    )
+
+
+# ======================================================================
+# Badge superior "parte de la plataforma"
+# ======================================================================
+
+
+def _badge_plataforma() -> rx.Component:
+    """
+    Badge superior tipo "INSTEIN IS PART OF ...".
+
+    Coherente con el diseño de Neon.com: ícono + texto pequeño
+    en mayúsculas, espaciado amplio.
+    """
+    return rx.flex(
+        rx.icon(
+            "circle-dot",
+            size=12,
+            color=AZUL_MARINO_NEON,
+        ),
+        rx.text(
+            "INSTEIN · INSTITUTO TÉCNICO INTEGRADO",
+            font_size="0.6875rem",
+            font_weight="700",
+            color=AZUL_MARINO_NEON,
+            letter_spacing="0.15em",
+            text_transform="uppercase",
+        ),
+        align="center",
+        gap="0.5rem",
+        margin_bottom="2rem",
+    )
+
+
+# ======================================================================
+# Título hero (multi-línea, estilo Neon)
+# ======================================================================
+
+
+def _titulo_hero() -> rx.Component:
+    """
+    Título hero multi-línea al estilo Neon.com.
+
+    Estructura:
+        Forja tu futuro como
+        Técnico Superior,
+        construye tu camino profesional.
+
+    El span "Técnico Superior" lleva gradiente de texto azul marino.
+    """
+    return rx.heading(
+        "Forja tu futuro como",
+        rx.box(height="0.25rem"),
+        rx.text.span(
+            "Técnico Superior",
+            background=GRADIENTE_TEXTO_HOME,
+            background_clip="text",
+            color="transparent",
+            webkit_background_clip="text",
+        ),
+        ",",
+        rx.box(height="0.25rem"),
+        "construye tu camino profesional.",
+        as_="h1",
+        font_size=["1.875rem", "2.5rem", "3rem", "3.75rem"],
+        text_align="left",
+        font_weight="900",
+        letter_spacing="-0.04em",
+        line_height="1.05",
+        color=TEXTO_HOME_PRINCIPAL,
+        max_width="56rem",
+    )
+
+
+# ======================================================================
+# CTAs
+# ======================================================================
+
+
+def _cta_primario() -> rx.Component:
+    """
+    CTA primario estilo Neon.com: fondo blanco, texto negro.
+
+    Es el botón principal del hero, contrasta con el fondo oscuro.
+    """
+    return enlace_navegacion(
+        "/carreras",
+        rx.text("Explorar carreras", as_="span", font_weight="600"),
+        rx.icon("arrow-right", size=16),
+        display="inline-flex",
+        align_items="center",
+        gap="0.5rem",
+        background=rx.color_mode_cond(
+            light=AZUL_MARINO_NEON,
+            dark="white",
+        ),
+        color=rx.color_mode_cond(
+            light="white",
+            dark="#0a0a0a",
+        ),
+        padding="0.875rem 1.75rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.9375rem",
+        font_weight="600",
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "filter": "brightness(1.05)",
+        },
+    )
+
+
+def _cta_secundario() -> rx.Component:
+    """
+    CTA secundario estilo Neon.com: outline transparente.
+
+    Es el botón secundario del hero, menos prominente.
+    """
+    return enlace_navegacion(
+        "/admision",
+        rx.text("Leer la guía", as_="span", font_weight="500"),
+        display="inline-flex",
+        align_items="center",
+        gap="0.5rem",
+        background="transparent",
+        color=TEXTO_HOME_PRINCIPAL,
+        padding="0.875rem 1.75rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.9375rem",
+        border=f"1px solid {BORDE_HOME_MEDIO}",
+        transition="all 0.2s",
+        _hover={
+            "border_color": BORDE_HOME_AZUL,
+            "background": FONDO_AZUL_SUAVE,
+        },
+    )
+
+
+# ======================================================================
+# Marquee de iconos (carrusel infinito)
+# ======================================================================
+
+
+def _item_marquee(icono: str, indice: int) -> rx.Component:
+    """
+    Item individual del marquee.
+
+    Cada item es un icono con espaciado a los lados.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        indice: Índice del item (no usado, requerido por rx.foreach).
+    """
+    return rx.box(
+        # ✅ DESPUÉS
+rx.icon(
+    icono,
+    size=24,
+    color=AZUL_MARINO_NEON,
+    opacity=rx.color_mode_cond(light="0.55", dark="0.4"),
+),
+        padding="0 1.5rem",
+        flex_shrink="0",
+    )
+
+
+def _marquee_iconos() -> rx.Component:
+    """
+    Marquee infinito con iconos de carreras.
+
+    Técnica CSS:
+    1. Duplicamos la lista de iconos `[iconos, iconos]`.
+    2. Animamos `translateX(-50%)` para que el primer bloque se
+       desplace completamente fuera de la vista.
+    3. Al reiniciar la animación, el segundo bloque ocupa el lugar
+       del primero, creando la ilusión de scroll infinito.
+
+    ⚠️ La lista duplicada se genera a nivel de Python (fuera del
+    componente), no en `rx.foreach`, porque necesitamos duplicar
+    literalmente los items.
+    """
+    iconos_duplicados = ICONOS_CARRERAS * 2
+
+    return rx.box(
+        rx.flex(
+            *[_item_marquee(ic, i) for i, ic in enumerate(iconos_duplicados)],
+            align="center",
+            width="max-content",
+            animation=(
+                f"marquee_horizontal {DURACION_MARQUEE_SEGUNDOS}s "
+                f"linear infinite"
+            ),
+        ),
+        width="100%",
+        overflow="hidden",
+        position="relative",
+        padding_y="1.5rem",
+        border_top=f"1px solid {BORDE_HOME_SUAVE}",
+        mask=(
+            "linear-gradient(90deg, "
+            "transparent 0%, "
+            "black 10%, "
+            "black 90%, "
+            "transparent 100%)"
+        ),
+        _hover={"& .marquee-track": {"animation_play_state": "paused"}},
+    )
+
+
+# ======================================================================
+# Trust badges (logos/credenciales)
+# ======================================================================
+
+
+def _trust_logo(icono: str, etiqueta: str) -> rx.Component:
+    """
+    Logo/credencial individual en la fila de trust.
+
+    Estilo Neon.com: ícono + texto pequeño, opacidad reducida,
+    alineación horizontal.
+    """
+    return rx.flex(
+        rx.icon(
+            icono,
+            size=18,
+            color=TEXTO_HOME_MAS_SUAVE,
+            opacity="0.7",
+        ),
+        rx.text(
+            etiqueta,
+            font_size="0.75rem",
+            font_weight="600",
+            color=TEXTO_HOME_MAS_SUAVE,
+            letter_spacing="0.05em",
+            text_transform="uppercase",
+            white_space="nowrap",
+        ),
+        align="center",
+        gap="0.5rem",
+        opacity="0.7",
+        transition="opacity 0.2s",
+        _hover={"opacity": "1"},
+    )
+
+
+def _fila_trust_logos() -> rx.Component:
+    """
+    Fila de logos/credenciales estilo Neon.com.
+
+    Se muestra debajo de los CTAs y encima del marquee.
+    """
+    return rx.flex(
+        _trust_logo("award", "R.M. 0871/2016"),
+        _trust_logo("shield-check", "Título Nacional"),
+        _trust_logo("users", "500+ Egresados"),
+        _trust_logo("trending-up", "100% Empleabilidad"),
+        _trust_logo("building-2", "15+ Convenios"),
+        gap=["1.5rem", "2rem", "3rem"],
+        align="center",
+        justify="start",
+        flex_wrap="wrap",
+        width="100%",
+        margin_top="4rem",
+        margin_bottom="3rem",
+    )
+
+
+# ======================================================================
+# Contenido principal del hero
+# ======================================================================
+
+
+def _contenido_hero() -> rx.Component:
+    """
+    Bloque de contenido del hero (badge + título + subtítulo + CTAs).
+
+    Alineado a la izquierda (estilo Neon.com), no centrado.
+    """
+    return rx.vstack(
+        # Badge superior
+        _badge_plataforma(),
+        # Título grande multi-línea
+        _titulo_hero(),
+        # Subtítulo
+        rx.text(
+            "Formación técnica de excelencia con títulos de Provisión "
+            "Nacional. 5 carreras, laboratorios modernos y docentes "
+            "especializados para que consigas tu primer empleo.",
+            font_size=["0.9375rem", "1rem", "1.125rem"],
+            color=TEXTO_HOME_MAS_SUAVE,
+            line_height="1.6",
+            max_width="42rem",
+            margin_top="2rem",
+        ),
+        # CTAs side-by-side
+        rx.flex(
+            _cta_primario(),
+            _cta_secundario(),
+            gap="0.75rem",
+            margin_top="2.5rem",
+            direction=rx.breakpoints(initial="column", sm="row"),
+            align="start",
+            justify="start",
+        ),
+        # Fila de trust logos
+        _fila_trust_logos(),
+        align="start",
+        width="100%",
+        max_width="72rem",
+        margin="0 auto",
+        padding=["3rem 1.5rem 0 1.5rem", "4rem 2rem 0 2rem", "5rem 2rem 0 2rem"],
+        position="relative",
+        z_index="2",
+    )
+
+
+# ======================================================================
+# Hero principal
+# ======================================================================
+
+
+def hero_principal() -> rx.Component:
+    """
+    Hero principal del home — estilo Neon.com.
+
+    Capas (de fondo a frente):
+    1. Gradiente radial sutil.
+    2. Barras verticales tipo datacenter.
+    3. Contenido (badge + título + subtítulo + CTAs + trust).
+    4. Marquee de iconos de carreras.
+
+    Returns:
+        Componente `rx.box` con el hero completo.
+    """
+    return rx.box(
+        # CAPA 0-2: Fondo + orbes + barras verticales
+        _capa_fondo(),
+        _capa_barras_verticales(),
+        # CAPA 3: Contenido principal
+        _contenido_hero(),
+        # CAPA 4: Marquee de iconos
+        _marquee_iconos(),
         position="relative",
         width="100%",
         overflow="hidden",
-        min_height="100vh",
+        min_height=["auto", "auto", "auto"],
+        background=FONDO_HOME_HERO,
     )
 
 
@@ -487,4 +664,8 @@ def hero_principal() -> rx.Component:
 # EXPORTS
 # ======================================================================
 
-__all__ = ["hero_principal"]
+__all__ = [
+    "BARRAS_VERTICALES",
+    "ICONOS_CARRERAS",
+    "hero_principal",
+]

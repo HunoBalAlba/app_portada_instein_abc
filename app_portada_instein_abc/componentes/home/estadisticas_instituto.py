@@ -1,28 +1,49 @@
 """
-Estadísticas del instituto — estilo Neon adaptativo (dark/light).
+Estadísticas del instituto — estilo Neon.com.
+
+Diseño
+------
+Refactorizado al estilo de Neon.com:
+
+1. **Sin cards con borde**: cada stat es una columna con divisor
+   vertical entre ellas.
+2. **Tipografía masiva**: número grande (`4rem`, `900`) + etiqueta
+   pequeña uppercase.
+3. **Sin iconos decorativos**: solo tipografía pura.
+4. **Hover sutil**: cambio de color, sin elevación.
+5. **Gráfico desnudo**: sin borde, sin fondo de card.
+6. **Espaciado generoso**: padding vertical amplio entre bloques.
+7. **Layout responsive**: 2 columnas en móvil, 4 en desktop.
 
 Contenido
 ---------
-1. Grid de 4 tarjetas con cifras clave:
+1. Grid de 4 stats con divisor vertical:
    - Carreras Técnicas (5)
    - Años de Experiencia (15+)
    - Egresados (500+)
    - Empleabilidad (100%)
-2. Gráfico de barras horizontales con la distribución de egresados
-   por carrera.
+2. Gráfico de barras horizontales con egresados por carrera.
 
 Sistema de color
 ----------------
 ✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
+✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
 
-- Cards: `FONDO_HOME_CARD` (light: blanco translúcido, dark: azul
-  oscuro translúcido).
-- Acentos: `AZUL_MARINO_NEON` en ambos modos.
-- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_SUAVE` / `BORDE_HOME_AZUL`.
-- Fondo tintado del icono: `FONDO_AZUL_SUAVE`.
-- Gráfico: barras en azul marino, ejes en `TEXTO_HOME_MAS_SUAVE`,
-  grid adaptativo.
+Nota técnica: ¿POR QUÉ SIN ICONOS EN LAS STATS?
+-----------------------------------------------
+En el diseño original, cada stat tenía un icono en caja cuadrada
+con fondo tintado. Visualmente resultaba "ruidoso":
+
+- 4 iconos idénticos en 4 cajas idénticas.
+- Redundancia visual: el icono no aporta información nueva.
+- Compite con el número, que ES la información principal.
+
+En Neon.com, las stats son tipografía pura: número grande +
+etiqueta. Sin iconos. Esta decisión:
+
+- Reduce el ruido visual.
+- Enfoca la atención en el dato.
+- Es más elegante y minimalista.
 """
 
 from __future__ import annotations
@@ -33,17 +54,9 @@ import reflex as rx
 
 from ...infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_AZUL,
-    BORDE_HOME_SUAVE,
-    FONDO_AZUL_SUAVE,
-    FONDO_HOME_CARD,
-    SOMBRA_HOVER_CARD_HOME,
+    COLOR_DIVISOR,
     TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
-)
-from ...infraestructura.constantes.dimensiones import (
-    RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
 )
 
 
@@ -51,17 +64,16 @@ from ...infraestructura.constantes.dimensiones import (
 # Constantes locales
 # ======================================================================
 
-PADDING_BLOQUE: str = "4rem 1.5rem"
-"""Padding del bloque completo de estadísticas."""
+ANCHO_MAXIMO_CONTENIDO: str = "80rem"
 
-TAMANO_ICONO_STAT: int = 20
-"""Tamaño del icono en cada stat card (px)."""
+# Padding del bloque completo
+PADDING_BLOQUE: str = "6rem 2rem"
 
-ALTO_GRAFICO: int = 280
-"""Altura del gráfico de barras (px)."""
+# Altura del gráfico
+ALTO_GRAFICO: int = 320
 
-ANCHO_MAXIMO_CONTENIDO: str = "72rem"
-"""Ancho máximo del contenido."""
+# Espaciado entre stats
+GAP_ENTRE_STATS: str = "3rem"
 
 
 # ======================================================================
@@ -75,7 +87,6 @@ class Estadistica(TypedDict):
     valor: str
     sufijo: str
     etiqueta: str
-    icono: str
 
 
 class ItemGrafico(TypedDict):
@@ -94,95 +105,87 @@ ESTADISTICAS: list[Estadistica] = [
         "valor": "5",
         "sufijo": "",
         "etiqueta": "Carreras Técnicas",
-        "icono": "graduation-cap",
     },
     {
         "valor": "15",
         "sufijo": "+",
         "etiqueta": "Años de Experiencia",
-        "icono": "award",
     },
     {
         "valor": "500",
         "sufijo": "+",
         "etiqueta": "Egresados",
-        "icono": "users",
     },
     {
         "valor": "100",
         "sufijo": "%",
         "etiqueta": "Empleabilidad",
-        "icono": "trending-up",
     },
 ]
 
 DATA_EGRESADOS: list[ItemGrafico] = [
     {"carrera": "Sistemas", "egresados": 234},
     {"carrera": "Contaduría", "egresados": 198},
+    {"carrera": "Electrónica", "egresados": 178},
     {"carrera": "Secretariado", "egresados": 156},
     {"carrera": "Comercio Int.", "egresados": 145},
-    {"carrera": "Electrónica", "egresados": 178},
 ]
 
 
 # ======================================================================
-# Tarjeta individual de estadística
+# Stat individual (columna sin card)
 # ======================================================================
 
 
-def _tarjeta_estadistica(stat: Estadistica) -> rx.Component:
+def _stat_item(
+    stat: Estadistica,
+    es_ultimo: bool = False,
+) -> rx.Component:
     """
-    Tarjeta individual de estadística — estilo Neon adaptativo.
+    Columna de una estadística individual.
 
-    UX:
-    - Icono pequeño con fondo tintado azul marino.
-    - Número grande con sufijo (+/%) en azul marino.
-    - Etiqueta descriptiva.
-    - Hover: elevación + borde azul + glow.
+    Estilo Neon.com:
+    - Número grande (`4rem`, `900`).
+    - Sufijo (`+`, `%`) en azul marino.
+    - Etiqueta uppercase, tamaño pequeño, color secundario.
+    - Divisor vertical a la izquierda (excepto la primera).
 
     Args:
-        stat: `Estadistica` con `valor`, `sufijo`, `etiqueta`, `icono`.
+        stat: Diccionario con `valor`, `sufijo`, `etiqueta`.
+        es_ultimo: Ignorado (reservado para futura lógica de
+            divisores condicionales).
+
+    Returns:
+        Columna con la estadística.
     """
     return rx.box(
         rx.vstack(
-            # --- Icono con fondo tintado ---
-            rx.flex(
-                rx.icon(
-                    stat["icono"],
-                    size=TAMANO_ICONO_STAT,
-                    color=AZUL_MARINO_NEON,
-                ),
-                height="2.75rem",
-                width="2.75rem",
-                border_radius=RADIO_GRANDE,
-                background=FONDO_AZUL_SUAVE,
-                border=f"1px solid {BORDE_HOME_AZUL}",
-                align="center",
-                justify="center",
-                margin_bottom="1rem",
-            ),
-            # --- Valor + sufijo ---
+            # ─── Número + sufijo ────────────────────────────────
             rx.flex(
                 rx.text(
                     stat["valor"],
-                    font_size="2.5rem",
+                    font_size=["3rem", "3.5rem", "4rem"],
                     font_weight="900",
                     color=TEXTO_HOME_PRINCIPAL,
                     line_height="1",
-                    letter_spacing="-0.04em",
+                    letter_spacing="-0.05em",
                 ),
-                rx.text(
+                rx.cond(
                     stat["sufijo"],
-                    font_size="1.5rem",
-                    font_weight="800",
-                    color=AZUL_MARINO_NEON,
-                    line_height="1",
-                    margin_left="0.125rem",
+                    rx.text(
+                        stat["sufijo"],
+                        font_size=["1.75rem", "2rem", "2.5rem"],
+                        font_weight="800",
+                        color=AZUL_MARINO_NEON,
+                        line_height="1",
+                        margin_left="0.125rem",
+                    ),
                 ),
-                align="end",
+                align="start",
                 gap="0",
+                flex_wrap="nowrap",
             ),
-            # --- Etiqueta ---
+            # ─── Etiqueta ───────────────────────────────────────
             rx.text(
                 stat["etiqueta"],
                 font_size="0.75rem",
@@ -190,30 +193,48 @@ def _tarjeta_estadistica(stat: Estadistica) -> rx.Component:
                 letter_spacing="0.1em",
                 text_transform="uppercase",
                 color=TEXTO_HOME_MAS_SUAVE,
-                margin_top="0.5rem",
+                line_height="1.4",
+                margin_top="0.75rem",
             ),
             align="start",
-            spacing="1",
+            spacing="0",
             width="100%",
         ),
-        padding="1.75rem",
-        border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {BORDE_HOME_SUAVE}",
-        background=FONDO_HOME_CARD,
-        backdrop_filter="blur(12px)",
+        padding_left=["0", "0", "2rem"],
+        padding_y="1rem",
+        border_left=rx.breakpoints(
+            initial="none",
+            sm="none",
+            lg=f"1px solid {COLOR_DIVISOR}",
+        ),
         width="100%",
-        height="100%",
-        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        _hover={
-            "transform": "translateY(-4px)",
-            "border_color": BORDE_HOME_AZUL,
-            "box_shadow": SOMBRA_HOVER_CARD_HOME,
-        },
     )
 
 
 # ======================================================================
-# Gráfico de barras
+# Grid de stats
+# ======================================================================
+
+
+def _grid_stats() -> rx.Component:
+    """
+    Grid de las 4 estadísticas con divisor vertical.
+
+    Layout:
+    - Móvil:    2 columnas.
+    - Tablet:   2 columnas.
+    - Desktop:  4 columnas.
+    """
+    return rx.grid(
+        *[_stat_item(s) for s in ESTADISTICAS],
+        columns=rx.breakpoints(initial="2", sm="2", lg="4"),
+        spacing="4",
+        width="100%",
+    )
+
+
+# ======================================================================
+# Gráfico de barras horizontales
 # ======================================================================
 
 
@@ -221,85 +242,81 @@ def _grafico_egresados() -> rx.Component:
     """
     Gráfico de barras horizontales con egresados por carrera.
 
-    Usa Recharts con `layout="vertical"`:
-    - Eje X numérico (cantidad).
-    - Eje Y categórico (nombre de carrera).
+    Estilo Neon.com:
+    - Sin borde exterior.
+    - Sin fondo de card.
+    - Título limpio arriba.
+    - Barras en azul marino sólido.
+    - Ejes sin línea, solo labels.
 
-    ✅ ADAPTATIVO: fondo, ejes y grid cambian con el modo.
+    Usa Recharts con `layout="vertical"`.
     """
-    return rx.box(
-        # ==========================================================
-        # Encabezado del gráfico
-        # ==========================================================
-        rx.flex(
-            rx.vstack(
-                rx.text(
-                    "Egresados por carrera",
-                    font_size="1rem",
-                    font_weight="700",
-                    color=TEXTO_HOME_PRINCIPAL,
-                    line_height="1.2",
-                ),
-                rx.text(
-                    "Distribución histórica de egresados en las 5 carreras.",
-                    font_size="0.8125rem",
-                    color=TEXTO_HOME_MAS_SUAVE,
-                    line_height="1.4",
-                ),
-                spacing="0",
-                align="start",
+    return rx.vstack(
+        # ─── Encabezado del gráfico ─────────────────────────────
+        rx.vstack(
+            rx.text(
+                "Egresados por carrera",
+                font_size=["1.125rem", "1.25rem"],
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
+                line_height="1.2",
             ),
+            rx.text(
+                "Distribución histórica de egresados en las 5 carreras "
+                "técnicas del instituto.",
+                font_size="0.875rem",
+                color=TEXTO_HOME_MAS_SUAVE,
+                line_height="1.5",
+                max_width="48rem",
+            ),
+            spacing="1",
             align="start",
-            width="100%",
-            margin_bottom="1.5rem",
         ),
-        # ==========================================================
-        # Gráfico Recharts
-        # ==========================================================
-        rx.recharts.bar_chart(
-            rx.recharts.bar(
-                data_key="egresados",
-                stroke=AZUL_MARINO_NEON,
-                fill=AZUL_MARINO_NEON,
-                radius=[0, 6, 6, 0],
-            ),
-            rx.recharts.x_axis(
-                type_="number",
-                stroke=TEXTO_HOME_MAS_SUAVE,
-            ),
-            rx.recharts.y_axis(
-                data_key="carrera",
-                type_="category",
-                width=110,
-                stroke=TEXTO_HOME_MAS_SUAVE,
-            ),
-            rx.recharts.cartesian_grid(
-                stroke_dasharray="3 3",
-                horizontal=False,
-                vertical=True,
-                stroke=rx.color_mode_cond(
-                    light="rgba(15, 23, 42, 0.08)",
-                    dark="rgba(255, 255, 255, 0.06)",
+        # ─── Gráfico Recharts ───────────────────────────────────
+        rx.box(
+            rx.recharts.bar_chart(
+                rx.recharts.bar(
+                    data_key="egresados",
+                    stroke=AZUL_MARINO_NEON,
+                    fill=AZUL_MARINO_NEON,
+                    radius=[0, 6, 6, 0],
                 ),
+                rx.recharts.x_axis(
+                    type_="number",
+                    stroke=TEXTO_HOME_MAS_SUAVE,
+                    tick_line=False,
+                    axis_line=False,
+                ),
+                rx.recharts.y_axis(
+                    data_key="carrera",
+                    type_="category",
+                    width=120,
+                    stroke=TEXTO_HOME_MAS_SUAVE,
+                    tick_line=False,
+                    axis_line=False,
+                ),
+                rx.recharts.cartesian_grid(
+                    stroke_dasharray="3 3",
+                    horizontal=False,
+                    vertical=True,
+                    stroke=rx.color_mode_cond(
+                        light="rgba(15, 23, 42, 0.06)",
+                        dark="rgba(255, 255, 255, 0.05)",
+                    ),
+                ),
+                rx.recharts.tooltip(),
+                data=DATA_EGRESADOS,
+                layout="vertical",
+                margin={"top": 10, "right": 20, "left": 10, "bottom": 10},
+                width="100%",
+                height=ALTO_GRAFICO,
             ),
-            rx.recharts.tooltip(),
-            data=DATA_EGRESADOS,
-            layout="vertical",
-            margin={"top": 10, "right": 20, "left": 10, "bottom": 10},
             width="100%",
-            height=ALTO_GRAFICO,
+            padding_y="1rem",
         ),
-        # ==========================================================
-        # Estilos del contenedor
-        # ==========================================================
-        padding="2rem",
-        border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {BORDE_HOME_SUAVE}",
-        background=FONDO_HOME_CARD,
-        backdrop_filter="blur(12px)",
+        spacing="4",
+        align="start",
         width="100%",
-        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        _hover={"border_color": BORDE_HOME_AZUL},
     )
 
 
@@ -312,30 +329,33 @@ def seccion_estadisticas() -> rx.Component:
     """
     Bloque completo con las estadísticas del instituto.
 
-    1. Grid de 4 tarjetas con cifras clave.
-    2. Gráfico de barras horizontales con egresados por carrera.
+    Estructura (estilo Neon.com):
+    1. Grid de 4 stats con divisor vertical (sin cards).
+    2. Separador horizontal sutil.
+    3. Gráfico de barras desnudo.
 
     Layout responsive:
     - Desktop: 4 columnas de stats + gráfico full width.
     - Tablet:  2 columnas de stats + gráfico full width.
-    - Móvil:   1 columna de stats + gráfico full width.
+    - Móvil:   2 columnas de stats + gráfico full width.
+
+    Returns:
+        Componente `rx.box` con el bloque completo.
     """
     return rx.box(
         rx.vstack(
-            # ==========================================================
-            # Grid de estadísticas
-            # ==========================================================
-            rx.grid(
-                *[_tarjeta_estadistica(s) for s in ESTADISTICAS],
-                columns=rx.breakpoints(initial="1", sm="2", lg="4"),
-                spacing="4",
+            # ─── Grid de stats ──────────────────────────────────
+            _grid_stats(),
+            # ─── Separador ──────────────────────────────────────
+            rx.box(
+                height="1px",
                 width="100%",
+                background=COLOR_DIVISOR,
+                margin_y="3rem",
             ),
-            # ==========================================================
-            # Gráfico de egresados
-            # ==========================================================
+            # ─── Gráfico ────────────────────────────────────────
             _grafico_egresados(),
-            spacing="6",
+            spacing="0",
             width="100%",
         ),
         width="100%",
