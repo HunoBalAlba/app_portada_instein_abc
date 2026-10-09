@@ -1,36 +1,4 @@
-"""
-Panel flotante de selección de carrera.
 
-Estructura
-----------
-- Botón flotante (esquina inferior derecha) con azul marino neon.
-- Overlay adaptativo cuando el panel está abierto.
-- Panel desplegable con grid de cards de carrera.
-
-Cada card navega al detalle `/carrera/{id}`.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: overlay, panel, textos y bordes cambian con el modo.
-
-- Fondo del panel: `FONDO_HOME_CARD` (adaptativo).
-- Acentos: `AZUL_MARINO_NEON` en ambos modos.
-- Textos: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_SUAVE`.
-- Overlay: negro translúcido con blur.
-
-Nota técnica: `columns` ES PROP CERRADO
----------------------------------------
-En Reflex 0.9.x, `rx.grid(columns=...)` NO acepta listas:
-
-    ❌ columns="1"
-    ✅ columns="1"                        # valor único
-    ✅ columns=rx.breakpoints(initial="1", sm="1")  # responsive
-
-Motivo: `columns` acepta solo `str` o `Breakpoints`, no
-`Sequence[str]`. Los props CSS abiertos (padding, gap, etc.) SÍ
-aceptan listas, pero `columns` NO.
-"""
 
 from __future__ import annotations
 

@@ -1,45 +1,4 @@
-"""
-Servicio del blog: lógica de negocio sobre los posts.
 
-Este módulo implementa las **reglas de negocio** del blog, usando el
-repositorio (`infraestructura.repositorios.repositorio_blog`) como
-fuente de datos.
-
-Diferencia con el repositorio
------------------------------
-- **Repositorio**: "dame todos los posts" / "dame el post con id X".
-- **Servicio**:    "busca posts por texto", "obtén los 3 más recientes",
-                   "filtra por categoría y ordénalos por fecha".
-
-Filosofía
----------
-Todos los servicios son **puros** y **sin efectos secundarios**.
-
-Convención de nombres
----------------------
-- `obtener_*`: devuelve uno o varios items.
-- `filtrar_*`: devuelve un subconjunto según criterios.
-- `buscar_*`:   devuelve resultados de una búsqueda por texto.
-- `ordenar_*`:  devuelve items ordenados por criterio.
-- `calcular_*`: devuelve un valor agregado.
-- `contar_*`:   devuelve un conteo.
-
-Nota técnica: ¿CÓMO SE ORDENAN LOS POSTS POR FECHA?
---------------------------------------------------
-Los posts tienen `fecha` como string (ej: "15 de abril, 2026").
-Ordenarlos alfabéticamente NO es correcto.
-
-Alternativas:
-1. Parsear la fecha con `datetime.strptime` (frágil con locale).
-2. Añadir un campo `fecha_iso` al modelo (mejor).
-3. Ordenar por `id` (asume que ids son cronológicos).
-
-**Decisión actual**: ordenar por `id` porque los ids se asignan
-cronológicamente (id 0 = más antiguo, id N = más reciente). Esto es
-simple y robusto.
-
-⚠️ Si los ids dejan de ser cronológicos, migrar a `fecha_iso`.
-"""
 
 from __future__ import annotations
 

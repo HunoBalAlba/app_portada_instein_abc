@@ -1,81 +1,4 @@
-"""
-Vista de la página de inicio (ruta "/") — estilo Neon.com.
 
-Diseño
-------
-Inspirado en Neon.com:
-
-1. **Fondo oscuro** con gradiente radial sutil.
-2. **Layout horizontal** en cada sección: número a la izquierda,
-   contenido a la derecha.
-3. **Tipografía masiva** (`size="8"`, `font_weight="900"`).
-4. **Espaciado generoso** (padding vertical de 8rem).
-5. **Acento único** (azul marino neon).
-6. **HTML semántico + SEO**.
-7. **Separadores `<hr>`** entre secciones (marca visual).
-
-Estructura
-----------
-1. Barra de navegación sticky (role="banner").
-2. Hero principal con explorador.
-2.5. **Sección 00 — Carreras destacadas** (NUEVO).
-3. Sección 01 — Multimedia institucional.
-4. Sección 02 — Estadísticas.
-5. Sección 03 — ¿Por qué INSTEIN?.
-6. Sección 04 — Preguntas frecuentes.
-7. Banner CTA final.
-8. Footer institucional (role="contentinfo").
-9. Banner de cookies (RGPD).
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-
-Nota técnica: PROPS DE FLEX EN REFLEX
--------------------------------------
-Según la documentación de `rx.flex`:
-
-- `direction`:  "row" | "column" | "row-reverse" | "column-reverse".
-- `align`:      "start" | "center" | "end" | "baseline" | "stretch".
-- `justify`:    "start" | "center" | "end" | "between".
-- `wrap`:       "nowrap" | "wrap" | "wrap-reverse".
-- `spacing`:    "0" - "9".
-
-Todos son props **cerrados** → aceptan un solo valor string.
-Para responsive, usar `rx.breakpoints(...)`.
-
-Nota técnica: HTML5 SEMÁNTICO
------------------------------
-Uso `rx.el.main()` en lugar de `rx.box(role="main")` para
-aprovechar la semántica nativa de HTML5:
-
-- `<main>`: contenido principal de la página.
-- `<section>`: secciones temáticas.
-- `<footer>`: pie de página (implementado en `pie_pagina`).
-- `<header>`: cabecera (role="banner").
-
-Nota técnica: COMPONENTES COMPARTIDOS
--------------------------------------
-Este archivo usa los componentes compartidos:
-
-- `encabezado_seccion` (de `..componentes.base`).
-- `separador_secciones` (de `..componentes.base`).
-
-Antes tenía copias locales `_encabezado_seccion` y
-`_separador_secciones` (duplicadas en 6+ archivos). Ahora vive
-una sola implementación en `componentes/base/`.
-
-Nota técnica: SECCIÓN DE CARRERAS (NUEVO)
------------------------------------------
-Se añade la sección `seccion_carreras_inicio()` **inmediatamente
-después del hero**, para que el visitante vea las carreras del
-instituto en los primeros segundos.
-
-Esta sección NO tiene número (`01`, `02`...) porque es una
-"introducción" al catálogo, no una sección temática más. Las
-secciones numeradas empiezan después, en Multimedia (01).
-"""
 
 from __future__ import annotations
 
@@ -88,7 +11,7 @@ from ..componentes.base import (
 from ..componentes.home import (
     banner_cta_final,
     hero_principal,
-    seccion_carreras_inicio,          # ← NUEVO
+    seccion_carreras_inicio,
     seccion_estadisticas,
     seccion_multimedia_institucional,
     seccion_por_que_instein,
@@ -147,7 +70,7 @@ def _seccion(
     - `scroll-margin-top` para compensar la barra sticky.
 
     Args:
-        numero: "01", "02", "03", "04".
+        numero: "02", "03", "04", "05".
         etiqueta: Texto pequeño en mayúsculas.
         titulo: Título de la sección.
         subtitulo: Subtítulo opcional.
@@ -200,18 +123,6 @@ def vista_inicio() -> rx.Component:
     - `<main>`                 → contenido principal.
     - `<section>`              → cada sección temática.
     - `<footer>`               → pie de página (en su componente).
-
-    Composición:
-    1. Header (barra de navegación).
-    2. Hero principal.
-    3. **Carreras destacadas** (NUEVO).
-    4. Sección 01 — Multimedia institucional.
-    5. Sección 02 — Estadísticas.
-    6. Sección 03 — ¿Por qué INSTEIN?.
-    7. Sección 04 — Preguntas frecuentes.
-    8. Banner CTA final.
-    9. Footer institucional.
-    10. Banner de cookies.
     """
     return rx.box(
         rx.vstack(
@@ -235,13 +146,13 @@ def vista_inicio() -> rx.Component:
                     role="article",
                     aria_label="Presentación principal",
                 ),
-                # ─── 2.2 Carreras destacadas (NUEVO) ────────────────
+                # ─── 2.2 Sección 01 — Carreras destacadas ───────────
                 seccion_carreras_inicio(),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(),
-                # ─── 2.3 Sección 01 — Multimedia ────────────────────
+                # ─── 2.3 Sección 02 — Multimedia ────────────────────
                 _seccion(
-                    numero="01",
+                    numero="02",
                     etiqueta="Multimedia",
                     titulo="Conoce nuestro instituto",
                     subtitulo=(
@@ -253,9 +164,9 @@ def vista_inicio() -> rx.Component:
                 ),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(),
-                # ─── 2.4 Sección 02 — Estadísticas ──────────────────
+                # ─── 2.4 Sección 03 — Estadísticas ──────────────────
                 _seccion(
-                    numero="02",
+                    numero="03",
                     etiqueta="Métricas institucionales",
                     titulo="15 años formando técnicos de excelencia",
                     subtitulo=(
@@ -267,9 +178,9 @@ def vista_inicio() -> rx.Component:
                 ),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(),
-                # ─── 2.5 Sección 03 — ¿Por qué INSTEIN? ─────────────
+                # ─── 2.5 Sección 04 — ¿Por qué INSTEIN? ─────────────
                 _seccion(
-                    numero="03",
+                    numero="04",
                     etiqueta="Nuestra propuesta",
                     titulo="Formación que transforma",
                     subtitulo=(
@@ -281,9 +192,9 @@ def vista_inicio() -> rx.Component:
                 ),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(),
-                # ─── 2.6 Sección 04 — FAQ ───────────────────────────
+                # ─── 2.6 Sección 05 — FAQ ───────────────────────────
                 _seccion(
-                    numero="04",
+                    numero="05",
                     etiqueta="Resolvemos tus dudas",
                     titulo="¿Tienes preguntas?",
                     subtitulo=(

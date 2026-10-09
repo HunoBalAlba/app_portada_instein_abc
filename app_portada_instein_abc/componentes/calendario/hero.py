@@ -1,25 +1,4 @@
-"""
-Hero + grid de info rápida del Calendario Académico — estilo Neon.com.
 
-Contenido
----------
-- `hero_calendario`:      hero con badge + título + subtítulo.
-- `grid_info_rapida`:     grid con 4 tarjetas de resumen.
-
-Diseño UX
----------
-1. **Layout izquierdo** (coherente con el resto del sitio).
-2. **Badge con punto verde pulsante** (comunicado "activo").
-3. **Título con énfasis bicolor** (patrón Neon).
-4. **Peso tipográfico** 700 (no 900).
-5. **Cards con icono directo** (sin caja) + borde superior de acento.
-6. **Hover sutil**: solo cambio de borde.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-"""
 
 from __future__ import annotations
 
@@ -29,10 +8,8 @@ import reflex as rx
 
 from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_AZUL,
     COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
-    FONDO_AZUL_SUAVE,
     RADIO_EXTRA_GRANDE,
     RADIO_PASTILLA,
     TEXTO_HOME_MAS_SUAVE,

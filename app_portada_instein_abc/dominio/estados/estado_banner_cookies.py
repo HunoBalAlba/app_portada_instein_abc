@@ -1,25 +1,4 @@
-"""
-Estado del banner de consentimiento de cookies.
 
-Gestiona el consentimiento del usuario y persiste la decisión en
-`localStorage` para futuras visitas.
-
-Referencia legal
-----------------
-- RGPD (UE) · Art. 7: consentimiento explícito e informado.
-- LGPD (Brasil) · Art. 8: consentimiento del titular.
-- CCPA (California) · §1798.100: derecho a saber y opt-out.
-
-Nota técnica: `rx.call_script` con `yield`
-------------------------------------------
-Los eventos usan `yield rx.call_script(...)` (no `return`) para
-permitir múltiples efectos:
-
-1. Actualizar el State (oculta el banner).
-2. Ejecutar JS en el cliente (persiste en `localStorage`).
-
-⚠️ El ORDEN importa: primero se actualiza el State, luego el script.
-"""
 
 from __future__ import annotations
 

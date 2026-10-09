@@ -1,43 +1,4 @@
-"""
-Pie de página institucional — estilo Neon.com (reingeniería UX).
 
-Filosofía
----------
-El footer NO es una repetición del header. Es el **último punto de
-contacto** con el usuario. Debe:
-
-1. **Acceso rápido** a acciones clave (WhatsApp, ubicación, admisión).
-2. **Captar leads** (newsletter con propuesta de valor).
-3. **Navegación secundaria** (enlaces con iconos descriptivos).
-4. **Cerrar con CTA** (empujar a la acción).
-
-Estructura
-----------
-1. **Acceso rápido** (3 tarjetas: WhatsApp, Ubicación, Admisión).
-2. **Newsletter + Enlaces** (2 columnas).
-3. **Feedback discreto** ("¿Te resultó útil?").
-4. **Barra inferior** (copyright + legales + redes).
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-
-Nota técnica: `spacing` en `rx.grid` NO acepta unidades CSS
-----------------------------------------------------------
-`spacing` en `rx.grid` y `rx.flex` de Radix Themes es un prop
-CERRADO que acepta solo:
-
-- `"0"`, `"1"`, `"2"`, ..., `"9"` (valores discretos).
-- `rx.breakpoints(initial="2", lg="4")` (breakpoints con esos
-  mismos valores).
-
-❌ NO acepta unidades CSS como `"3rem"`, `"4rem"`.
-❌ NO acepta listas `["3rem", "4rem", "6rem"]`.
-
-Para separación CSS personalizada, usar `gap` (prop abierto)
-en lugar de `spacing`.
-"""
 
 from __future__ import annotations
 

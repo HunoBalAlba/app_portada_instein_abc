@@ -1,21 +1,9 @@
-"""
-Tab 2: Fechas importantes de Bolivia y el mundo — estilo Neon.com.
 
-Diseño UX
----------
-1. **Leyenda arriba** (colores por tipo).
-2. **Agrupación por mes**.
-3. **Cards compactas** con día destacado.
-4. **Hover sutil** (solo borde).
-"""
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...componentes.base import (
-    badge_icono_texto,
-)
 from ...dominio.modelos.calendario import (
     FECHAS_IMPORTANTES,
     TIPOS_FECHA,
@@ -33,7 +21,44 @@ from ...infraestructura import (
     TEXTO_HOME_PRINCIPAL,
 )
 
-from .helpers import color_por_tipo_fecha
+
+# ======================================================================
+# Badge genérico (recibe strings literales)
+# ======================================================================
+
+
+def _badge_estatico(
+    etiqueta: str,
+    icono: str,
+    color: str,
+    fondo: str,
+    borde: str,
+) -> rx.Component:
+    """Badge genérico con valores literales."""
+    return rx.flex(
+        rx.icon(
+            icono,
+            size=12,
+            color=color,
+            flex_shrink="0",
+        ),
+        rx.text(
+            etiqueta,
+            font_size="0.6875rem",
+            font_weight="700",
+            color=color,
+            text_transform="uppercase",
+            letter_spacing="0.05em",
+            white_space="nowrap",
+        ),
+        align="center",
+        gap="0.375rem",
+        padding="0.25rem 0.625rem",
+        border_radius=RADIO_PASTILLA,
+        background=fondo,
+        border=f"1px solid {borde}",
+        width="fit-content",
+    )
 
 
 # ======================================================================
@@ -42,7 +67,7 @@ from .helpers import color_por_tipo_fecha
 
 
 def _leyenda_fechas() -> rx.Component:
-    """Leyenda con los tipos de fecha importante."""
+    """Leyenda con los tipos de fecha importante (colores hex)."""
     return rx.flex(
         *[
             rx.flex(
@@ -50,7 +75,7 @@ def _leyenda_fechas() -> rx.Component:
                     height="0.75rem",
                     width="0.75rem",
                     border_radius=RADIO_PASTILLA,
-                    background=rx.color(info["color"], 9),
+                    background=info["color"],
                     flex_shrink="0",
                 ),
                 rx.text(
@@ -71,19 +96,34 @@ def _leyenda_fechas() -> rx.Component:
 
 
 # ======================================================================
-# Badge de tipo de fecha
+# Badge de tipo de fecha (via rx.match)
 # ======================================================================
 
 
-def _badge_tipo_fecha(tipo: str) -> rx.Component:
-    """Badge con el tipo de fecha importante."""
-    info = color_por_tipo_fecha(tipo)
-
-    return badge_icono_texto(
-        info["etiqueta"],
-        icono=info["icono"],
-        color_scheme=info["color"],
-        tamano="sm",
+def _badge_tipo_fecha(tipo: str | rx.Var) -> rx.Component:
+    """Badge con el tipo de fecha resuelto dinámicamente."""
+    return rx.match(
+        tipo,
+        ("feriado_nacional", _badge_estatico(
+            "Feriado nacional", "flag",
+            "#ef4444", "#fef2f2", "#fecaca",
+        )),
+        ("efemeride_nacional", _badge_estatico(
+            "Efeméride nacional", "landmark",
+            "#f59e0b", "#fffbeb", "#fde68a",
+        )),
+        ("feriado_movible", _badge_estatico(
+            "Feriado movible", "calendar-days",
+            "#ef4444", "#fef2f2", "#fecaca",
+        )),
+        ("internacional", _badge_estatico(
+            "Día internacional", "globe",
+            "#3b82f6", "#eff6ff", "#bfdbfe",
+        )),
+        _badge_estatico(
+            "Desconocido", "alert-circle",
+            "#6b7280", "#f3f4f6", "#d1d5db",
+        ),
     )
 
 
@@ -93,24 +133,9 @@ def _badge_tipo_fecha(tipo: str) -> rx.Component:
 
 
 def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
-    """
-    Card individual de fecha importante.
-
-    Estructura:
-    ┌──────────────────────────────────────┐
-    │  [DÍA]     [Feriado nacional]        │
-    │    01      Año Nuevo                 │
-    └──────────────────────────────────────┘
-
-    Args:
-        fecha: `FechaImportante` con `mes`, `dia`, `titulo`, `tipo`.
-    """
-    info = color_por_tipo_fecha(fecha["tipo"])
-
+    """Card individual de fecha importante."""
     return rx.flex(
-        # ==========================================================
-        # Columna izquierda: día
-        # ==========================================================
+        # ─── Columna izquierda: día ────────────────────────────
         rx.box(
             rx.vstack(
                 rx.text(
@@ -144,9 +169,7 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
             justify_content="center",
             flex_shrink="0",
         ),
-        # ==========================================================
-        # Columna derecha: título + tipo
-        # ==========================================================
+        # ─── Columna derecha: título + tipo ────────────────────
         rx.vstack(
             _badge_tipo_fecha(fecha["tipo"]),
             rx.text(
@@ -181,17 +204,8 @@ def _card_fecha_importante(fecha: FechaImportante) -> rx.Component:
 
 
 def _grupo_mes(mes: str, fechas: list[FechaImportante]) -> rx.Component:
-    """
-    Grupo de fechas de un mismo mes.
-
-    Args:
-        mes: Nombre del mes (ej: "ENERO").
-        fechas: Lista de fechas del mes.
-    """
+    """Grupo de fechas de un mismo mes."""
     return rx.box(
-        # ==========================================================
-        # Encabezado del mes
-        # ==========================================================
         rx.flex(
             rx.text(
                 mes,
@@ -224,9 +238,6 @@ def _grupo_mes(mes: str, fechas: list[FechaImportante]) -> rx.Component:
             width="100%",
             margin_bottom="1rem",
         ),
-        # ==========================================================
-        # Grid de fechas del mes
-        # ==========================================================
         rx.grid(
             *[_card_fecha_importante(f) for f in fechas],
             columns=rx.breakpoints(initial="1", sm="2"),
@@ -244,13 +255,7 @@ def _grupo_mes(mes: str, fechas: list[FechaImportante]) -> rx.Component:
 
 
 def tab_fechas_importantes() -> rx.Component:
-    """
-    Contenido del tab 'Fechas importantes'.
-
-    Agrupa las fechas por mes (orden cronológico), mostrando cada mes
-    como un bloque con su grid de fechas.
-    """
-    # Agrupamos por mes manteniendo el orden de aparición
+    """Contenido del tab 'Fechas importantes'."""
     meses_ordenados: list[str] = []
     fechas_por_mes: dict[str, list[FechaImportante]] = {}
 

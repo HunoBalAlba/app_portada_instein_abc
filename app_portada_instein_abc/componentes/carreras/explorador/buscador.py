@@ -1,31 +1,4 @@
-"""
-Buscador de carreras + card + grid + estado vacío.
 
-Estructura
-----------
-- `buscador_carreras`:        input de búsqueda con iconos decorativos.
-- `card_imagen_carrera`:      card con imagen destacada (navega al detalle).
-- `grid_imagenes_carreras`:   grid + contador + estado vacío.
-- `estado_vacio_busqueda`:    estado vacío (delegado al componente unificado).
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-
-- Fondo del buscador: `FONDO_HOME_CARD` (adaptativo).
-- Acentos: `AZUL_MARINO_NEON` en ambos modos.
-- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
-- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_SUAVE`.
-
-Nota técnica: IMPORTS DESDE LA FACHADA
---------------------------------------
-Todos los imports de infraestructura se hacen desde la fachada
-`infraestructura` (no desde los módulos internos
-`infraestructura.constantes.colores` ni `...dimensiones`).
-
-Motivo: `ANCHO_CONTENIDO` vive en `dimensiones.py`, y mezclar rutas
-es fuente de errores. La fachada unifica.
-"""
 
 from __future__ import annotations
 

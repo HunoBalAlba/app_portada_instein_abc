@@ -1,57 +1,10 @@
-"""
-Vista de detalle de un post del blog
-(ruta dinámica "/blog/[post_id]").
 
-Reemplaza el antiguo `dialogos.py`. En vez de un modal, el post se
-muestra en una página completa, con:
-
-- Hero editorial con imagen de fondo + título + meta info.
-- Cuerpo de lectura con tipografía optimizada (max_width ~65ch).
-- Navegación al post anterior / siguiente (si existen).
-- CTA al final hacia /contacto.
-- Botón "Volver al blog".
-
-Ventajas sobre el diálogo modal
--------------------------------
-- URL compartible: `/blog/3` se puede enviar por WhatsApp.
-- SEO: Google indexa cada post.
-- Scroll natural: sin peleas con flexbox.
-- Botón atrás del navegador funciona.
-- Mejor lectura larga: patrón Medium/Substack/NYT.
-
-Nota técnica: PATH PARAMS
--------------------------
-`post_id` viene como string en `self.router.page.params["post_id"]`.
-El State `EstadoBlog` lo resuelve con la var `post_seleccionado`.
-
-Nota técnica: VALIDACIÓN DE RUTA
---------------------------------
-El decorador `@rx.page` incluye
-`on_load=EstadoBlog.redirigir_si_post_invalido`. Este evento se
-ejecuta al cargar la página y redirige a `/404?origen=blog` si el
-`post_id` no corresponde a ningún post real.
-
-Nota técnica: FLAGS DE NAVEGACIÓN
----------------------------------
-`EstadoBlog.post_anterior` y `EstadoBlog.post_siguiente` SIEMPRE
-devuelven un `Post` válido (con fallback al destacado), así que
-**no se pueden usar directamente en `rx.cond(...)`** porque siempre
-evaluarían a True.
-
-Para decidir si mostrar u ocultar las tarjetas de navegación, se usan
-los flags booleanos `hay_post_anterior` y `hay_post_siguiente`:
-
-    ❌ rx.cond(EstadoBlog.post_anterior, ...)    # siempre True
-    ✅ rx.cond(EstadoBlog.hay_post_anterior, ...) # correcto
-"""
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...componentes.base.primitivos import (
-    enlace_navegacion,
-)
+from ...componentes.base import enlace_navegacion
 from ...componentes.blog import meta_info_post
 from ...componentes.blog.helpers_categoria import (
     badge_categoria,
@@ -67,14 +20,11 @@ from ...dominio import (
 )
 from ...infraestructura import (
     AZUL_MARINO_NEON,
-    COLOR_ACENTO_FONDO,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
     COLOR_BORDE_SUAVE,
     COLOR_DIVISOR,
     COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
     FONDO_HOME,
     NOMBRE_INSTITUTO,
     PADDING_LATERAL,
@@ -82,6 +32,8 @@ from ...infraestructura import (
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 
@@ -99,10 +51,7 @@ ANCHO_CONTENIDO: str = "64rem"
 
 
 def _hero_post() -> rx.Component:
-    """
-    Hero del artículo: imagen de fondo con overlay + badge + título
-    + meta info.
-    """
+    """Hero del artículo: imagen de fondo + badge + título + meta."""
     post = EstadoBlog.post_seleccionado
 
     return rx.box(
@@ -153,13 +102,13 @@ def _hero_post() -> rx.Component:
                     backdrop_filter="blur(8px)",
                     border_radius=RADIO_PASTILLA,
                     padding="0.125rem",
-                    box_shadow="0 4px 12px -2px rgba(0,0,0,0.15)",
                     width="fit-content",
                 ),
                 rx.heading(
                     post["titulo"],
-                    size="8",
-                    font_weight="900",
+                    as_="h1",
+                    font_size=["1.75rem", "2.5rem", "3rem"],
+                    font_weight="700",
                     color="white",
                     line_height="1.15",
                     letter_spacing="-0.02em",
@@ -214,17 +163,15 @@ def _boton_volver() -> rx.Component:
         gap="0.5rem",
         padding="0.5rem 1rem",
         border_radius=RADIO_MEDIO,
-        background=COLOR_FONDO_CARTA,
-        color=COLOR_TEXTO_PRINCIPAL,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        background="transparent",
+        color=TEXTO_HOME_PRINCIPAL,
+        border=f"1px solid {BORDE_HOME_MEDIO}",
         font_size="0.875rem",
         text_decoration="none",
         transition="all 0.2s",
         width="fit-content",
         _hover={
-            "background": COLOR_FONDO_SUAVE,
             "border_color": AZUL_MARINO_NEON,
-            "transform": "translateX(-2px)",
         },
     )
 
@@ -244,7 +191,7 @@ def _cuerpo_post() -> rx.Component:
                 post["extracto"],
                 font_size=["1rem", "1.0625rem", "1.125rem"],
                 font_weight="500",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.75",
                 font_style="italic",
             ),
@@ -262,7 +209,7 @@ def _cuerpo_post() -> rx.Component:
             rx.text(
                 post["contenido"],
                 font_size=["1rem", "1.0625rem", "1.125rem"],
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.85",
                 white_space="pre-line",
                 max_width=ANCHO_LECTURA,
@@ -284,13 +231,7 @@ def _tarjeta_navegacion_post(
     post: Post | rx.Var,
     direccion: str,
 ) -> rx.Component:
-    """
-    Tarjeta de navegación a un post adyacente.
-
-    Args:
-        post: Var con el `Post` (post_anterior o post_siguiente).
-        direccion: "anterior" o "siguiente".
-    """
+    """Tarjeta de navegación a un post adyacente."""
     es_anterior = direccion == "anterior"
 
     icono = "arrow-left" if es_anterior else "arrow-right"
@@ -303,7 +244,7 @@ def _tarjeta_navegacion_post(
             etiqueta,
             font_size="0.6875rem",
             font_weight="700",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_MAS_SUAVE,
             text_transform="uppercase",
             letter_spacing="0.05em",
         ),
@@ -311,7 +252,7 @@ def _tarjeta_navegacion_post(
             post["titulo"],
             font_size="0.875rem",
             font_weight="600",
-            color=COLOR_TEXTO_PRINCIPAL,
+            color=TEXTO_HOME_PRINCIPAL,
             line_height="1.3",
             max_width="18rem",
         ),
@@ -322,7 +263,7 @@ def _tarjeta_navegacion_post(
     )
 
     icono_componente = rx.icon(
-        icono, size=16, color=COLOR_TEXTO_SECUNDARIO
+        icono, size=16, color=TEXTO_HOME_MAS_SUAVE
     )
 
     if es_anterior:
@@ -348,8 +289,6 @@ def _tarjeta_navegacion_post(
         min_width="0",
         _hover={
             "border_color": AZUL_MARINO_NEON,
-            "transform": "translateY(-2px)",
-            "box_shadow": f"0 8px 20px -8px {AZUL_MARINO_NEON}",
         },
     )
 
@@ -358,9 +297,7 @@ def _navegacion_posts() -> rx.Component:
     """
     Navegación al post anterior y siguiente.
 
-    ⚠️ Usamos los flags `hay_post_anterior` y `hay_post_siguiente`
-    (bool), NO `post_anterior`/`post_siguiente` (que siempre son
-    truthy por el fallback al destacado).
+    ⚠️ Usamos los flags `hay_post_anterior` y `hay_post_siguiente`.
     """
     hay_anterior = EstadoBlog.hay_post_anterior
     hay_siguiente = EstadoBlog.hay_post_siguiente
@@ -372,7 +309,7 @@ def _navegacion_posts() -> rx.Component:
                 "Continúa leyendo",
                 font_size="0.75rem",
                 font_weight="700",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_transform="uppercase",
                 letter_spacing="0.075em",
                 margin_bottom="1rem",
@@ -412,7 +349,13 @@ def _navegacion_posts() -> rx.Component:
 
 
 def _cta_final_post() -> rx.Component:
-    """Bloque CTA al final del artículo."""
+    """
+    Bloque CTA al final del artículo.
+
+    Estilo Neon.com:
+    - Sin glow.
+    - Sin translateY.
+    """
     return rx.box(
         rx.vstack(
             rx.text(
@@ -425,9 +368,10 @@ def _cta_final_post() -> rx.Component:
             ),
             rx.heading(
                 "Hablemos de tu futuro profesional",
-                size="6",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+                as_="h2",
+                font_size=["1.25rem", "1.5rem", "1.75rem"],
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
                 text_align="center",
                 line_height="1.2",
             ),
@@ -436,7 +380,7 @@ def _cta_final_post() -> rx.Component:
                 "resolver tus dudas y ayudarte a elegir la carrera "
                 "adecuada.",
                 font_size="0.9375rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_align="center",
                 max_width="36rem",
                 line_height="1.6",
@@ -444,7 +388,7 @@ def _cta_final_post() -> rx.Component:
             rx.flex(
                 enlace_navegacion(
                     "/contacto",
-                    rx.icon("message-circle", size=18),
+                    rx.icon("message-circle", size=18, color="white"),
                     rx.text("Consultar", as_="span", font_weight="700"),
                     display="inline-flex",
                     align_items="center",
@@ -454,13 +398,9 @@ def _cta_final_post() -> rx.Component:
                     padding="0.875rem 1.75rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="0.9375rem",
-                    box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}",
                     transition="all 0.2s",
                     text_decoration="none",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "filter": "brightness(1.1)",
-                    },
+                    _hover={"filter": "brightness(1.1)"},
                 ),
                 enlace_navegacion(
                     "/blog",
@@ -474,15 +414,14 @@ def _cta_final_post() -> rx.Component:
                     align_items="center",
                     gap="0.5rem",
                     background="transparent",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,
                     padding="0.875rem 1.75rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="0.9375rem",
-                    border=f"1px solid {COLOR_BORDE_SUAVE}",
+                    border=f"1px solid {BORDE_HOME_MEDIO}",
                     transition="all 0.2s",
                     text_decoration="none",
                     _hover={
-                        "transform": "translateY(-2px)",
                         "border_color": AZUL_MARINO_NEON,
                     },
                 ),
@@ -499,8 +438,8 @@ def _cta_final_post() -> rx.Component:
         ),
         padding="2.5rem 1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        background=COLOR_ACENTO_FONDO,
-        border=f"1px solid {AZUL_MARINO_NEON}",
+        background="transparent",
+        border=f"1px solid {BORDE_HOME_AZUL}",
         width="100%",
         margin_top="3rem",
     )
@@ -517,47 +456,50 @@ def _cta_final_post() -> rx.Component:
     on_load=EstadoBlog.redirigir_si_post_invalido,
 )
 def vista_post() -> rx.Component:
-    """
-    Página de detalle del artículo.
-
-    Estructura:
-    1. Barra de navegación.
-    2. Hero editorial con imagen + título + meta.
-    3. Contenedor con:
-       - Botón "Volver al blog".
-       - Cuerpo del artículo.
-       - Navegación al post anterior / siguiente.
-       - CTA final hacia /contacto.
-    4. Pie de página.
-
-    El `on_load` (`redirigir_si_post_invalido`) redirige
-    automáticamente a `/404?origen=blog` si el `post_id` de la URL
-    no corresponde a ningún post real.
-    """
-    return rx.vstack(
-        barra_navegacion_superior(),
-        _hero_post(),
-        rx.box(
-            rx.vstack(
-                _boton_volver(),
-                _cuerpo_post(),
-                _navegacion_posts(),
-                _cta_final_post(),
-                spacing="6",
+    """Página de detalle del artículo."""
+    return rx.box(
+        rx.vstack(
+            rx.box(
+                barra_navegacion_superior(),
                 width="100%",
-                align="start",
+                role="banner",
+                aria_label="Navegación principal",
             ),
-            max_width=ANCHO_CONTENIDO,
-            margin="0 auto",
-            padding=f"2.5rem {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
+            rx.el.main(
+                _hero_post(),
+                rx.box(
+                    rx.vstack(
+                        _boton_volver(),
+                        _cuerpo_post(),
+                        _navegacion_posts(),
+                        _cta_final_post(),
+                        spacing="6",
+                        width="100%",
+                        align="start",
+                    ),
+                    max_width=ANCHO_CONTENIDO,
+                    margin="0 auto",
+                    padding=f"2.5rem {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
+                    width="100%",
+                ),
+                width="100%",
+                aria_label="Artículo del blog",
+            ),
+            rx.box(
+                pie_pagina_institucional(),
+                width="100%",
+                role="contentinfo",
+                aria_label="Información del sitio",
+            ),
+            align="center",
+            min_height="100vh",
             width="100%",
+            spacing="0",
+            background=FONDO_HOME,
         ),
-        pie_pagina_institucional(),
-        align="center",
-        min_height="100vh",
         width="100%",
-        spacing="0",
         background=FONDO_HOME,
+        lang="es",
     )
 
 

@@ -1,31 +1,4 @@
-"""
-Utilidades para manipulación de colores.
 
-Provee helpers puros (sin dependencias de Reflex) para trabajar con
-colores hexadecimales, RGB y HSL:
-
-- Invertir colores.
-- Convertir entre formatos.
-- Ajustar luminosidad (aclarar/oscurecer).
-- Calcular contraste (WCAG).
-- Mezclar colores.
-
-Filosofía
----------
-Todas las funciones son **puras** (sin efectos secundarios) y
-**deterministas** (mismo input → mismo output). Esto las hace:
-
-- Fáciles de testear.
-- Seguras de llamar en cualquier parte.
-- Cacheables con `@lru_cache`.
-
-Formato soportado
------------------
-- **Hex**: `#RRGGBB` (6 dígitos) o `#RGB` (3 dígitos).
-- **RGB**: tupla `(r, g, b)` con valores 0-255.
-- **HSL**: tupla `(h, s, l)` con `h` en grados (0-360) y `s`, `l`
-  como porcentajes (0-100).
-"""
 
 from __future__ import annotations
 

@@ -1,40 +1,4 @@
-"""
-Paquete `paginas`: vistas registradas con `@rx.page`.
 
-Rutas registradas
------------------
-- `/`                        → vista_inicio
-- `/carreras`                → vista_carreras
-- `/carrera/[carrera_id]`    → vista_detalle_carrera
-- `/contacto`                → vista_contacto
-- `/sobre-nosotros`          → vista_sobre_nosotros
-- `/faq`                     → vista_faq
-- `/calendario`              → vista_calendario
-- `/admision`                → vista_admision
-- `/becas`                   → vista_becas
-- `/blog`                    → vista_blog
-- `/blog/[post_id]`          → vista_post
-- `/404`                     → vista_404
-
-Convención de imports
----------------------
-✅ **CORRECTO** — importar desde el paquete:
-    from app_portada_instein.paginas import (
-        vista_inicio,
-        vista_carreras,
-        vista_contacto,
-    )
-
-⚠️ El import de las vistas REGISTRA las rutas en `rx.App`. Si no se
-importan, `reflex run` no las reconoce.
-
-Uso típico
-----------
-En `configuracion/app_config.py`:
-
-    from app_portada_instein import paginas  # noqa: F401
-    # Este import registra todas las rutas automáticamente.
-"""
 
 from __future__ import annotations
 

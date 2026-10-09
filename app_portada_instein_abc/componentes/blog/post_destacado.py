@@ -1,33 +1,4 @@
-"""
-Post destacado (featured) del blog con imagen real.
 
-Estructura
-----------
-- `_imagen_destacada`:  bloque de imagen grande con overlay + badge.
-- `_cta_leer_articulo`: botón CTA "Leer artículo".
-- `post_destacado`:     card completa con layout 2 columnas.
-
-Sistema de color
-----------------
-- Acentos: `AZUL_MARINO_NEON`.
-- Overlays sobre imagen: `rgba` intencionales.
-- Badge "DESTACADO": `rgba(0,0,0,0.5)` sobre cualquier imagen.
-
-Nota técnica: TIPADO ESTRICTO CON `Post`
-----------------------------------------
-Todas las funciones que reciben un post están tipadas como `Post`
-(el `TypedDict` de `dominio.modelos.blog`), NO como `dict` genérico.
-
-Esto es CRÍTICO para Reflex: si el tipo es `dict` genérico, los
-campos internos se infieren como `str | int | bool` y props como
-`rx.image(alt=str)` fallan.
-
-Nota técnica: NAVEGACIÓN
-------------------------
-La card destacada ya NO abre un diálogo modal. Ahora es un enlace
-directo a la página de detalle `/blog/{id}`, donde el post se muestra
-completo con scroll natural de página.
-"""
 
 from __future__ import annotations
 
@@ -35,17 +6,15 @@ import reflex as rx
 
 from ...dominio.estados.estado_blog import EstadoBlog
 from ...dominio.modelos.blog import Post
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
+    COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-)
-from ...infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 from .helpers_categoria import badge_categoria, fondo_categoria
@@ -67,12 +36,7 @@ RUTA_IMAGENES_BLOG: str = "/blog/"
 
 
 def _badge_destacado() -> rx.Component:
-    """
-    Badge "DESTACADO" flotante sobre la imagen.
-
-    Usa `rgba(0,0,0,0.5)` con blur intencional para garantizar
-    legibilidad sobre cualquier imagen de fondo.
-    """
+    """Badge "DESTACADO" flotante sobre la imagen."""
     return rx.flex(
         rx.icon("star", size=12, color="white", fill="white"),
         rx.text(
@@ -103,16 +67,9 @@ def _badge_destacado() -> rx.Component:
 
 
 def _imagen_destacada(post: Post) -> rx.Component:
-    """
-    Bloque de imagen grande del post destacado.
-
-    Args:
-        post: `Post` destacado. Tipado estricto (no `dict`) para que
-            Reflex sepa que `post["titulo"]` y `post["imagen"]` son
-            `str` y los acepte en `rx.image`.
-    """
+    """Bloque de imagen grande del post destacado."""
     return rx.box(
-        # CAPA 1: Fondo de fallback (color de la categoría)
+        # CAPA 1: Fondo de fallback
         rx.box(
             position="absolute",
             top="0",
@@ -135,7 +92,7 @@ def _imagen_destacada(post: Post) -> rx.Component:
             z_index="1",
             transition="transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
         ),
-        # CAPA 3: Overlay sutil
+        # CAPA 3: Overlay
         rx.box(
             position="absolute",
             top="0",
@@ -171,10 +128,11 @@ def _imagen_destacada(post: Post) -> rx.Component:
 
 def _cta_leer_articulo() -> rx.Component:
     """
-    Botón CTA "Leer artículo" con flecha animada en hover.
+    Botón CTA "Leer artículo" con flecha animada.
 
-    La flecha lleva la clase `arrow-destacado`, que la card padre
-    anima al recibir hover.
+    Estilo Neon.com:
+    - Fondo azul marino.
+    - Sin box_shadow glow.
     """
     return rx.flex(
         rx.text("Leer artículo", as_="span", font_weight="700"),
@@ -192,7 +150,6 @@ def _cta_leer_articulo() -> rx.Component:
         border_radius=RADIO_PASTILLA,
         font_size="0.875rem",
         margin_top="0.5rem",
-        box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}",
         transition="all 0.2s",
         cursor="pointer",
     )
@@ -207,12 +164,10 @@ def post_destacado() -> rx.Component:
     """
     Post destacado con layout de dos columnas que enlaza al detalle.
 
-    Estructura:
-    - Columna izquierda (40%): imagen grande con overlay y badge.
-    - Columna derecha (60%): badge de categoría + título + extracto
-      + meta + CTA "Leer artículo".
-
-    La card completa es un enlace a `/blog/{id}` (no un diálogo).
+    Estilo Neon.com:
+    - Sin box_shadow glow en hover.
+    - Sin translateY.
+    - Solo cambio de borde.
     """
     post = EstadoBlog.post_destacado
 
@@ -223,16 +178,17 @@ def post_destacado() -> rx.Component:
                 badge_categoria(post["categoria"]),
                 rx.heading(
                     post["titulo"],
-                    size="7",
-                    font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    as_="h2",
+                    font_size=["1.25rem", "1.5rem", "1.75rem"],
+                    font_weight="700",
+                    color=TEXTO_HOME_PRINCIPAL,
                     line_height="1.2",
                     letter_spacing="-0.02em",
                 ),
                 rx.text(
                     post["extracto"],
                     font_size="0.9375rem",
-                    color=COLOR_TEXTO_CUERPO,
+                    color=TEXTO_HOME_MAS_SUAVE,
                     line_height="1.7",
                 ),
                 meta_info_post(post),
@@ -250,14 +206,13 @@ def post_destacado() -> rx.Component:
         padding="1.5rem",
         border_radius=RADIO_EXTRA_GRANDE,
         background=COLOR_FONDO_CARTA,
-        border=f"1px solid {BORDE_HOME_SUAVE}",
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
         width="100%",
-        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition="all 0.2s",
         cursor="pointer",
         _hover={
             "border_color": AZUL_MARINO_NEON,
-            "box_shadow": f"0 20px 40px -10px {AZUL_MARINO_NEON}",
-            "& img": {"transform": "scale(1.05)"},
+            "& img": {"transform": "scale(1.03)"},
             "& .arrow-destacado": {"transform": "translateX(4px)"},
         },
     )

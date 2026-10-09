@@ -1,43 +1,4 @@
-"""
-Componentes de tarjeta de carrera y plan de estudios — estilo Neon
-adaptativo (dark/light).
 
-Contenido
----------
-- `tarjeta_carrera`:        item de carrera con icono + info + rating.
-- `item_carrera_ranking`:   variante con número de ranking a la izquierda.
-- `pastilla_anio`:          pastilla seleccionable de año del plan.
-- `fila_materia`:           fila de una materia del plan de estudios.
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: todas las carreras comparten el azul marino neon
-   (`AZUL_MARINO_NEON` = `#3b5bdb`).
-
-✅ ADAPTATIVO: los textos, fondos y bordes cambian con el `color_mode`.
-
-- Acentos: azul marino neon en ambos modos (color de marca).
-- Textos: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE` (adaptativos).
-- Bordes: `BORDE_HOME_SUAVE` (adaptativos).
-- Fondo de hover: `FONDO_AZUL_SUAVE` (adaptativo).
-- Rating: `rx.color("amber", 9)` (token Radix semántico).
-
-Nota técnica: `_icono_carrera_circular` NO es circular
-------------------------------------------------------
-El nombre original decía "circular" pero el border-radius es
-`RADIO_MEDIO` (rectángulo con esquinas redondeadas). Se renombra a
-`_icono_carrera_redondeado` para reflejar la realidad visual.
-
-Nota técnica: RECORTE DE `lema`
--------------------------------
-`carrera["lema"][:40]` SOLO funciona si `lema` es un `str` estático
-de Python. Si `carrera` es un `Var` reactivo, `[:40]` falla en runtime.
-
-En este módulo, `carrera` es siempre un `Carrera` estático (viene de
-un `rx.foreach` sobre una lista estática o de un literal), así que el
-recorte es seguro. Si en el futuro se pasa un `Var`, habría que
-migrar a `.length()` + `.substring()` de Reflex.
-"""
 
 from __future__ import annotations
 

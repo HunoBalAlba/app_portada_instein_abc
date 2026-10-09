@@ -1,47 +1,4 @@
-"""
-Paquete `dominio.servicios`: lógica de negocio.
 
-Los servicios implementan **reglas de negocio** sobre los datos
-obtenidos del repositorio. Aíslan los componentes y estados de la
-lógica compleja, permitiendo testearla en aislamiento.
-
-Contenido
----------
-1. **servicio_carreras**: filtros, ordenamientos, búsquedas y
-   estadísticas del catálogo de carreras.
-2. **servicio_blog**:     filtros, ordenamientos, búsquedas y   navegación del blog.
-3. **kepler**:            motor kepleriano para órbitas de iconos
-   (dominio matemático puro).
-
-Filosofía
----------
-- **Puros**:         sin efectos secundarios.
-- **Testeables**:    fáciles de cubrir con pytest.
-- **Sin UI**:        no dependen de Reflex excepto donde es inevitable.
-- **Con nombres claros**: verbo + sustantivo (ej: `filtrar_*`,
-  `ordenar_*`, `buscar_*`, `calcular_*`, `contar_*`).
-
-Convención de imports
----------------------
-✅ **CORRECTO** — importar desde el paquete:
-    from app_portada_instein.dominio.servicios import (
-        filtrar_carreras_por_demanda,
-        ordenar_carreras_por_puntuacion,
-        buscar_posts_por_texto,
-    )
-
-✅ **TAMBIÉN VÁLIDO** — importar desde el módulo específico:
-    from app_portada_instein.dominio.servicios.servicio_carreras import (
-        filtrar_carreras_por_demanda,
-    )
-
-Diferencia con `dominio.estados`
---------------------------------
-- **estados**:  reactivos, contienen estado mutable, disparan renders.
-- **servicios**: puros, sin estado, ejecutables en cualquier contexto.
-
-Los estados pueden llamar a servicios, pero no al revés.
-"""
 
 from __future__ import annotations
 

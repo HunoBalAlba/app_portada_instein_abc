@@ -1,13 +1,4 @@
-"""
-Banner CTA final del home — estilo Neon.com (v2).
 
-Cambios sobre v1:
-- Más padding horizontal en desktop.
-- Trust badges con más contraste.
-- Botón primario con glow azul marino.
-- Subtítulo con mejor jerarquía.
-- Sin "30 cupos" (evita microcopy de urgencia artificial).
-"""
 
 from __future__ import annotations
 

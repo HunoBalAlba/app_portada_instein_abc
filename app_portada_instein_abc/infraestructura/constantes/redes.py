@@ -1,72 +1,4 @@
-"""
-Redes sociales y presencia digital del INSTEIN.
 
-Este módulo es la **fuente única de verdad** para:
-- URLs de las redes sociales oficiales del instituto.
-- Metadatos visuales (icono, color corporativo, nombre).
-- Canales de comunicación (WhatsApp Canal, etc.).
-
-Convención de nombres
----------------------
-- `URL_*`:     URLs de referencia (una constante por red).
-- `URLS_REDES`: dict con todas las URLs indexadas por nombre.
-- `REDES_SOCIALES`: lista de `RedSocial` con metadata completa.
-- `RedSocial`: TypedDict con la estructura de cada red.
-
-Diferencia con `identidad.py`
------------------------------
-- `identidad.py`   → quién es el instituto (nombre, contacto, dirección).
-- `redes.py`       → dónde encontrarlo online (redes sociales).
-
-Nota técnica: COLORES CORPORATIVOS
-----------------------------------
-Los colores de cada red son **corporativos oficiales** de cada
-plataforma y NO cambian con el `color_mode`. Son colores de marca
-de terceros, no del proyecto.
-
-Ejemplos:
-- Facebook   → `#1877F2` (azul Facebook)
-- Instagram  → `#E4405F` (rosa Instagram)
-- YouTube    → `#FF0000` (rojo YouTube)
-- Discord    → `#5865F2` (blurple Discord)
-
-NOTA: NO reemplazar por tokens de Radix ni por el acento azul marino
-del proyecto. Son colores oficiales de cada plataforma.
-
-Nota técnica: `RedSocial` ES `TypedDict`
-----------------------------------------
-`RedSocial` es un `TypedDict`, NO un `dataclass`. Esto permite que
-`rx.foreach` itere sobre `REDES_SOCIALES` sin problemas de tipado
-(consistente con `Post`, `Carrera`, etc.).
-
-Los items se construyen con dicts literales:
-
-    {"nombre": "Facebook", "icono": "users", ...}
-
-NO con `RedSocial(nombre=...)`.
-
-Nota técnica: NOMBRES DE ICONOS LUCIDE
---------------------------------------
-Los iconos siguen el formato **kebab-case** oficial de Lucide
-(https://lucide.dev/icons):
-
-    ✅ message-circle    ❌ message_circle
-    ✅ circle-play       ❌ circle_play
-    ✅ music-2           ❌ music_2
-
-Nota técnica: ORDEN DE `REDES_SOCIALES`
----------------------------------------
-El orden importa: es el orden en que se renderizan en el footer y
-en la sección de multimedia. Está ordenado por **relevancia de uso**
-en Bolivia:
-
-1. Facebook    → red más usada para comunicación institucional.
-2. Instagram   → segunda más usada, contenido visual.
-3. TikTok      → fuerte crecimiento entre jóvenes.
-4. YouTube     → contenido de largo formato.
-5. Telegram    → canal de anuncios.
-6. Discord     → comunidad de estudiantes.
-"""
 
 from __future__ import annotations
 
@@ -159,7 +91,7 @@ REDES_SOCIALES: list[RedSocial] = [
     },
     {
         "nombre": "YouTube",
-        "icono": "circle-play",
+        "icono": "circle_play",
         "url": URL_YOUTUBE,
         "color": "#FF0000",
         "aria_label": "Visitar canal de YouTube del INSTEIN",
@@ -173,7 +105,7 @@ REDES_SOCIALES: list[RedSocial] = [
     },
     {
         "nombre": "Discord",
-        "icono": "message-circle",
+        "icono": "message_circle",
         "url": URL_DISCORD,
         "color": "#5865F2",
         "aria_label": "Unirse al servidor de Discord del INSTEIN",

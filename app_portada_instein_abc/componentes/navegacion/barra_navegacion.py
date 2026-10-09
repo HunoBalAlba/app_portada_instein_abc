@@ -1,12 +1,4 @@
-"""
-Barra de navegación superior — estilo Neon.com.
 
-Sistema de color
-----------------
-- Fondo: glassmorphism adaptativo.
-- Elemento activo: acento azul marino.
-- Toggle de color_mode: a la derecha.
-"""
 
 from __future__ import annotations
 

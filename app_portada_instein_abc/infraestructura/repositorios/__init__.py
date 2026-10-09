@@ -1,49 +1,4 @@
-"""
-Paquete `infraestructura.repositorios`: acceso a datos.
 
-Este paquete encapsula el acceso a las fuentes de datos del proyecto
-(catálogo de carreras, posts del blog, eventos del calendario, etc.).
-
-Patrón Repository
------------------
-Cada repositorio expone una API estable (funciones públicas) sobre
-una fuente de datos concreta. Los consumidores (dominio, componentes)
-NO acceden directamente a la fuente de datos: pasan por el repositorio.
-
-Ventajas:
-- **Abstracción**: cambiar de estático a API/BD no afecta al dominio.
-- **Testabilidad**: se puede mockear el repositorio.
-- **Caché**: el repositorio puede cachear lecturas costosas.
-
-Contenido
----------
-- **repositorio_carreras**:  catálogo de las 5 carreras técnicas.
-- **repositorio_blog**:      posts y categorías del blog.
-
-Convención de imports
----------------------
-✅ **CORRECTO** — importar desde el paquete:
-    from app_portada_instein.infraestructura.repositorios import (
-        obtener_catalogo,
-        obtener_post,
-    )
-
-✅ **TAMBIÉN VÁLIDO** — importar desde el módulo específico:
-    from app_portada_instein.infraestructura.repositorios.repositorio_carreras import (
-        obtener_catalogo,
-    )
-
-Qué exponer y qué no
---------------------
-Se exponen:
-- Modelos (`Carrera`, `Post`, `Categoria`, etc.): son tipos públicos.
-- Funciones de acceso (`obtener_catalogo()`, `obtener_post()`, etc.).
-- Constantes públicas (`CATEGORIAS`, `PALETA_COLORES`, etc.).
-
-NO se exponen:
-- Datos crudos privados (`_CATALOGO_CARRERAS`, `_POSTS`).
-- Helpers internos (`_icono_orbital_config`).
-"""
 
 from __future__ import annotations
 

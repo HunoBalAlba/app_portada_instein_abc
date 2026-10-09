@@ -1,33 +1,4 @@
-"""
-Widgets atómicos del explorador de carreras.
 
-Contenido
----------
-- `contenedor_animacion_orbital`: fondo espacial con partículas +
-  imagen central (el "Sol" del sistema orbital).
-- `cuadro_resumen_multimedia`:   contenedor orbital + etiquetas +
-  CTA al detalle.
-- `pastilla_carrera_destacada`:  pastilla seleccionable para cambiar
-  la carrera destacada.
-- `selector_carrera_destacada`:  fila completa de pastillas con
-  encabezado y contador.
-- `bloque_texto_carrera_destacada`: título + lema + CTA del home.
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: `AZUL_MARINO_NEON` para todos los elementos.
-✅ ADAPTATIVO: fondos, textos y bordes cambian con el `color_mode`.
-
-Nota técnica: ORIGEN
---------------------
-Este archivo reemplaza la antigua implementación monolítica que
-convivía con `tarjetas_carrera.py`. Se extrajo a `widgets.py` dentro
-de `explorador/` para mantener la cohesión temática.
-
-Los helpers `color_carrera_adaptativo()` y
-`color_suave_carrera_adaptativo()` fueron ELIMINADOS. Aquí usamos
-directamente `AZUL_MARINO_NEON` y `FONDO_AZUL_SUAVE`.
-"""
 
 from __future__ import annotations
 

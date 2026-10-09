@@ -1,30 +1,4 @@
-"""
-Hero de la página de carreras — carrusel de banners destacados.
 
-Estructura
-----------
-- Grid de perspectiva de fondo.
-- Carrusel con auto-avance (via `rx.moment`).
-- Flechas de navegación izquierda/derecha.
-- Indicadores de posición (dots).
-- Miniaturas clicables.
-- Barra de progreso del auto-avance.
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: `AZUL_MARINO_NEON` para todas las carreras.
-✅ ADAPTATIVO: fondo, textos y bordes respetan el `color_mode`.
-
-Nota técnica: AUTO-AVANCE CON `rx.moment`
------------------------------------------
-El auto-avance del carrusel se implementa con `rx.moment(interval=5000)`,
-que internamente usa `setInterval` de JS en el cliente.
-
-Ventajas sobre `while True` en Python:
-- Cero fugas de memoria (1 intervalo por página activa).
-- Cero CPU del servidor (el timer vive en el navegador).
-- Cancelación automática al desmontar el componente.
-"""
 
 from __future__ import annotations
 

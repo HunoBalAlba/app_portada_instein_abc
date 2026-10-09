@@ -1,21 +1,4 @@
-"""
-Estado global del acordeón de FAQ.
 
-Compartido por todos los acordeones de la aplicación:
-- FAQ del home.
-- FAQ de cada carrera.
-- FAQ del programa de becas.
-- FAQ de admisión.
-- FAQ del explorador.
-
-Nota técnica: VARIOS ACORDEONES EN LA MISMA PÁGINA
---------------------------------------------------
-Como todos comparten el mismo State, dos acordeones en la misma
-página estarán sincronizados (al abrir uno se cierra el otro).
-
-Si en el futuro se necesitan múltiples acordeones independientes en
-la misma página, crear subclases de State por instancia.
-"""
 
 from __future__ import annotations
 

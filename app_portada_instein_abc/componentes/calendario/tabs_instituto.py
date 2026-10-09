@@ -1,23 +1,10 @@
-"""
-Tab 1: Actividades del instituto (timeline con filtros) — estilo Neon.com.
 
-Diseño UX
----------
-1. **Timeline vertical** con línea conectora.
-2. **Card por evento** con fecha destacada.
-3. **Badge por tipo** con color semántico.
-4. **Hover sutil** (solo borde).
-5. **Sin glow excesivo** (coherente con el sitio).
-"""
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...componentes.base import (
-    badge_icono_texto,
-    estado_vacio,
-)
+from ...componentes.base import estado_vacio
 from ...dominio.estados.estado_calendario import (
     EstadoCalendario,
 )
@@ -37,27 +24,152 @@ from ...infraestructura import (
 )
 
 from .filtros import barra_filtros
-from .helpers import color_por_tipo_evento
 
 
 # ======================================================================
-# Badge de tipo de evento
+# Badge con colores hex directos
 # ======================================================================
 
 
-def _badge_tipo_evento(tipo: str) -> rx.Component:
+def _badge_hex(
+    etiqueta: str,
+    icono: str,
+    color: str,
+    fondo: str,
+    borde: str,
+) -> rx.Component:
     """
-    Badge con el tipo de evento.
+    Badge con colores hex directos.
 
-    Delega en `badge_icono_texto` del paquete base.
+    Esta función recibe strings LITERALES (no Vars). Se usa dentro
+    de `rx.match`, donde cada rama tiene colores conocidos en
+    tiempo de compilación.
+
+    Args:
+        etiqueta: Texto visible (ej: "Seminario").
+        icono: Nombre del icono Lucide (kebab-case).
+        color: Color del texto e icono (hex).
+        fondo: Fondo del badge (hex).
+        borde: Color del borde (hex).
+
+    Returns:
+        Badge con los colores especificados.
     """
-    info = color_por_tipo_evento(tipo)
+    return rx.flex(
+        rx.icon(
+            icono,
+            size=12,
+            color=color,
+            flex_shrink="0",
+        ),
+        rx.text(
+            etiqueta,
+            font_size="0.6875rem",
+            font_weight="700",
+            color=color,
+            text_transform="uppercase",
+            letter_spacing="0.05em",
+            white_space="nowrap",
+        ),
+        align="center",
+        gap="0.375rem",
+        padding="0.25rem 0.625rem",
+        border_radius=RADIO_PASTILLA,
+        background=fondo,
+        border=f"1px solid {borde}",
+        width="fit-content",
+    )
 
-    return badge_icono_texto(
-        info["etiqueta"],
-        icono=info["icono"],
-        color_scheme=info["color"],
-        tamano="sm",
+
+# ======================================================================
+# Badge por tipo de evento (via rx.match)
+# ======================================================================
+
+
+def _badge_tipo_evento(tipo: str | rx.Var) -> rx.Component:
+    """
+    Badge con el tipo de evento resuelto dinámicamente.
+
+    Usa `rx.match` para resolver el tipo **en el cliente** porque
+    `tipo` es una `Var` reactiva cuando viene de `rx.foreach`.
+
+    Args:
+        tipo: Clave del tipo de evento (Var reactiva o str).
+
+    Returns:
+        Badge correspondiente al tipo.
+    """
+    return rx.match(
+        tipo,
+        # ─── Categorías académicas ─────────────────────────────
+        ("taller", _badge_hex(
+            "Taller", "wrench",
+            "#3b82f6", "#eff6ff", "#bfdbfe",
+        )),
+        ("taller_tecnico", _badge_hex(
+            "Taller técnico", "code",
+            "#6366f1", "#eef2ff", "#c7d2fe",
+        )),
+        ("seminario", _badge_hex(
+            "Seminario", "mic",
+            "#8b5cf6", "#f5f3ff", "#ddd6fe",
+        )),
+        ("charla", _badge_hex(
+            "Charla", "graduation-cap",
+            "#06b6d4", "#ecfeff", "#a5f3fc",
+        )),
+        # ─── Categorías de evaluación ──────────────────────────
+        ("evaluacion", _badge_hex(
+            "Evaluación", "clipboard-check",
+            "#f59e0b", "#fffbeb", "#fde68a",
+        )),
+        ("parcial", _badge_hex(
+            "Parcial", "file-pen",
+            "#f97316", "#fff7ed", "#fed7aa",
+        )),
+        ("examen_final", _badge_hex(
+            "Examen final", "file-check",
+            "#dc2626", "#fef2f2", "#fecaca",
+        )),
+        ("cierre_actas", _badge_hex(
+            "Cierre de actas", "file-lock",
+            "#7c3aed", "#f5f3ff", "#ddd6fe",
+        )),
+        ("graduacion", _badge_hex(
+            "Graduación", "award",
+            "#eab308", "#fefce8", "#fef08a",
+        )),
+        # ─── Categorías institucionales ────────────────────────
+        ("inicio_bimestre", _badge_hex(
+            "Inicio de bimestre", "play-circle",
+            "#16a34a", "#f0fdf4", "#bbf7d0",
+        )),
+        ("institucional", _badge_hex(
+            "Institucional", "landmark",
+            "#dc2626", "#fef2f2", "#fecaca",
+        )),
+        ("feria", _badge_hex(
+            "Feria", "store",
+            "#f97316", "#fff7ed", "#fed7aa",
+        )),
+        ("feriado", _badge_hex(
+            "Feriado", "party-popper",
+            "#ef4444", "#fef2f2", "#fecaca",
+        )),
+        # ─── Categorías recreativas ────────────────────────────
+        ("deportivo", _badge_hex(
+            "Deportivo", "trophy",
+            "#22c55e", "#f0fdf4", "#bbf7d0",
+        )),
+        ("cultural", _badge_hex(
+            "Cultural", "music",
+            "#ec4899", "#fdf2f8", "#fbcfe8",
+        )),
+        # ─── Fallback visible ──────────────────────────────────
+        _badge_hex(
+            "Desconocido", "alert-circle",
+            "#6b7280", "#f3f4f6", "#d1d5db",
+        ),
     )
 
 
@@ -78,14 +190,11 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
     └──────────────────────────────────────────┘
 
     Args:
-        evento: `ProximoEvento` con `mes`, `dia`, `anio`, `titulo`,
-            `descripcion`, `tipo`, `lugar`.
+        evento: `ProximoEvento`.
     """
-    info = color_por_tipo_evento(evento["tipo"])
-
     return rx.flex(
         # ==========================================================
-        # Columna izquierda: fecha (día + mes + año)
+        # Columna izquierda: fecha
         # ==========================================================
         rx.box(
             rx.vstack(
@@ -174,18 +283,10 @@ def _card_evento(evento: ProximoEvento) -> rx.Component:
 
 
 def _item_timeline(evento: ProximoEvento, indice, total) -> rx.Component:
-    """
-    Item del timeline de actividades del instituto.
-
-    ⚠️ `indice` y `total` son Vars reactivos porque vienen de un
-    `rx.foreach`. Por eso usamos `rx.cond` en lugar de `if/not`.
-    """
+    """Item del timeline de actividades del instituto."""
     es_ultimo = indice == (total - 1)
 
     return rx.flex(
-        # ==========================================================
-        # Indicador (círculo + línea conectora)
-        # ==========================================================
         rx.vstack(
             rx.box(
                 height="1rem",
@@ -212,9 +313,6 @@ def _item_timeline(evento: ProximoEvento, indice, total) -> rx.Component:
             padding_top="1.5rem",
             flex_shrink="0",
         ),
-        # ==========================================================
-        # Card del evento
-        # ==========================================================
         rx.box(
             _card_evento(evento),
             padding="1.25rem",
@@ -249,7 +347,7 @@ def _estado_vacio_filtros() -> rx.Component:
         boton_accion_etiqueta="Limpiar filtros",
         boton_accion_icono="rotate-ccw",
         boton_accion_on_click=EstadoCalendario.limpiar_filtros,
-        boton_accion_color_scheme="crimson",
+        boton_accion_color_scheme="indigo",
     )
 
 
@@ -259,21 +357,9 @@ def _estado_vacio_filtros() -> rx.Component:
 
 
 def tab_actividades_instituto() -> rx.Component:
-    """
-    Contenido del tab 'Actividades del instituto' con filtros.
-
-    Estructura:
-    1. Barra de filtros.
-    2. Timeline o estado vacío (según haya resultados).
-    """
+    """Contenido del tab 'Actividades del instituto' con filtros."""
     return rx.vstack(
-        # ==========================================================
-        # Barra de filtros
-        # ==========================================================
         barra_filtros(),
-        # ==========================================================
-        # Timeline o estado vacío
-        # ==========================================================
         rx.cond(
             EstadoCalendario.hay_resultados,
             rx.vstack(

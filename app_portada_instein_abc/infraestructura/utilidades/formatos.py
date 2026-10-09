@@ -1,18 +1,4 @@
-"""
-Utilidades para formatear texto, números y fechas.
 
-Provee helpers puros para:
-- Formatear números con separador de miles.
-- Truncar textos largos con elipsis.
-- Pluralizar palabras (singular/plural).
-- Generar iniciales a partir de un nombre.
-- Generar slugs para URLs.
-
-Filosofía
----------
-Todas las funciones son **puras** y **deterministas**. No dependen de
-Reflex ni de la UI.
-"""
 
 from __future__ import annotations
 

@@ -1,14 +1,4 @@
-"""
-Constantes compartidas del explorador de carrera.
 
-Layout, tamaños y opciones de navegación del explorador.
-
-Nota técnica: SCOPE
--------------------
-Este módulo SOLO contiene constantes del **explorador** (buscador,
-panel flotante, contenido, widgets). No contiene constantes globales
-del proyecto — esas viven en `infraestructura.constantes`.
-"""
 
 from __future__ import annotations
 

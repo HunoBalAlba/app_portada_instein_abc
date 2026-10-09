@@ -270,14 +270,14 @@ def _logo_instituto() -> rx.Component:
     """
     return rx.box(
         rx.image(
-            src="/logo_instituto.jpeg",
+            src="/log_instein.jpg",
             alt="Logo del Instituto Técnico Integrado San Antonio de Padua",
             width="100%",
             height="100%",
             object_fit="cover",
         ),
         width="100%",
-        aspect_ratio="1",
+        # aspect_ratio="1",
         max_width="100%",
         border_radius=RADIO_EXTRA_GRANDE,
         border=f"1px solid {BORDE_HOME_AZUL}",

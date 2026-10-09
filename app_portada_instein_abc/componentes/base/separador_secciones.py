@@ -1,16 +1,4 @@
-"""
-Separador horizontal sutil entre secciones (estilo Neon.com).
 
-Componente reutilizable por todas las vistas que necesitan
-marcar visualmente el cambio de sección con una línea fina.
-
-Uso:
-    from ..componentes.base.separador_secciones import separador_secciones
-
-    ...
-    separador_secciones()
-    ...
-"""
 
 from __future__ import annotations
 

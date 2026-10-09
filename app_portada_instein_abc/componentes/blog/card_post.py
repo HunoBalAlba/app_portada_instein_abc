@@ -1,31 +1,4 @@
-"""
-Card individual de post + grid de posts + estado vacío + botón
-"Cargar más".
 
-Estructura
-----------
-- `card_post`:      card con imagen + badge + título + meta + CTA.
-- `grid_posts`:     grid responsive de cards.
-- `estado_vacio`:   estado vacío (delegado al componente unificado).
-- `boton_cargar_mas`: botón de paginación.
-
-Sistema de color
-----------------
-- Cada card respira el color de su categoría (borde hover + sombra).
-- La imagen tiene un overlay sutil con el color de la categoría.
-- Los textos son neutros.
-
-Nota técnica: TIPADO ESTRICTO CON `Post`
-----------------------------------------
-`_imagen_post(post)` y `card_post(post)` están tipadas como `Post`.
-Sin esto, Reflex lanza `TypeError: Invalid var passed for prop
-Img.alt, expected type <class 'str'>`.
-
-Nota técnica: NAVEGACIÓN
-------------------------
-Las cards ya NO abren un diálogo modal. Ahora son enlaces a
-`/blog/{id}`.
-"""
 
 from __future__ import annotations
 
@@ -36,16 +9,13 @@ from ...componentes.base.estado_vacio import (
 )
 from ...dominio.estados.estado_blog import EstadoBlog
 from ...dominio.modelos.blog import Post
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
+    COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-)
-from ...infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 from .helpers_categoria import (
@@ -112,7 +82,7 @@ def _imagen_post(post: Post) -> rx.Component:
             transition="transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
             _group_hover={"transform": "scale(1.05)"},
         ),
-        # Capa 3: overlay sutil
+        # Capa 3: overlay sutil (respetando color de categoría)
         rx.box(
             position="absolute",
             top="0",
@@ -162,7 +132,7 @@ def _imagen_post(post: Post) -> rx.Component:
         height=ALTURA_IMAGEN_CARD,
         border_radius=RADIO_EXTRA_GRANDE,
         overflow="hidden",
-        background=COLOR_FONDO_SUAVE,
+        background=COLOR_FONDO_CARTA,
     )
 
 
@@ -204,12 +174,12 @@ def card_post(post: Post) -> rx.Component:
     """
     Card individual de post que enlaza a la página de detalle.
 
-    UX:
+    Estilo Neon.com:
     - Imagen con zoom sutil en hover.
     - Borde de acento en hover.
-    - Elevación + sombra tintada con el acento.
+    - **Sin translateY** (solo borde).
+    - **Sin glow**.
     - CTA "Leer artículo" con flecha animada.
-    - Click en cualquier parte → navega al detalle.
 
     Args:
         post: `Post` (TypedDict). Tipado estricto.
@@ -220,15 +190,16 @@ def card_post(post: Post) -> rx.Component:
             badge_categoria(post["categoria"]),
             rx.heading(
                 post["titulo"],
-                size="4",
+                as_="h3",
+                font_size="1.0625rem",
                 font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 line_height="1.3",
             ),
             rx.text(
                 post["extracto"],
                 font_size="0.875rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 line_height="1.6",
             ),
             meta_info_post(post),
@@ -241,15 +212,13 @@ def card_post(post: Post) -> rx.Component:
         padding="1.25rem",
         border_radius=RADIO_EXTRA_GRANDE,
         background=COLOR_FONDO_CARTA,
-        border=f"1px solid {BORDE_HOME_SUAVE}",
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
         width="100%",
         height="100%",
-        transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition="all 0.2s",
         cursor="pointer",
         _hover={
-            "transform": "translateY(-4px)",
             "border_color": AZUL_MARINO_NEON,
-            "box_shadow": f"0 16px 40px -12px {AZUL_MARINO_NEON}",
             "& .arrow-leer": {"transform": "translateX(4px)"},
         },
         class_name="card-post",
@@ -285,7 +254,7 @@ def grid_posts() -> rx.Component:
 
 
 # ======================================================================
-# Estado vacío (delegado al componente unificado)
+# Estado vacío
 # ======================================================================
 
 
@@ -306,7 +275,7 @@ def estado_vacio() -> rx.Component:
         boton_accion_etiqueta="Limpiar filtros",
         boton_accion_icono="rotate-ccw",
         boton_accion_on_click=EstadoBlog.limpiar_filtros,
-        boton_accion_color_scheme="crimson",
+        boton_accion_color_scheme="indigo",
     )
 
 
@@ -316,7 +285,13 @@ def estado_vacio() -> rx.Component:
 
 
 def boton_cargar_mas() -> rx.Component:
-    """Botón 'Cargar más' (solo se muestra si hay más posts)."""
+    """
+    Botón 'Cargar más' (solo se muestra si hay más posts).
+
+    Estilo Neon.com:
+    - Botón outline con indigo (no crimson).
+    - Hover sutil (solo cambio de borde).
+    """
     return rx.cond(
         EstadoBlog.hay_mas_posts,
         rx.flex(
@@ -330,13 +305,9 @@ def boton_cargar_mas() -> rx.Component:
                 on_click=EstadoBlog.cargar_mas_posts,
                 size="3",
                 variant="outline",
-                color_scheme="crimson",
+                color_scheme="indigo",
                 cursor="pointer",
                 transition="all 0.2s",
-                _hover={
-                    "transform": "translateY(-2px)",
-                    "box_shadow": f"0 10px 25px -5px {AZUL_MARINO_NEON}",
-                },
             ),
             justify="center",
             width="100%",

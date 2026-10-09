@@ -1,44 +1,4 @@
-"""
-Dimensiones, radios, sombras y espaciados reutilizables.
 
-Contenido
----------
-1. **Radios**:      border-radius estándar del proyecto.
-2. **Sombras**:     elevación y glow del proyecto.
-3. **Anchos**:      anchos máximos de contenedores.
-4. **Espaciados**:  paddings y gaps comunes.
-5. **Tamaños**:     tamaños de caja y contenedores.
-
-Convención de nombres
----------------------
-- **RADIO_***:      border-radius.
-- **SOMBRA_***:     box-shadow.
-- **ANCHO_***:      width / max-width.
-- **PADDING_***:    padding.
-- **GAP_***:        gap (flex/grid).
-- **TAMANO_***:     width/height de cajas específicas.
-
-Naming: unidades
-----------------
-Los valores siempre van con unidad explícita (`"1rem"`, `"1.5rem"`,
-`"9999px"`). Nunca valores "mágicos" sin unidad.
-
-Naming: consistencia con Radix
-------------------------------
-- `RADIO_MEDIO = "0.75rem"` ≈ `radix radius-3` (0.75rem).
-- `RADIO_BORDE = "var(--radius-2)"` usa el token del tema Reflex.
-
-Nota técnica: `RADIO_BORDE` vs `RADIO_MEDIO`
---------------------------------------------
-- `RADIO_BORDE`      → usa el token del tema (`var(--radius-2)`).
-  Adapta al `radius` global de `rx.theme(radius="medium")`.
-- `RADIO_MEDIO`      → valor fijo (`0.75rem`).
-  Independiente del tema. Úsalo cuando necesites control exacto.
-
-Regla: usa `RADIO_BORDE` para tarjetas/inputs que deben seguir el
-tema. Usa `RADIO_MEDIO`/`RADIO_GRANDE` cuando el diseño exige un
-valor específico.
-"""
 
 from __future__ import annotations
 

@@ -1,39 +1,4 @@
-"""
-Acordeón de FAQ reutilizable — único en toda la app.
 
-✅ REFACTORIZADO:
-   - El `EstadoAcordeonFaq` ahora vive en `dominio/estados/`.
-   - Este módulo SOLO contiene presentación (UI pura).
-   - Eliminada la duplicación del State.
-   - Corregido el import roto de `FONDO_HOME_CARD_ADAPTATIVO`.
-
-Diseño
-------
-- Componente declarativo: recibe una lista (estática o `Var`) de items
-  con `pregunta` y `respuesta`.
-- Soporta dos variantes visuales: `"light"` y `"neon"`.
-- Un solo item abierto a la vez (gestionado por `EstadoAcordeonFaq`).
-
-Nota técnica: TIPADO DE `items`
--------------------------------
-`items` acepta dos formas:
-
-1. **Lista estática** (`list[ItemFaq]`):
-       PREGUNTAS = [{"pregunta": "¿...?", "respuesta": "..."}, ...]
-       acordeon_faq(items=PREGUNTAS)
-
-2. **Var reactiva** (`rx.Var`):
-       acordeon_faq(items=EstadoInstitucional.carrera_seleccionada["faq"])
-
-En ambos casos, `item["pregunta"]` funciona: en el caso estático
-devuelve un `str`; en el caso reactivo devuelve un `Var`.
-
-Nota técnica: VARIOS ACORDEONES EN LA MISMA PÁGINA
---------------------------------------------------
-Como todos comparten el mismo `EstadoAcordeonFaq`, dos acordeones en
-la misma página estarán sincronizados (al abrir uno se cierra el otro).
-Si necesitas independencia, crea una subclase de State.
-"""
 
 from __future__ import annotations
 

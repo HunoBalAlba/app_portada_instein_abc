@@ -1,100 +1,4 @@
-"""
-Vista de detalle de una carrera específica
-(ruta dinámica "/carrera/[carrera_id]") — estilo Neon.com.
 
-Estructura
-----------
-1. Encabezado sticky con breadcrumb.
-2. Hero con imagen banner de fondo + gradiente oscuro + contenido.
-3. Marquee de iconos (características de la carrera).
-4. Pestañas descriptivas (Sobre la carrera, Malla curricular, Perfil y salidas).
-5. Sección de FAQ (con separador).
-6. Botón flotante "volver arriba" minimalista.
-7. Pie de página institucional.
-
-Diseño UX
----------
-Inspirado en el **hero principal del home** y en **Neon.com**:
-
-1. **Imagen banner de fondo** (`imagen_banner`) con `object_fit=cover`.
-2. **Gradiente oscuro** (transparente → negro) para legibilidad.
-3. **Contenido superpuesto**: badge + título + lema + CTAs.
-4. **Trust badges** (duración, modalidad, cupos) sobre el hero.
-5. **Marquee de iconos** de las características.
-6. **Tabs descriptivas** (no genéricas como "Info" o "Plan").
-7. **HTML5 semántico** (`main`, `section`, `article`).
-8. **Breadcrumb sticky** con blur.
-9. **Responsive mobile-first**.
-10. **Énfasis bicolor** en el nombre de la carrera.
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: azul marino neon.
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-
-Nota técnica: TABS DESCRIPTIVAS (NUEVO)
----------------------------------------
-Las etiquetas de los tabs cambiaron de genéricas a descriptivas:
-
-- **Antes**: `Info` / `Plan` / `Perfil`
-- **Ahora**: `Sobre la carrera` / `Malla curricular` / `Perfil y salidas`
-
-Motivo UX: los usuarios nuevos no saben qué esperar de "Info" o "Plan".
-Las etiquetas descriptivas mejoran la descubribilidad del contenido y
-el SEO (keywords: "carrera", "malla curricular", "salidas laborales").
-
-Nota técnica: ELIMINACIÓN DEL SISTEMA ORBITAL
---------------------------------------------
-Se eliminó TODO el sistema kepleriano:
-- `_anillos_saturno()`
-- `_icono_orbital()`
-- `_contenedor_orbital_imagen()`
-- El import de `IconoAnimado` desde `..dominio`
-
-En su lugar, se usa:
-- `imagen_banner` como fondo del hero.
-- `caracteristicas` de la carrera en el marquee.
-
-Nota técnica: MARQUEE DE ICONOS
--------------------------------
-Debajo del hero se muestra un **marquee horizontal** con los
-iconos de las características de la carrera. Técnica CSS:
-
-1. Se duplica la lista de características `[items, items]`.
-2. Se anima `translateX(-50%)` con la duración definida.
-3. Al reiniciar, el segundo bloque ocupa el lugar del primero → scroll infinito.
-4. Se pausa al hover (mejora UX).
-
-⚠️ El marquee es DINÁMICO: usa `carrera["caracteristicas"]`, así
-cada carrera muestra sus propios iconos.
-
-Nota técnica: TRUST BADGES
---------------------------
-Se muestran los datos clave (`duracion`, `modalidad`, `cupos`) en
-badges con borde (patrón ya usado en `contacto.py`).
-
-Nota técnica: ACORDEÓN FAQ UNIFICADO
-------------------------------------
-La sección de preguntas frecuentes delega en `acordeon_faq` con
-variante `"light"`.
-
-⚠️ IMPORTANTE: los items del acordeón vienen como `Var` reactiva
-(`carrera_seleccionada["preguntas_frecuentes"]`), NO como lista
-estática de Python.
-
-Nota técnica: VALIDACIÓN DE RUTA
---------------------------------
-El decorador `@rx.page` incluye
-`on_load=EstadoInstitucional.redirigir_si_carrera_invalida`.
-
-Nota técnica: COMPONENTES COMPARTIDOS
--------------------------------------
-Este archivo usa los componentes compartidos:
-
-- `acordeon_faq` (de `..componentes.base`).
-- `enlace_navegacion` (de `..componentes.base`).
-- `separador_secciones` (de `..componentes.base`).
-"""
 
 from __future__ import annotations
 
@@ -102,6 +6,7 @@ import reflex as rx
 
 from ..componentes.base import (
     acordeon_faq,
+    encabezado_seccion,
     enlace_navegacion,
     separador_secciones,
 )
@@ -119,7 +24,6 @@ from ..dominio import (
 )
 from ..infraestructura import (
     ANCHO_CONTENIDO,
-    ANCHO_SECCION,
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
     BORDE_HOME_MEDIO,
@@ -140,99 +44,74 @@ from ..infraestructura import (
 # Constantes locales
 # ======================================================================
 
-PADDING_INFERIOR_PESTANAS = f"0 {PADDING_LATERAL} 4rem {PADDING_LATERAL}"
-
 # Altura mínima del hero con imagen de fondo.
 ALTURA_HERO: list[str] = ["28rem", "32rem", "36rem"]
 
 # Duración de un ciclo completo del marquee (segundos).
 DURACION_MARQUEE_SEGUNDOS: int = 30
 
-
-# ======================================================================
-# Configuración de tabs (NUEVO)
-# ======================================================================
-
-# Cada tab tiene: etiqueta descriptiva, icono Lucide, valor interno.
-# Las etiquetas son DESCRIPTIVAS (UX) y los valores son INTERNOS (código).
-TABS_DETALLE: list[dict] = [
-    {
-        "etiqueta": "Sobre la carrera",
-        "icono": "info",
-        "valor": "info",
-    },
-    {
-        "etiqueta": "Malla curricular",
-        "icono": "book-open-text",
-        "valor": "plan",
-    },
-    {
-        "etiqueta": "Perfil y salidas",
-        "icono": "target",
-        "valor": "perfil",
-    },
-]
+# Padding de cada sección numerada.
+PADDING_SECCION_HORIZONTAL: str = "1.5rem"
 
 
 # ======================================================================
-# Tabs: triggers
+# Wrapper de sección numerada
 # ======================================================================
 
 
-def _tab_trigger(
-    texto: str,
-    icono: str,
-    value: str,
+def _seccion(
+    numero: str,
+    etiqueta: str,
+    titulo: str,
+    titulo_enfasis: str | None,
+    contenido: rx.Component,
+    id_seccion: str,
 ) -> rx.Component:
     """
-    Trigger de pestaña con icono + texto descriptivo.
+    Sección con encabezado horizontal + contenido.
 
-    Diseño UX:
-    - **Móvil**: solo texto (ahorra espacio).
-    - **Tablet/desktop**: icono + texto.
-    - **Activo**: color azul marino + border_bottom.
-    - **Hover**: transición suave a azul marino.
+    Estilo Neon.com:
+    - Padding vertical generoso (unificado).
+    - Encabezado horizontal (número + título).
+    - Contenido debajo, ocupando el ancho completo.
+    - `scroll-margin-top` para compensar la barra sticky.
 
     Args:
-        texto: Etiqueta descriptiva (ej: "Sobre la carrera").
-        icono: Icono Lucide (kebab-case).
-        value: Valor interno del tab (ej: "info").
+        numero: "01", "02", "03", "04".
+        etiqueta: Texto pequeño en mayúsculas.
+        titulo: Título de la sección (blanco).
+        titulo_enfasis: Énfasis gris del título (opcional).
+        contenido: Componente con el contenido.
+        id_seccion: ID único (para anchor links).
 
     Returns:
-        Trigger de tab con icono + texto.
+        Componente `<section>` completo.
     """
-    return rx.tabs.trigger(
-        # ─── Móvil: solo texto ─────────────────────────────────
-        rx.mobile_only(
-            rx.text(
-                texto,
-                font_size="0.8125rem",
-                font_weight="600",
-                white_space="nowrap",
+    return rx.section(
+        rx.box(
+            # ─── Encabezado horizontal ───────────────────────────
+            encabezado_seccion(
+                numero=numero,
+                etiqueta=etiqueta,
+                titulo=titulo,
+                titulo_enfasis=titulo_enfasis,
             ),
+            # ─── Contenido ──────────────────────────────────────
+            contenido,
+            padding=[
+                f"4rem {PADDING_SECCION_HORIZONTAL}",
+                f"5rem {PADDING_SECCION_HORIZONTAL}",
+                f"6rem {PADDING_SECCION_HORIZONTAL}",
+            ],
+            max_width=ANCHO_CONTENIDO,
+            margin="0 auto",
+            width="100%",
         ),
-        # ─── Tablet/desktop: icono + texto ─────────────────────
-        rx.tablet_and_desktop(
-            rx.flex(
-                rx.icon(icono, size=16),
-                rx.text(
-                    texto,
-                    font_size="0.875rem",
-                    font_weight="600",
-                    white_space="nowrap",
-                ),
-                align="center",
-                gap="0.5rem",
-            ),
-        ),
-        value=value,
-        padding="0.75rem 1rem",
-        color=TEXTO_HOME_MAS_SUAVE,
-        transition="all 0.2s",
-        _hover={"color": AZUL_MARINO_NEON},
-        _selected={
-            "color": AZUL_MARINO_NEON,
-        },
+        width="100%",
+        id=id_seccion,
+        aria_label=titulo,
+        # Compensa la barra sticky al hacer scroll a un anchor
+        scroll_margin_top="5rem",
     )
 
 
@@ -678,129 +557,28 @@ def _marquee_caracteristicas() -> rx.Component:
 
 
 # ======================================================================
-# Sección: Preguntas frecuentes
+# Sección 04: Preguntas frecuentes
 # ======================================================================
 
 
-def _seccion_preguntas_frecuentes() -> rx.Component:
+def _contenido_preguntas_frecuentes() -> rx.Component:
     """
-    Sección completa con las FAQ de la carrera.
+    Contenido de la sección de preguntas frecuentes.
 
-    Estilo Neon.com:
-    - Sin contador en caja.
-    - Con encabezado limpio.
-    - Separada de la sección anterior.
+    Solo el acordeón (el encabezado lo pone `_seccion`).
     """
     carrera = EstadoInstitucional.carrera_seleccionada
 
-    return rx.vstack(
-        # ─── Encabezado ────────────────────────────────────────
-        rx.vstack(
-            rx.text(
-                "PREGUNTAS FRECUENTES",
-                font_size="0.6875rem",
-                font_weight="700",
-                color=AZUL_MARINO_NEON,
-                letter_spacing="0.15em",
-                text_transform="uppercase",
-            ),
-            rx.heading(
-                "Dudas sobre esta carrera",
-                as_="h2",
-                font_size=["1.5rem", "1.75rem", "2rem"],
-                font_weight="700",
-                color=TEXTO_HOME_PRINCIPAL,
-                letter_spacing="-0.02em",
-                line_height="1.2",
-                margin_top="0.5rem",
-            ),
-            rx.text(
-                "Respuestas a las dudas más comunes de esta carrera. "
-                "Si no encuentras la tuya, contáctanos.",
-                font_size="0.9375rem",
-                color=TEXTO_HOME_MAS_SUAVE,
-                line_height="1.6",
-                max_width="48rem",
-                margin_top="0.75rem",
-            ),
-            align="start",
-            spacing="0",
-            width="100%",
-            margin_bottom="3rem",
-        ),
-        # ─── Acordeón ───────────────────────────────────────────
-        acordeon_faq(
-            items=carrera["preguntas_frecuentes"],
-            variante="light",
-            icono="circle-help",
-            color_acento=AZUL_MARINO_NEON,
-            tamano_texto_pregunta="0.9375rem",
-            tamano_texto_respuesta="0.875rem",
-            padding_cabecera="1.125rem 1.25rem",
-            padding_respuesta="0 1.25rem 1.25rem 3.5rem",
-            max_width=ANCHO_SECCION,
-        ),
-        spacing="0",
-        width="100%",
-        align="start",
-    )
-
-
-# ======================================================================
-# Tabs completas (con etiquetas descriptivas)
-# ======================================================================
-
-
-def _pestanas_secciones_detalle() -> rx.Component:
-    """
-    Sistema de pestañas con etiquetas DESCRIPTIVAS (UX).
-
-    Estilo Neon.com:
-    - Sin fondo de card.
-    - Solo border_bottom en el list.
-    - Indicador activo con color azul marino.
-
-    UX:
-    - Las etiquetas describen el contenido real (no genéricas).
-    - En desktop: icono + texto. En móvil: solo texto.
-    - Los tabs se generan desde `TABS_DETALLE` (fuente única).
-
-    Returns:
-        Sistema completo de tabs con sus contenidos.
-    """
-    return rx.tabs.root(
-        rx.tabs.list(
-            # Generamos los triggers desde la config
-            *[
-                _tab_trigger(
-                    tab["etiqueta"],
-                    tab["icono"],
-                    tab["valor"],
-                )
-                for tab in TABS_DETALLE
-            ],
-            width="100%",
-            gap="0.25rem",
-            border_bottom=f"1px solid {BORDE_HOME_SUAVE}",
-        ),
-        # ─── Contenido de cada tab ──────────────────────────────
-        rx.tabs.content(
-            seccion_informacion(),
-            margin_top="2rem",
-            value="info",
-        ),
-        rx.tabs.content(
-            seccion_plan_estudios(),
-            margin_top="2rem",
-            value="plan",
-        ),
-        rx.tabs.content(
-            seccion_perfil_y_campo_laboral(),
-            margin_top="2rem",
-            value="perfil",
-        ),
-        default_value="info",
-        width="100%",
+    return acordeon_faq(
+        items=carrera["preguntas_frecuentes"],
+        variante="light",
+        icono="circle-help",
+        color_acento=AZUL_MARINO_NEON,
+        tamano_texto_pregunta="0.9375rem",
+        tamano_texto_respuesta="0.875rem",
+        padding_cabecera="1.125rem 1.25rem",
+        padding_respuesta="0 1.25rem 1.25rem 3.5rem",
+        max_width="56rem",
     )
 
 
@@ -871,6 +649,12 @@ def vista_detalle_carrera() -> rx.Component:
 
     El `on_load` redirige a `/404?origen=carrera` si el `carrera_id`
     de la URL no existe o no es válido.
+
+    Numeración de secciones:
+    - 01 → Sobre la carrera
+    - 02 → Malla curricular
+    - 03 → Perfil y salidas
+    - 04 → Preguntas frecuentes
     """
     return rx.box(
         rx.vstack(
@@ -916,36 +700,50 @@ def vista_detalle_carrera() -> rx.Component:
                 ),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(ancho_maximo=ANCHO_CONTENIDO),
-                # ─── Tabs (Sobre la carrera, Malla curricular, Perfil y salidas)
-                rx.el.section(
-                    rx.box(
-                        _pestanas_secciones_detalle(),
-                        padding=PADDING_INFERIOR_PESTANAS,
-                        max_width=ANCHO_CONTENIDO,
-                        margin="0 auto",
-                        padding_top="4rem",
-                        width="100%",
-                    ),
-                    width="100%",
-                    aria_label="Información detallada de la carrera",
-                    id="tabs-detalle",
-                    scroll_margin_top="5rem",
+                # ══════════════════════════════════════════════════════
+                # SECCIONES NUMERADAS
+                # ══════════════════════════════════════════════════════
+                # ─── Sección 01 — Sobre la carrera ──────────────────
+                _seccion(
+                    numero="01",
+                    etiqueta="Sobre la carrera",
+                    titulo="Descripción y",
+                    titulo_enfasis="datos generales",
+                    contenido=seccion_informacion(),
+                    id_seccion="sobre-carrera",
                 ),
                 # ─── Separador ──────────────────────────────────────
                 separador_secciones(ancho_maximo=ANCHO_CONTENIDO),
-                # ─── FAQ de la carrera ──────────────────────────────
-                rx.el.section(
-                    rx.box(
-                        _seccion_preguntas_frecuentes(),
-                        padding=f"6rem {PADDING_LATERAL}",
-                        max_width=ANCHO_CONTENIDO,
-                        margin="0 auto",
-                        width="100%",
-                    ),
-                    width="100%",
-                    aria_label="Preguntas frecuentes de la carrera",
-                    id="faq-carrera",
-                    scroll_margin_top="5rem",
+                # ─── Sección 02 — Malla curricular ──────────────────
+                _seccion(
+                    numero="02",
+                    etiqueta="Plan de estudios",
+                    titulo="Malla",
+                    titulo_enfasis="curricular",
+                    contenido=seccion_plan_estudios(),
+                    id_seccion="malla-curricular",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_CONTENIDO),
+                # ─── Sección 03 — Perfil y salidas ──────────────────
+                _seccion(
+                    numero="03",
+                    etiqueta="Competencias y campo laboral",
+                    titulo="Perfil y",
+                    titulo_enfasis="salidas profesionales",
+                    contenido=seccion_perfil_y_campo_laboral(),
+                    id_seccion="perfil-salidas",
+                ),
+                # ─── Separador ──────────────────────────────────────
+                separador_secciones(ancho_maximo=ANCHO_CONTENIDO),
+                # ─── Sección 04 — Preguntas frecuentes ──────────────
+                _seccion(
+                    numero="04",
+                    etiqueta="Resolvemos tus dudas",
+                    titulo="Preguntas",
+                    titulo_enfasis="frecuentes",
+                    contenido=_contenido_preguntas_frecuentes(),
+                    id_seccion="faq-carrera",
                 ),
                 # ─── Botón flotante ────────────────────────────────
                 _boton_volver_arriba(),

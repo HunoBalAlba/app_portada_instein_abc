@@ -1,46 +1,4 @@
-"""
-Hero principal del home — estilo Neon.com adaptado a INSTEIN.
 
-Diseño
-------
-Inspirado en Neon.com:
-
-1. **Fondo oscuro casi puro** con gradiente radial sutil.
-2. **Barras verticales tipo "datacenter"** (patrón de columnas
-   animadas con iconos de carreras).
-3. **Título hero grande** con jerarquía clara (2-3 líneas).
-4. **Dos CTAs** side-by-side (primario + secundario).
-5. **Badge superior** tipo "parte de la plataforma".
-6. **Carrusel infinito** (marquee) con iconos de carreras.
-7. **Trust badges** inline con credenciales.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-
-Nota técnica: CARRUSEL INFINITO (MARQUEE)
------------------------------------------
-El carrusel infinito usa una técnica CSS pura:
-
-1. Duplicar la lista de iconos `[iconos, iconos]` (2x).
-2. Animar `translateX(-50%)` en `@keyframes marquee`.
-3. Al terminar la animación, el segundo bloque reemplaza al primero
-   visualmente, creando la ilusión de scroll infinito.
-
-Ventajas:
-- No usa JavaScript (CSS puro).
-- No interfiere con el evento de scroll.
-- Suave y sin saltos visuales.
-
-Nota técnica: BARRAS VERTICALES TIPO DATACENTER
------------------------------------------------
-Las barras verticales se renderizan como un grid de columnas con
-alturas variables (con semilla fija para reproducibilidad).
-Cada barra contiene iconos de carreras apilados verticalmente.
-
-Es el patrón característico de Neon.com.
-"""
 
 from __future__ import annotations
 

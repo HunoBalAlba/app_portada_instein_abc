@@ -1,41 +1,4 @@
-"""
-Sección de información general de la carrera — estilo Neon.com.
 
-Contenido
----------
-- `seccion_informacion`: descripción larga + grid de 4 datos rápidos
-  (duración, título, modalidad, cupos).
-
-Diseño UX
----------
-1. **Encabezado limpio**: icono directo + título + subtítulo.
-2. **Tarjeta de descripción** con borde superior de acento.
-3. **Hover sutil**: solo cambio de borde (sin translateY ni glow).
-4. **Grid de datos rápidos** con iconos directos.
-5. **Coherencia visual** con el resto del sitio (Neon).
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: `AZUL_MARINO_NEON` para bordes y decoración.
-✅ ADAPTATIVO: todos los textos y fondos respetan el `color_mode`.
-
-Nota técnica: CTA ELIMINADO
----------------------------
-El CTA de contacto se eliminó porque:
-1. Ya hay CTAs en el hero (`Inscribirme ahora` + `Contactar`).
-2. La sección de FAQ tiene su propio CTA implícito.
-
-Añadir un tercer CTA crearía redundancia.
-
-Nota técnica: COMPONENTES COMPARTIDOS
--------------------------------------
-Este archivo usa los componentes compartidos:
-
-- `tarjeta_dato` (de `..componentes.base`).
-
-Antes se importaba desde `....componentes.base.primitivos`.
-Ahora vive en la fachada `..componentes.base/`.
-"""
 
 from __future__ import annotations
 

@@ -1,39 +1,4 @@
-"""
-Paquete `componentes.blog`: componentes del blog institucional.
 
-Contenido
----------
-- **hero**:              hero del blog con badge + título + subtítulo.
-- **post_destacado**:    card destacada (featured).
-- **filtros_blog**:      buscador + pills de categoría + contador.
-- **card_post**:         card + grid + estado vacío + cargar más.
-- **newsletter_blog**:   newsletter inline al pie.
-- **cta_blog**:          CTA final hacia /carreras o /contacto.
-- **meta_info**:         meta info (autor · fecha · minutos).
-- **helpers_categoria**: helpers de `rx.match` para categorías.
-
-Nota técnica: DATOS Y ESTADOS
-----------------------------
-Los datos estáticos (`CATEGORIAS`, `POSTS`) viven en
-`dominio.modelos.blog`. El State (`EstadoBlog`) vive en
-`dominio.estados.estado_blog`. Este paquete SOLO expone UI.
-
-Convención de imports
----------------------
-✅ **CORRECTO** — importar desde el paquete:
-    from app_portada_instein.componentes.blog import (
-        barra_filtros,
-        cta_blog,
-        hero_blog,
-        newsletter_blog,
-        post_destacado,
-        grid_posts,
-        boton_cargar_mas,
-        estado_vacio,
-    )
-
-❌ **EVITAR** — importar desde el módulo interno.
-"""
 
 from __future__ import annotations
 

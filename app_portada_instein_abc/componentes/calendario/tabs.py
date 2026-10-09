@@ -1,13 +1,4 @@
-"""
-Ensamblador de los tabs del Calendario Académico — estilo Neon.com.
 
-Diseño UX
----------
-- **Tabs con icono + texto** (más intuitivo).
-- **Sin fondo de card** (solo border_bottom sutil).
-- **Indicador activo con azul marino**.
-- **Contenido con separación clara**.
-"""
 
 from __future__ import annotations
 
@@ -15,7 +6,6 @@ import reflex as rx
 
 from ...infraestructura import (
     BORDE_HOME_SUAVE,
-    RADIO_EXTRA_GRANDE,
 )
 
 from .tabs_fechas import tab_fechas_importantes
@@ -33,30 +23,33 @@ def _tab_trigger(
     value: str,
 ) -> rx.Component:
     """
-    Trigger de pestaña con icono + texto.
+    Trigger de pestaña con icono + texto descriptivo.
 
-    Estilo Neon.com:
-    - Icono + texto en desktop.
-    - Activo: color azul marino + border_bottom.
-    - Hover: color azul marino.
+    Diseño UX:
+    - **Móvil**: solo texto.
+    - **Tablet/desktop**: icono + texto.
+    - **Activo**: color azul marino.
+    - **Hover**: transición suave a azul marino.
     """
     return rx.tabs.trigger(
         # ─── Móvil: solo texto ─────────────────────────────────
         rx.mobile_only(
             rx.text(
                 texto,
-                font_size="0.875rem",
+                font_size="0.8125rem",
                 font_weight="600",
+                white_space="nowrap",
             ),
         ),
         # ─── Tablet/desktop: icono + texto ─────────────────────
         rx.tablet_and_desktop(
             rx.flex(
-                rx.icon(icono, size=16),
+                rx.icon(icono, size=26),
                 rx.text(
                     texto,
-                    font_size="0.875rem",
+                    font_size="1rem",
                     font_weight="600",
+                    white_space="nowrap",
                 ),
                 align="center",
                 gap="0.5rem",

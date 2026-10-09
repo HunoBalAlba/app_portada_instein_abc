@@ -1,47 +1,4 @@
-"""
-Componentes primitivos reutilizables en toda la aplicación.
 
-Agrupa los bloques de construcción base que se repiten en múltiples
-vistas:
-
-- `contenedor_clicable`: caja con semántica de botón (eventos internos).
-- `enlace_navegacion`:  enlace estilizado para navegación SPA/externa.
-- `tarjeta_estilizada`: tarjeta con estilo institucional estándar.
-- `tarjeta_dato`:       tarjeta compacta con icono + etiqueta + valor.
-
-Filosofía
----------
-Todos los componentes de este módulo:
-
-1. Aplican defaults sensatos con `setdefault` (permiten override sin
-   duplicar kwargs).
-2. Usan tokens de `infraestructura/constantes/` para consistencia
-   visual.
-3. Documentan exhaustivamente sus props y defaults.
-4. Respetan accesibilidad (WCAG 2.1 AA) cuando aplica.
-
-Nota técnica: `setdefault` vs `**kwargs`
-----------------------------------------
-Cada helper aplica `propiedades.setdefault("clave", valor)` para
-valores por defecto. Esto permite al llamador SOBRESCRIBIR cualquier
-default sin duplicar kwargs:
-
-    tarjeta_estilizada(padding="2rem")   # ✅ override funciona
-    tarjeta_estilizada()                 # ✅ usa default 1.25rem
-
-Nota técnica: `contenedor_clicable` vs `enlace_navegacion`
-----------------------------------------------------------
-Usar el correcto según el caso:
-
-- **Eventos internos** (abrir diálogo, cambiar estado) → `contenedor_clicable`
-  Renderiza un `<div role="button">` con `tabindex` y `on_click`.
-
-- **Navegación** (ir a otra ruta, abrir URL externa) → `enlace_navegacion`
-  Renderiza un `<a href>` correcto para SEO y accesibilidad.
-
-Nunca uses `contenedor_clicable` para navegar: rompe la semántica HTML
-y el botón "atrás" del navegador.
-"""
 
 from __future__ import annotations
 

@@ -1,50 +1,5 @@
 # componentes/base/encabezado_seccion.py
 
-"""
-Encabezado de sección con número (estilo Neon.com).
-
-Compatible con Reflex 0.5+ y 0.6+.
-
-Diseño
-------
-Estructura visual (fiel a Neon.com):
-
-    ┌──────────────────────────────────────────────────┐
-    │  ▶ ETIQUETA              Título grande           │
-    │                          con mezcla de pesos     │
-    │  01                      (blanco + gris)         │
-    │                          Subtítulo descriptivo   │
-    └──────────────────────────────────────────────────┘
-
-Diferencias con la v1.0:
-------------------------
-1. **Icono en la etiqueta** (`▶ ETIQUETA`) — distintivo de Neon.
-2. **Número más grande y sutil** (`font_size` hasta 10rem,
-   `opacity="0.12"`).
-3. **Peso tipográfico reducido** (`700` en lugar de `900`).
-4. **Nuevo parámetro `titulo_enfasis`** que permite pintar la
-   segunda mitad del título en gris (patrón Neon).
-5. **Orden etiqueta/número invertido** para replicar el layout
-   de Neon.com (etiqueta arriba, número abajo).
-
-Uso
----
-Básico:
-    encabezado_seccion(
-        numero="01",
-        etiqueta="Nuestra historia",
-        titulo="15 años formando profesionales",
-    )
-
-Con énfasis (título bicolor):
-    encabezado_seccion(
-        numero="01",
-        etiqueta="Nuestra historia",
-        titulo="15 años",
-        titulo_enfasis="formando profesionales",
-    )
-    → Renderiza: "15 años" en blanco + "formando profesionales" en gris.
-"""
 
 from __future__ import annotations
 

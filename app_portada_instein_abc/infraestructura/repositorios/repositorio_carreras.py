@@ -1,49 +1,4 @@
-"""
-Repositorio de carreras técnicas del INSTEIN.
 
-Este módulo encapsula el acceso al catálogo de carreras. Hoy el
-catálogo es estático (hardcoded), pero el patrón repository permite
-migrar a API/BD sin cambiar la capa de dominio ni los componentes.
-
-Contenido
----------
-- `Carrera`:              TypedDict con la estructura completa.
-- `PlanAnual`:            TypedDict con el plan de estudios por año.
-- `PreguntaFrecuente`:    TypedDict con las FAQ de cada carrera.
-- `IconoAnimado`:         TypedDict con la config orbital de iconos.
-- `EstadisticasCarrera`:  TypedDict con métricas de la carrera.
-- `CaracteristicaCarrera`: TypedDict con badges informativos.
-- `Turno`, `Modalidad`:   Literals con valores válidos.
-- `CATALOGO_CARRERAS`:    Lista estática de las 5 carreras.
-- `obtener_catalogo()`:   Devuelve una copia inmutable del catálogo.
-- `obtener_carrera_por_id(id)`: Devuelve una carrera por ID.
-- `obtener_carrera_destacada()`: Devuelve la carrera con `destacada=True`.
-
-Nota técnica: TIPADO ESTRICTO CON `TypedDict`
----------------------------------------------
-Los modelos usan `TypedDict` (no dataclasses) para ser compatibles
-con `rx.foreach` sin `ForeachVarError`. Cada campo tiene un tipo
-concreto (`str`, `int`, `list[T]`) que Reflex puede inferir.
-
-Nota técnica: CACHÉ CON `@lru_cache`
-------------------------------------
-`obtener_catalogo()` y `obtener_carrera_por_id()` usan caché porque
-el catálogo es inmutable. Esto evita reconstruir la lista completa
-en cada render.
-
-⚠️ Si en el futuro el catálogo se vuelve mutable, eliminar el caché.
-
-Nota técnica: CAMPOS DE COLOR
------------------------------
-Cada carrera expone 4 colores para light/dark:
-- `color_principal`, `color_suave`            → light mode
-- `color_principal_dark`, `color_suave_dark`  → dark mode
-
-⚠️ ACTUALMENTE NO SE USAN. El proyecto unificó el acento visual bajo
-un único azul marino (`AZUL_MARINO_NEON`). Los campos se mantienen
-para facilitar la reversión si se decide volver a colorear por
-carrera.
-"""
 
 from __future__ import annotations
 

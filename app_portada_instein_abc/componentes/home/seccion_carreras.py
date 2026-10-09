@@ -1,34 +1,4 @@
-"""
-Sección de carreras en la página de inicio — estilo Neon.com.
 
-Propósito
----------
-Comunicar al visitante, en los primeros segundos, qué carreras
-ofrece el instituto. Cada tarjeta es un enlace directo al detalle
-de esa carrera.
-
-Diseño
-------
-1. **Grid responsive** de 5 tarjetas con imagen de portada.
-2. **Imagen de fondo** + gradiente oscuro para legibilidad.
-3. **Nombre corto + icono + CTA** sobre la imagen.
-4. **Hover sutil** (zoom leve de la imagen + borde de acento).
-5. **Sin glow excesivo** (coherente con el sitio).
-6. **Enlace global** al catálogo de carreras.
-
-Técnica de imagen de fondo
---------------------------
-Cada tarjeta tiene:
-1. `<img>` con `object_fit="cover"` ocupando el 100%.
-2. Overlay con gradiente lineal (transparente → negro) para que el
-   texto sea legible sin importar la imagen.
-3. Contenido (icono + nombre + CTA) encima, con `z_index`.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: fondo, textos y bordes respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-"""
 
 from __future__ import annotations
 
@@ -36,11 +6,11 @@ from typing import TypedDict
 
 import reflex as rx
 
+from ..base import encabezado_seccion
 from ...infraestructura import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
     COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
     FONDO_AZUL_SUAVE,
     RADIO_EXTRA_GRANDE,
     RADIO_PASTILLA,
@@ -171,7 +141,7 @@ def _tarjeta_carrera(carrera: CarreraDestacada) -> rx.Component:
             ),
             # ─── Contenido sobre la imagen ──────────────────────
             rx.vstack(
-                # ─── Icono + CTA arriba (sutil) ─────────────────
+                # ─── Icono arriba ───────────────────────────────
                 rx.flex(
                     rx.flex(
                         rx.icon(
@@ -266,12 +236,12 @@ def seccion_carreras_inicio() -> rx.Component:
     Sección completa de carreras destacadas para el inicio.
 
     Estructura:
-    1. Header: badge + título + subtítulo.
+    1. Encabezado numerado (01) + título + subtítulo.
     2. Grid de 5 tarjetas con imagen.
     3. CTA "Ver todas las carreras".
 
     Estilo Neon.com:
-    - Layout alineado a la izquierda (header).
+    - Layout alineado a la izquierda (encabezado).
     - Grid responsive (1 → 2 → 3 → 5 columnas).
     - Padding vertical consistente con el resto del sitio.
 
@@ -281,54 +251,18 @@ def seccion_carreras_inicio() -> rx.Component:
     return rx.box(
         rx.vstack(
             # ==========================================================
-            # Header: badge + título + subtítulo
+            # Encabezado numerado (01)
             # ==========================================================
-            rx.vstack(
-                # ─── Badge ─────────────────────────────────────────
-                rx.flex(
-                    rx.icon("graduation-cap", size=12, color=AZUL_MARINO_NEON),
-                    rx.text(
-                        "CARRERAS TÉCNICAS",
-                        font_size="0.6875rem",
-                        font_weight="700",
-                        color=AZUL_MARINO_NEON,
-                        letter_spacing="0.15em",
-                        text_transform="uppercase",
-                    ),
-                    align="center",
-                    gap="0.5rem",
-                    margin_bottom="1.5rem",
+            encabezado_seccion(
+                numero="01",
+                etiqueta="Carreras técnicas",
+                titulo="5 carreras,",
+                titulo_enfasis="3 años, 1 título",
+                subtitulo=(
+                    "Elige el programa que impulse tu carrera. "
+                    "Todas con título de Técnico Superior en "
+                    "Provisión Nacional."
                 ),
-                # ─── Título con énfasis bicolor ────────────────────
-                rx.heading(
-                    rx.text.span("5 carreras, "),
-                    rx.text.span(
-                        "3 años, 1 título",
-                        color=TEXTO_HOME_MAS_SUAVE,
-                    ),
-                    as_="h2",
-                    font_size=["1.75rem", "2rem", "2.25rem"],
-                    font_weight="700",
-                    color=TEXTO_HOME_PRINCIPAL,
-                    letter_spacing="-0.03em",
-                    line_height="1.15",
-                    max_width="48rem",
-                ),
-                # ─── Subtítulo ─────────────────────────────────────
-                rx.text(
-                    "Elige el programa que impulse tu carrera. Todas "
-                    "con título de Técnico Superior en Provisión "
-                    "Nacional.",
-                    font_size=["1rem", "1.0625rem"],
-                    color=TEXTO_HOME_MAS_SUAVE,
-                    line_height="1.6",
-                    max_width="42rem",
-                    margin_top="0.75rem",
-                ),
-                align="start",
-                spacing="0",
-                width="100%",
-                margin_bottom="3rem",
             ),
             # ==========================================================
             # Grid de tarjetas con imagen

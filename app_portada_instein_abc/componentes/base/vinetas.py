@@ -1,29 +1,4 @@
-"""
-Viñetas reutilizables para listas con icono.
 
-Una "viñeta" es una fila con un icono a la izquierda y un texto a la
-derecha. Se usan en múltiples secciones del proyecto:
-
-- **Perfil profesional** de una carrera (icono `check`).
-- **Campo laboral** de una carrera (icono `briefcase-business`).
-- **Requisitos** de admisión (icono personalizable).
-- **Listas de beneficios** (icono personalizable).
-
-Sistema de color
-----------------
-✅ ACENTO ÚNICO: `AZUL_MARINO_NEON` para los iconos.
-✅ ADAPTATIVO: los textos respetan el `color_mode`.
-
-Nota técnica: ¿POR QUÉ ESTE ARCHIVO EXISTE?
--------------------------------------------
-En la versión original, `vinetas.py` estaba en
-`componentes/vinetas.py`. En la refactorización, se movió a
-`componentes/base/vinetas.py` para:
-
-1. Cohesión con otros componentes base.
-2. Facilitar la exposición desde `componentes.base`.
-3. Mantener la simetría con el resto de subpaquetes.
-"""
 
 from __future__ import annotations
 

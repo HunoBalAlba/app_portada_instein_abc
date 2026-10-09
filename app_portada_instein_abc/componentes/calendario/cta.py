@@ -1,12 +1,4 @@
-"""
-CTA final del Calendario Académico — estilo Neon.com.
 
-Diseño UX
----------
-- CTA simple tipo "¿Tienes dudas? **Contáctanos →**"
-- Sin botón grande con glow.
-- Coherente con los CTA finales del resto del sitio.
-"""
 
 from __future__ import annotations
 

@@ -1,49 +1,4 @@
-"""
-Tokens de color del proyecto INSTEIN.
 
-Filosofía
----------
-1. **Colores semánticos** → tokens Radix vía `rx.color(...)`.
-   Se adaptan automáticamente al `color_mode`.
-
-2. **Acento de marca** → azul marino neon `#3b5bdb`.
-   Es el ÚNICO acento del proyecto (todas las carreras lo comparten).
-   El acento no cambia entre light/dark (es color de marca).
-
-3. **Tokens adaptativos del home** → `rx.color_mode_cond(...)`.
-   Permiten cambiar fondo, texto y bordes entre light/dark sin
-   repetir el condicional en cada componente.
-
-Escala Radix (steps 1 → 12)
----------------------------
-| Step | Uso                                         |
-|------|---------------------------------------------|
-| 1-2  | Fondo de app / tarjeta                      |
-| 3-5  | Fondos suaves (chips, badges)               |
-| 6-8  | Bordes, separadores, hover                  |
-| 9-10 | Fondos sólidos con contraste (botones)      |
-| 11   | Texto de bajo énfasis                       |
-| 12   | Texto principal de máximo contraste         |
-
-Naming
-------
-- **AZUL_MARINO_***   → acento de marca (hex fijo, ambos modos).
-- **COLOR_***         → tokens Radix semánticos (adaptativos).
-- **FONDO_***         → fondos (adaptativos).
-- **TEXTO_***         → textos (adaptativos).
-- **BORDE_***         → bordes (adaptativos).
-- **GRADIENTE_***     → gradientes (adaptativos).
-- **SOMBRA_***        → sombras (adaptativas o fijas).
-
-Nota técnica: ALIAS RETROCOMPATIBLES
-------------------------------------
-Algunos nombres antiguos se mantienen como alias para no romper
-imports existentes:
-
-- `FONDO_HOME_CARD_ADAPTATIVO`  → alias de `FONDO_HOME_CARD`.
-
-Migrar consumidores al nombre nuevo cuando sea posible.
-"""
 
 from __future__ import annotations
 

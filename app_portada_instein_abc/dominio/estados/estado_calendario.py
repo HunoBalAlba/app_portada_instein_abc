@@ -1,12 +1,4 @@
-"""
-Estado de los filtros del Calendario Académico.
 
-Gestiona:
-- Filtro por carrera.
-- Filtro por tipo de evento.
-- Ordenamiento.
-- Búsqueda por texto.
-"""
 
 from __future__ import annotations
 
@@ -36,7 +28,7 @@ ORDEN_MESES: dict[str, int] = {
     "NOVIEMBRE": 11,
     "DICIEMBRE": 12,
 }
-"""Orden numérico de los meses (para ordenamiento por fecha)."""
+"""Orden numérico de los meses (para ordenamiento cronológico)."""
 
 
 # ======================================================================
@@ -49,44 +41,133 @@ class EstadoCalendario(rx.State):
     Estado de filtros y ordenamiento del calendario académico.
 
     Atributos:
-        filtro_carrera: Clave de la carrera seleccionada.
-        filtro_tipo:    Clave del tipo de evento.
-        orden_activo:   Clave del ordenamiento.
-        texto_busqueda: Texto de búsqueda.
+        filtro_carrera:   Clave de la carrera ("todas", "sistemas", ...).
+        filtro_tipo:      Clave del tipo de evento ("todos", "taller", ...).
+        filtro_bimestre:  Clave del bimestre ("0" = todos, "1".."4").
+        orden_activo:     Clave del ordenamiento.
+        texto_busqueda:   Texto de búsqueda libre.
     """
 
+    # ─── Valores por defecto ──────────────────────────────────────
     filtro_carrera: str = "todas"
     filtro_tipo: str = "todos"
+    filtro_bimestre: str = "0"
     orden_activo: str = "fecha_asc"
     texto_busqueda: str = ""
 
     # ==================================================================
-    # VARS COMPUTADAS: LISTA FILTRADA
+    # EVENT HANDLERS
+    # ==================================================================
+
+    @rx.event
+    def cambiar_filtro_carrera(self, valor: str):
+        """
+        Cambia el filtro de carrera.
+
+        Args:
+            valor: Clave de carrera ("todas", "sistemas", ...).
+        """
+        self.filtro_carrera = valor
+
+    @rx.event
+    def cambiar_filtro_tipo(self, valor: str):
+        """
+        Cambia el filtro de tipo de evento.
+
+        Args:
+            valor: Clave del tipo ("todos", "taller", ...).
+        """
+        self.filtro_tipo = valor
+
+    @rx.event
+    def cambiar_filtro_bimestre(self, valor: str):
+        """
+        Cambia el filtro de bimestre.
+
+        Args:
+            valor: Clave del bimestre ("0", "1", "2", "3", "4").
+        """
+        self.filtro_bimestre = valor
+
+    @rx.event
+    def cambiar_orden(self, valor: str):
+        """
+        Cambia el ordenamiento activo.
+
+        Args:
+            valor: Clave del orden ("fecha_asc", "fecha_desc", ...).
+        """
+        self.orden_activo = valor
+
+    @rx.event
+    def actualizar_busqueda(self, texto: str):
+        """
+        Actualiza el texto de búsqueda.
+
+        Args:
+            texto: Texto libre de búsqueda.
+        """
+        self.texto_busqueda = texto
+
+    @rx.event
+    def limpiar_filtros(self):
+        """
+        Restablece todos los filtros a sus valores por defecto.
+
+        Nota: Se llama a `reset()` como atajo, pero también se
+        documentan los valores por defecto individualmente.
+        """
+        self.filtro_carrera = "todas"
+        self.filtro_tipo = "todos"
+        self.filtro_bimestre = "0"
+        self.orden_activo = "fecha_asc"
+        self.texto_busqueda = ""
+
+    # ==================================================================
+    # VARS COMPUTADAS
     # ==================================================================
 
     @rx.var
     def eventos_filtrados(self) -> list[ProximoEvento]:
         """
         Eventos filtrados y ordenados según los filtros activos.
+
+        Aplica los filtros en este orden:
+        1. Carrera.
+        2. Tipo de evento.
+        3. Bimestre.
+        4. Búsqueda por texto.
+        5. Ordenamiento.
+
+        Returns:
+            Lista de `ProximoEvento` filtrados y ordenados.
         """
         eventos = list(PROXIMOS_EVENTOS)
 
-        # --- Filtro por carrera ---
+        # ─── Filtro por carrera ─────────────────────────────────
         if self.filtro_carrera != "todas":
             eventos = [
                 e for e in eventos
-                if e.get("carrera", "institucional")
-                == self.filtro_carrera
+                if e.get("carrera", "institucional") == self.filtro_carrera
             ]
 
-        # --- Filtro por tipo ---
+        # ─── Filtro por tipo de evento ──────────────────────────
         if self.filtro_tipo != "todos":
             eventos = [
                 e for e in eventos
                 if e["tipo"] == self.filtro_tipo
             ]
 
-        # --- Filtro por búsqueda ---
+        # ─── Filtro por bimestre ────────────────────────────────
+        # NOTA: `filtro_bimestre` es str; `e["bimestre"]` es int.
+        if self.filtro_bimestre != "0":
+            bimestre_int = int(self.filtro_bimestre)
+            eventos = [
+                e for e in eventos
+                if e.get("bimestre", 0) == bimestre_int
+            ]
+
+        # ─── Filtro por búsqueda ────────────────────────────────
         if self.texto_busqueda:
             busqueda = self.texto_busqueda.lower()
             eventos = [
@@ -96,7 +177,7 @@ class EstadoCalendario(rx.State):
                 or busqueda in e["lugar"].lower()
             ]
 
-        # --- Ordenamiento ---
+        # ─── Ordenamiento ───────────────────────────────────────
         if self.orden_activo == "fecha_asc":
             eventos = sorted(
                 eventos,
@@ -114,6 +195,15 @@ class EstadoCalendario(rx.State):
                 ),
                 reverse=True,
             )
+        elif self.orden_activo == "bimestre_asc":
+            eventos = sorted(
+                eventos,
+                key=lambda e: (
+                    e.get("bimestre", 0),
+                    ORDEN_MESES.get(e["mes"], 99),
+                    int(e["dia"]) if e["dia"].isdigit() else 0,
+                ),
+            )
         elif self.orden_activo == "tipo_asc":
             eventos = sorted(
                 eventos,
@@ -124,62 +214,43 @@ class EstadoCalendario(rx.State):
 
     @rx.var
     def hay_resultados(self) -> bool:
-        """Indica si hay eventos que coincidan con los filtros."""
+        """
+        Indica si hay eventos que coincidan con los filtros.
+
+        Returns:
+            True si hay al menos 1 evento.
+        """
         return len(self.eventos_filtrados) > 0
 
     @rx.var
     def contador_resultados(self) -> str:
-        """Texto con el número de resultados."""
+        """
+        Texto con el número de resultados.
+
+        Returns:
+            Número de eventos como string.
+        """
         return str(len(self.eventos_filtrados))
 
     @rx.var
     def hay_filtros_activos(self) -> bool:
-        """Indica si hay algún filtro activo."""
+        """
+        Indica si hay algún filtro activo (distinto del default).
+
+        Returns:
+            True si algún filtro u ordenamiento tiene valor no-default.
+        """
         return (
             self.filtro_carrera != "todas"
             or self.filtro_tipo != "todos"
+            or self.filtro_bimestre != "0"
             or self.orden_activo != "fecha_asc"
             or self.texto_busqueda != ""
         )
-
-    # ==================================================================
-    # EVENT HANDLERS
-    # ==================================================================
-
-    @rx.event
-    def cambiar_filtro_carrera(self, valor: str):
-        """Cambia el filtro de carrera."""
-        self.filtro_carrera = valor
-
-    @rx.event
-    def cambiar_filtro_tipo(self, valor: str):
-        """Cambia el filtro de tipo de evento."""
-        self.filtro_tipo = valor
-
-    @rx.event
-    def cambiar_orden(self, valor: str):
-        """Cambia el ordenamiento activo."""
-        self.orden_activo = valor
-
-    @rx.event
-    def actualizar_busqueda(self, texto: str):
-        """Actualiza el texto de búsqueda."""
-        self.texto_busqueda = texto
-
-    @rx.event
-    def limpiar_filtros(self):
-        """Restablece todos los filtros a sus valores por defecto."""
-        self.filtro_carrera = "todas"
-        self.filtro_tipo = "todos"
-        self.orden_activo = "fecha_asc"
-        self.texto_busqueda = ""
 
 
 # ======================================================================
 # EXPORTS
 # ======================================================================
 
-__all__ = [
-    "EstadoCalendario",
-    "ORDEN_MESES",
-]
+__all__ = ["EstadoCalendario", "ORDEN_MESES"]

@@ -1,38 +1,14 @@
-"""
-Helpers internos del explorador de carreras.
 
-Este módulo provee las funciones de resolución de color que usan los
-componentes del explorador. Como el proyecto unificó el acento visual
-bajo un único azul marino (`AZUL_MARINO_NEON`), los helpers mantienen
-la firma anterior (reciben `carrera`) pero devuelven siempre el mismo
-valor.
-
-Nota técnica: ¿POR QUÉ EXISTEN ESTOS HELPERS SI NO DIFERENCIAN?
----------------------------------------------------------------
-Los helpers se conservan por dos razones:
-
-1. **Compatibilidad**: los componentes del explorador los importan
-   con la misma firma que antes. Migrarlos a llamadas directas de
-   `AZUL_MARINO_NEON` implicaría tocar ~15 archivos.
-
-2. **Punto único de extensión**: si en el futuro se decide volver a
-   colorear por carrera, solo hay que modificar estas funciones.
-
-Cuando NO usar estos helpers
-----------------------------
-Si un componente nuevo sabe que el acento es siempre azul marino,
-NO necesita pasar por aquí. Importa `AZUL_MARINO_NEON` directamente.
-"""
 
 from __future__ import annotations
 
 import reflex as rx
 
-from app_portada_instein.infraestructura.constantes.colores import (
+from ....infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     FONDO_AZUL_SUAVE,
 )
-from app_portada_instein.dominio.modelos.carrera import Carrera
+from ....dominio.modelos.carrera import Carrera
 
 
 # ======================================================================

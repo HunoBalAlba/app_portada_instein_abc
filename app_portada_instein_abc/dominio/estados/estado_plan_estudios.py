@@ -1,16 +1,4 @@
-"""
-Estado del selector de año del plan de estudios.
 
-Usado en la sección de plan de estudios de la vista de detalle de
-carrera (`componentes/carreras/detalle/seccion_plan.py`).
-
-Nota técnica: SEPARADO DE `EstadoInstitucional`
------------------------------------------------
-El estado del plan de estudios vive aquí separado porque:
-1. Es un estado de UI (no de negocio).
-2. Solo se usa en la sección de plan.
-3. No necesita persistir entre navegaciones.
-"""
 
 from __future__ import annotations
 

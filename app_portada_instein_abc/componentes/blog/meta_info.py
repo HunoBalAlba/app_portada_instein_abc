@@ -1,24 +1,4 @@
-"""
-Meta info del post: autor · fecha · minutos de lectura.
 
-Usado en:
-- `post_destacado.py` → card destacada del blog.
-- `card_post.py`      → cards del grid de posts.
-- `paginas/vista_post.py` → hero editorial del detalle.
-
-Nota técnica: TIPADO ESTRICTO CON `Post`
-----------------------------------------
-`meta_info_post(post: Post)` recibe un `Post` (el `TypedDict` de
-`dominio.modelos.blog`), NO un `dict` genérico.
-
-Esto es CRÍTICO porque Reflex necesita tipos precisos para props
-tipadas. Si el tipo es `dict`, los campos internos se infieren como
-`str | int | bool` y `rx.text(...)` puede fallar.
-
-Además, `post["minutos_lectura"]` es `int` y se usa dentro de un
-f-string (`f"{post['minutos_lectura']} min"`), lo cual requiere que
-Reflex sepa que es un `int` para formatearlo correctamente.
-"""
 
 from __future__ import annotations
 

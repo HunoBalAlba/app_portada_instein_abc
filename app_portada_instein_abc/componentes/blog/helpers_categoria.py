@@ -1,21 +1,4 @@
-"""
-Helpers para resolver la categoría de un post.
 
-Como `clave` puede ser un `Var` reactivo (dentro de `rx.foreach`), NO
-podemos hacer lookups de Python. Usamos `rx.match` para resolver los
-valores en el cliente.
-
-Nota técnica: TIPOS DE RETORNO
-------------------------------
-Los helpers devuelven `rx.Var` (no `str`) porque el resultado de
-`rx.match` es un `Var` reactivo del frontend. Esto permite que los
-componentes consumidores los usen en cualquier prop que acepte Vars.
-
-Nota técnica: `rx.match` CON FALLBACK
---------------------------------------
-El último argumento de `rx.match` es el valor por defecto (fallback)
-si ninguna de las claves anteriores coincide.
-"""
 
 from __future__ import annotations
 

@@ -1,18 +1,15 @@
-"""
-CTA final del blog: hacia /carreras o /contacto.
-"""
+
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...infraestructura.constantes.colores import (
+from ...infraestructura import (
     AZUL_MARINO_NEON,
-    BORDE_HOME_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-)
-from ...infraestructura.constantes.dimensiones import (
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
     RADIO_PASTILLA,
 )
 
@@ -29,10 +26,11 @@ def cta_blog() -> rx.Component:
     """
     CTA final del blog hacia /carreras o /contacto.
 
-    Estilo Neon adaptativo:
-    - Botón primario "Ver carreras" con azul marino neon.
-    - Botón secundario "Contactar" con borde.
-    - Layout responsive (columna → fila).
+    Estilo Neon.com:
+    - CTA primario "Ver carreras" (azul marino).
+    - CTA secundario "Contactar" (outline).
+    - Sin glow.
+    - Sin translateY.
 
     Returns:
         Bloque CTA completo.
@@ -41,9 +39,10 @@ def cta_blog() -> rx.Component:
         rx.vstack(
             rx.heading(
                 "¿Listo para ser parte de INSTEIN?",
-                size="7",
-                font_weight="900",
-                color=COLOR_TEXTO_PRINCIPAL,
+                as_="h2",
+                font_size=["1.5rem", "1.75rem", "2rem"],
+                font_weight="700",
+                color=TEXTO_HOME_PRINCIPAL,
                 text_align="center",
                 letter_spacing="-0.03em",
             ),
@@ -51,16 +50,16 @@ def cta_blog() -> rx.Component:
                 "La teoría está en el blog. La práctica te espera en "
                 "nuestras aulas.",
                 font_size="1rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_HOME_MAS_SUAVE,
                 text_align="center",
                 max_width="42rem",
                 line_height="1.6",
                 margin_top="0.5rem",
             ),
             rx.flex(
-                # --- CTA primario ---
+                # ─── CTA primario ──────────────────────────────
                 rx.link(
-                    rx.icon("graduation-cap", size=18),
+                    rx.icon("graduation-cap", size=18, color="white"),
                     rx.text("Ver carreras", as_="span", font_weight="700"),
                     href="/carreras",
                     text_decoration="none",
@@ -72,14 +71,10 @@ def cta_blog() -> rx.Component:
                     padding="1rem 2rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="1rem",
-                    box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}",
                     transition="all 0.2s",
-                    _hover={
-                        "transform": "translateY(-2px)",
-                        "filter": "brightness(1.1)",
-                    },
+                    _hover={"filter": "brightness(1.1)"},
                 ),
-                # --- CTA secundario ---
+                # ─── CTA secundario ────────────────────────────
                 rx.link(
                     rx.icon("message-circle", size=18),
                     rx.text("Contactar", as_="span", font_weight="600"),
@@ -89,14 +84,13 @@ def cta_blog() -> rx.Component:
                     align_items="center",
                     gap="0.5rem",
                     background="transparent",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,
                     padding="1rem 2rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="1rem",
-                    border=f"1px solid {BORDE_HOME_SUAVE}",
+                    border=f"1px solid {BORDE_HOME_MEDIO}",
                     transition="all 0.2s",
                     _hover={
-                        "transform": "translateY(-2px)",
                         "border_color": AZUL_MARINO_NEON,
                     },
                 ),

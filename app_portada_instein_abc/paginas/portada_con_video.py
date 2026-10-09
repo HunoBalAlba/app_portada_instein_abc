@@ -1,79 +1,17 @@
-"""
-Sección: Video de presentación institucional — estilo Neon.com.
 
-Contenido
----------
-- Título + subtítulo de presentación.
-- Video de YouTube embebido en formato 16:9.
-- CTAs duales (más información + crear cuenta).
-
-Diseño
-------
-Refactorizado al estilo Neon.com:
-
-1. **Layout 2 columnas**: texto (izq) + video (der).
-2. **YouTube con iframe** (no `rx.video`, que no soporta YouTube).
-3. **CTAs con acciones reales** (a /carreras y /admision).
-4. **Iconos kebab-case** (Lucide oficial).
-5. **Fondo adaptativo** al `color_mode`.
-6. **Responsive mobile-first**.
-
-Sistema de color
-----------------
-✅ ADAPTATIVO: todos los colores respetan el `color_mode`.
-✅ ACENTO ÚNICO: azul marino neon (`#3b5bdb`).
-
-Nota técnica: VIDEO DE YOUTUBE
------------------------------
-`rx.video` NO soporta URLs de YouTube (`youtu.be/...` o
-`youtube.com/watch?v=...`). Solo acepta URLs directas a archivos
-`.mp4`, `.webm`, etc.
-
-Para YouTube se usa `rx.el.iframe` con la URL de embed:
-
-    https://www.youtube.com/embed/VIDEO_ID
-
-El ID del video se extrae de la URL original.
-
-Ejemplo:
-    Original:  https://youtu.be/uP00VWRCsrw
-    Embed:     https://www.youtube.com/embed/uP00VWRCsrw
-
-Nota técnica: NOMBRE DEL MÓDULO
--------------------------------
-Este módulo se llamaba `portada_inicio_con_video.py`, lo cual era
-engañoso porque NO es la portada del inicio, es UNA sección.
-
-Se renombró a `seccion_video_portada.py` para reflejar su
-propósito real.
-
-Nota técnica: FUNCIONES ELIMINADAS
-----------------------------------
-- `icono_principal_de_curso()`: mostraba un icono de bitcoin
-  (`bitcoin-svgrepo-com.svg`) que no tiene relación con el
-  instituto. Se eliminó.
-
-Nota técnica: `rx.video` vs `rx.el.iframe`
-------------------------------------------
-- `rx.video`: para archivos de video directos (`.mp4`, `.webm`).
-- `rx.el.iframe`: para embeds externos (YouTube, Vimeo, Google Maps).
-
-Esta distinción es importante porque YouTube sirve el video como
-una página web embebida, no como un archivo de video.
-"""
 
 from __future__ import annotations
 
 import reflex as rx
 
-from ...infraestructura.constantes.colores import (
+from ..infraestructura.constantes.colores import (
     AZUL_MARINO_NEON,
     BORDE_HOME_AZUL,
     BORDE_HOME_MEDIO,
     TEXTO_HOME_MAS_SUAVE,
     TEXTO_HOME_PRINCIPAL,
 )
-from ...infraestructura.constantes.dimensiones import (
+from ..infraestructura.constantes.dimensiones import (
     RADIO_EXTRA_GRANDE,
     RADIO_PASTILLA,
 )
